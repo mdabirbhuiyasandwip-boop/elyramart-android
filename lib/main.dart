@@ -471,6 +471,12 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
   @override void initState(){super.initState();_load();}
   @override void dispose(){shop.dispose();owner.dispose();phone.dispose();address.dispose();product.dispose();price.dispose();stock.dispose();super.dispose();}
   Future<void> _load() async {final p=await SharedPreferences.getInstance();final raw=p.getString('elyramart_seller_profile_v1');final items=p.getStringList('elyramart_seller_products_v1')??[];final orderItems=p.getStringList('elyramart_local_orders_v1')??[];final loadedProducts=items.map((v)=>Map<String,dynamic>.from(jsonDecode(v))).toList().reversed.toList();final loadedOrders=orderItems.map((v){try{return Map<String,dynamic>.from(jsonDecode(v));}catch(_){return <String,dynamic>{};}}).where((v)=>v.isNotEmpty).toList().reversed.toList();final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;if(user!=null){try{final cloudProducts=await FirebaseFirestore.instance.collection('products').where('sellerId',isEqualTo:user.uid).limit(100).get();loadedProducts.insertAll(0,cloudProducts.docs.map((d)=>{...d.data(),'_docId':d.id,'name':d.data()['title']??''}));final cloudOrders=await FirebaseFirestore.instance.collection('orders').where('sellerIds',arrayContains:user.uid).limit(100).get();loadedOrders.insertAll(0,cloudOrders.docs.map((d)=>{...d.data(),'_docId':d.id}));}catch(error){debugPrint('Seller cloud load failed: $error');}}if(!mounted)return;setState((){if(raw!=null){final m=Map<String,dynamic>.from(jsonDecode(raw));shop.text=m['shop']??'';owner.text=m['owner']??'';phone.text=m['phone']??'';address.text=m['address']??'';registered=true;}mine=loadedProducts;orders=loadedOrders;});}
+  List<String> _sellerOrderNextStatuses(String current) => switch(current) {
+    'placed' => ['confirmed','cancelled'],
+    'confirmed' => ['processing','cancelled'],
+    'processing' => ['completed','cancelled'],
+    _ => <String>[],
+  };
   Future<void> updateOrderStatus(Map<String,dynamic> order,String status) async {
     if(order['_docId']!=null){try{await FirebaseFirestore.instance.collection('orders').doc(order['_docId']).update({'status':status,'updatedAt':FieldValue.serverTimestamp()});if(mounted)setState(()=>order['status']=status);}catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('অর্ডার আপডেট হয়নি: $error')));}return;}
     final prefs=await SharedPreferences.getInstance();
@@ -635,7 +641,7 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
         DropdownMenuItem(value:'processing',child:Text('প্রস্তুত হচ্ছে')),
         DropdownMenuItem(value:'completed',child:Text('সম্পন্ন')),
         DropdownMenuItem(value:'cancelled',child:Text('বাতিল'))
-      ],onChanged:(v){if(v!=null)updateOrderStatus(o,v);})
+      ].where((option)=>o['_docId']==null||_sellerOrderNextStatuses((o['status']??'').toString()).contains(option.value)).toList(),onChanged:(v){if(v!=null)updateOrderStatus(o,v);})
     ])))),
     const SizedBox(height:12),const Text('গুরুত্বপূর্ণ: সেলার আবেদন, পণ্য ও অর্ডার শুধু এই ফোনে সংরক্ষিত। অন্য ফোনে অর্ডার পৌঁছাতে সার্ভার সংযোগ প্রয়োজন।',style:TextStyle(color:Colors.black54,fontSize:12))
   ]));
