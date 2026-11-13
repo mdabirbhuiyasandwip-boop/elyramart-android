@@ -36,11 +36,11 @@ workflows:
           if plugin not in s:
               if needle not in s:
                   raise SystemExit("Flutter Gradle plugin declaration not found")
-              s = s.replace(needle, needle + "\\n" + plugin, 1)
+              s = s.replace(needle, needle + "\n" + plugin, 1)
           if "checkReleaseBuilds" not in s:
-              lint_block = ('\\nandroid {\\n    lint { checkReleaseBuilds = false }\\n}\\n'
+              lint_block = ('\nandroid {\n    lint { checkReleaseBuilds = false }\n}\n'
                             if p.suffix == ".kts"
-                            else '\\nandroid {\\n    lint { checkReleaseBuilds false }\\n}\\n')
+                            else '\nandroid {\n    lint { checkReleaseBuilds false }\n}\n')
               s += lint_block
           p.write_text(s, encoding="utf-8")
           PY
@@ -57,7 +57,7 @@ workflows:
           ]
           missing = [line for line in permissions if line not in s]
           if missing:
-              s = s.replace("<application", "\\n".join(missing) + "\\n    <application", 1)
+              s = s.replace("<application", "\n".join(missing) + "\n    <application", 1)
               p.write_text(s, encoding="utf-8")
           PY
       - name: Generate Elyramart E-only brand icons
