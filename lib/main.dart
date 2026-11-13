@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
@@ -383,6 +384,8 @@ class CheckoutPage extends StatefulWidget {
 class _CheckoutPageState extends State<CheckoutPage> {
   final name=TextEditingController(),phone=TextEditingController(),address=TextEditingController();
   bool saving=false;
+  int serverDeliveryFee=80;
+  int? serverTotalAmount;
   String paymentMethod='cash_on_delivery';
   int get totalAmount {
     const bn='০১২৩৪৫৬৭৮৯';
@@ -438,7 +441,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
         if(result['success']!=true || result['orderId'] is! String || (result['orderId'] as String).isEmpty){
           throw StateError('সার্ভার অর্ডার নিশ্চিত করেনি।');
         }
-        orderData['totalAmount']=result['totalAmount'];
+        serverDeliveryFee=(result['deliveryFee'] as num?)?.toInt()??80;
+        serverTotalAmount=(result['totalAmount'] as num?)?.toInt();
+        orderData['deliveryFee']=serverDeliveryFee;
+        orderData['subtotal']=result['subtotal']??totalAmount;
+        orderData['totalAmount']=serverTotalAmount??(totalAmount+serverDeliveryFee);
         orderData['orderNumber']=result['orderNumber']??orderNumber;
         cloudSaved=true;
       }catch(error){
@@ -464,7 +471,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
       const Text('আপনার অর্ডার',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
       ...widget.items.map((p)=>ListTile(contentPadding:EdgeInsets.zero,title:Text(p.name),trailing:Text(p.price))),
       const Divider(),
-      ListTile(contentPadding:EdgeInsets.zero,title:const Text('পণ্যের মোট',style:TextStyle(fontWeight:FontWeight.bold)),trailing:Text('৳$totalAmount',style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold,color:green))),
+      ListTile(contentPadding:EdgeInsets.zero,title:const Text('পণ্যের মোট'),trailing:Text('৳$totalAmount')),
+      const ListTile(contentPadding:EdgeInsets.zero,title:Text('ডেলিভারি চার্জ (প্রাথমিক)'),trailing:Text('৳80')),
+      ListTile(contentPadding:EdgeInsets.zero,title:const Text('সর্বমোট (আনুমানিক)',style:TextStyle(fontWeight:FontWeight.bold)),trailing:Text('৳${totalAmount+80}',style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold,color:green))),
       const SizedBox(height:8),field(name,'আপনার নাম'),field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),field(address,'সম্পূর্ণ ডেলিভারি ঠিকানা',lines:3),
       const SizedBox(height:8),
       const Text('পেমেন্ট পদ্ধতি',style:TextStyle(fontWeight:FontWeight.bold,fontSize:16)),
@@ -774,6 +783,38 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
       if(mounted){setState(() { booking['technicianId']=technicianUid; booking['status']='confirmed'; });ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('টেকনিশিয়ান নির্ধারণ করা হয়েছে।')));}
     }catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('টেকনিশিয়ান নির্ধারণ হয়নি: $error')));}
   }
+  Future<void> _assignDelivery(Map<String,dynamic> order) async {
+    final id=(order['_docId']??'').toString();
+    if(id.isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('অনলাইন অর্ডার ছাড়া রাইডার বরাদ্দ করা যাবে না।')));return;}
+    final riderName=TextEditingController(text:(order['riderName']??'').toString());
+    final riderPhone=TextEditingController(text:(order['riderPhone']??'').toString());
+    final accepted=await showDialog<bool>(context:context,builder:(dialogContext)=>AlertDialog(
+      title:const Text('ডেলিভারি রাইডার বরাদ্দ'),
+      content:Column(mainAxisSize:MainAxisSize.min,children:[
+        TextField(controller:riderName,decoration:const InputDecoration(labelText:'রাইডারের নাম')),
+        TextField(controller:riderPhone,keyboardType:TextInputType.phone,decoration:const InputDecoration(labelText:'রাইডারের মোবাইল')),
+      ]),
+      actions:[
+        TextButton(onPressed:()=>Navigator.pop(dialogContext,false),child:const Text('বাতিল')),
+        FilledButton(onPressed:()=>Navigator.pop(dialogContext,true),child:const Text('সংরক্ষণ')),
+      ],
+    ));
+    if(accepted!=true){riderName.dispose();riderPhone.dispose();return;}
+    final normalized=normalizeBangladeshPhone(riderPhone.text);
+    if(riderName.text.trim().isEmpty||normalized==null){
+      riderName.dispose();riderPhone.dispose();
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('রাইডারের নাম ও সঠিক মোবাইল নম্বর দিন।')));
+      return;
+    }
+    try{
+      await FirebaseFirestore.instance.collection('orders').doc(id).update({
+        'riderName':riderName.text.trim(),'riderPhone':normalized,
+        'deliveryStatus':'assigned','updatedAt':FieldValue.serverTimestamp(),
+      });
+      if(mounted){setState(()=>order.addAll({'riderName':riderName.text.trim(),'riderPhone':normalized,'deliveryStatus':'assigned'}));ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('ডেলিভারি রাইডার বরাদ্দ হয়েছে।')));}
+    }catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('রাইডার বরাদ্দ হয়নি: $error')));}
+    riderName.dispose();riderPhone.dispose();
+  }
   Future<void> _publishProduct(Map<String,dynamic> product) async {
     final id=(product['_docId']??'').toString();
     if(id.isEmpty)return;
@@ -937,7 +978,10 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
                   title: Text(v['orderNumber'] ?? ''),
                   subtitle: Text('${v['customerName'] ?? ''} • ${v['phone'] ?? ''}\n${v['address'] ?? ''}\nস্ট্যাটাস: ${_status(v)}'),
                   isThreeLine: true,
-                  trailing: _statusMenu('elyramart_local_orders_v1', 'orderNumber', v),
+                  trailing: Row(mainAxisSize:MainAxisSize.min,children:[
+                    IconButton(tooltip:'রাইডার বরাদ্দ',onPressed:()=>_assignDelivery(v),icon:const Icon(Icons.delivery_dining,color:green)),
+                    _statusMenu('elyramart_local_orders_v1', 'orderNumber', v),
+                  ]),
                 ),
               )),
             heading('সার্ভিস বুকিং'),
@@ -1603,6 +1647,23 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
         'address': address.text.trim(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+    }
+    try {
+      final messaging = FirebaseMessaging.instance;
+      await messaging.requestPermission(alert: true, badge: true, sound: true);
+      final token = await messaging.getToken();
+      if (token != null && token.isNotEmpty) {
+        await ref.collection('fcmTokens').doc(token).set({
+          'createdAt': FieldValue.serverTimestamp(), 'platform': 'android',
+        }, SetOptions(merge: true));
+      }
+      messaging.onTokenRefresh.listen((newToken) {
+        ref.collection('fcmTokens').doc(newToken).set({
+          'createdAt': FieldValue.serverTimestamp(), 'platform': 'android',
+        }, SetOptions(merge: true));
+      });
+    } catch (error) {
+      debugPrint('Elyramart push notification setup skipped: $error');
     }
   }
 
