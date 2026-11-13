@@ -6,12 +6,17 @@ service cloud.firestore {
       return signedIn() && request.auth.token.admin == true;
     }
     function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function isApprovedSeller() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.sellerApproved == true;
+    }
 
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow create: if isOwner(uid)
         && request.resource.data.keys().hasOnly(['name','phone','email','role','createdAt'])
-        && request.resource.data.role in ['customer','seller','technician'];
+        && request.resource.data.role == 'customer';
       allow update: if (isOwner(uid)
         && request.resource.data.role == resource.data.role
         && request.resource.data.diff(resource.data).affectedKeys()
@@ -23,13 +28,23 @@ service cloud.firestore {
     match /products/{productId} {
       allow read: if resource.data.status == 'active' || isAdmin()
         || (signedIn() && resource.data.sellerId == request.auth.uid);
-      allow create: if signedIn()
+      allow create: if isApprovedSeller()
         && request.resource.data.sellerId == request.auth.uid
-        && request.resource.data.status == 'pending';
+        && request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasOnly(['sellerId','title','categoryId','price','stock','imageUrls','status','createdAt','updatedAt'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.price is number
+        && request.resource.data.price > 0
+        && request.resource.data.stock is int
+        && request.resource.data.stock >= 0;
       allow update: if isAdmin()
-        || (signedIn() && resource.data.sellerId == request.auth.uid
+        || (isApprovedSeller() && resource.data.sellerId == request.auth.uid
           && request.resource.data.sellerId == resource.data.sellerId
-          && request.resource.data.status == resource.data.status);
+          && resource.data.status == 'pending'
+          && request.resource.data.status == 'pending'
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['title','categoryId','price','stock','imageUrls','updatedAt']));
       allow delete: if isAdmin()
         || (signedIn() && resource.data.sellerId == request.auth.uid
           && resource.data.status == 'pending');
@@ -66,7 +81,8 @@ service cloud.firestore {
     match /sellerApplications/{applicationId} {
       allow create: if signedIn()
         && request.resource.data.userId == request.auth.uid
-        && request.resource.data.status == 'pending';
+        && request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasOnly(['userId','shopName','contact','address','status','createdAt']);
       allow read: if isAdmin()
         || (signedIn() && resource.data.userId == request.auth.uid);
       allow update, delete: if isAdmin();
