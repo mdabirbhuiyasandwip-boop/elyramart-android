@@ -42,7 +42,10 @@ jobs:
       - name: Resolve Flutter packages
         run: flutter pub get
       - name: Analyze Dart source
-        run: flutter analyze --no-pub
+        run: |
+          flutter analyze --no-pub > /tmp/elyramart-analyze.log 2>&1 || true
+          cat /tmp/elyramart-analyze.log
+          if grep -Eq ' (error|warning) •' /tmp/elyramart-analyze.log; then exit 1; fi
       - name: Run widget tests
         run: flutter test
       - name: Build release APK
