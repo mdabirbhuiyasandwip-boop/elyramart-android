@@ -489,7 +489,7 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     setState(()=>registered=true);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(user==null?'সেলার তথ্য শুধু এই ফোনে রাখা হয়েছে। অনলাইন আবেদনের জন্য লগইন করুন।':'সেলার আবেদন অনলাইনে পাঠানো হয়েছে। অ্যাডমিন অনুমোদনের পর পণ্য যোগ করতে পারবেন।')));
   }
-  Future<void> removeProduct(Map<String,dynamic> item) async {final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];final target=jsonEncode(item);raw.remove(target);await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.remove(item));}
+  Future<void> removeProduct(Map<String,dynamic> item) async {if(item['_docId']!=null){try{await FirebaseFirestore.instance.collection('products').doc(item['_docId']).delete();if(mounted)setState(()=>mine.remove(item));}catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('পণ্য মুছতে সমস্যা: $error')));}return;}final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];final target=jsonEncode(item);raw.remove(target);await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.remove(item));}
   Future<void> editProduct(Map<String,dynamic> item) async {
     final nameController=TextEditingController(text:item['name']??'');
     final priceController=TextEditingController(text:item['price']??'');
@@ -510,8 +510,17 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
       if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্যের নাম ও দাম দিন')));
       return;
     }
-    final updated={...item,'name':nameController.text.trim(),'price':priceController.text.trim()};
+    final updated={...item,'name':nameController.text.trim(),'title':nameController.text.trim(),'price':priceController.text.trim()};
     nameController.dispose();priceController.dispose();
+    if(item['_docId']!=null){
+      var digits=priceController.text;
+      const bn='০১২৩৪৫৬৭৮৯';
+      for(var i=0;i<10;i++){digits=digits.replaceAll(bn[i],'$i');}
+      final numericPrice=double.tryParse(digits.replaceAll(RegExp(r'[^0-9.]'), ''));
+      if(numericPrice==null||numericPrice<=0){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক দাম লিখুন')));return;}
+      try{await FirebaseFirestore.instance.collection('products').doc(item['_docId']).update({'title':nameController.text.trim(),'price':numericPrice,'updatedAt':FieldValue.serverTimestamp()});if(mounted)setState(()=>mine[mine.indexOf(item)]=updated);}catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('পণ্য আপডেট হয়নি: $error')));}
+      return;
+    }
     final prefs=await SharedPreferences.getInstance();
     final raw=prefs.getStringList('elyramart_seller_products_v1')??[];
     final next=<String>[];
@@ -568,7 +577,7 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     const SizedBox(height:12),FilledButton.icon(onPressed:addProduct,icon:const Icon(Icons.add),label:const Text('পণ্য সংরক্ষণ করুন')),
     const SizedBox(height:20),Text('আমার যোগ করা পণ্য (${mine.length})',style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold)),
     if(mine.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('এখনো কোনো পণ্য যোগ করা হয়নি')))
-    else ...mine.map((m)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.inventory_2,color:green),title:Text(m['name']??''),subtitle:Text('${m['category']??''} • ${m['price']??''}'),trailing:Row(mainAxisSize:MainAxisSize.min,children:[
+    else ...mine.map((m)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.inventory_2,color:green),title:Text(m['name']??''),subtitle:Text('${m['category']??m['categoryId']??''} • ${m['price']??''}'),trailing:Row(mainAxisSize:MainAxisSize.min,children:[
       IconButton(tooltip:'পণ্য সম্পাদনা',onPressed:()=>editProduct(m),icon:const Icon(Icons.edit_outlined,color:green)),
       IconButton(tooltip:'পণ্য মুছুন',onPressed:()=>showDialog(context:c,builder:(dialogContext)=>AlertDialog(title:const Text('পণ্য মুছবেন?'),content:Text((m['name']??'')+' তালিকা থেকে মুছে যাবে।'),actions:[TextButton(onPressed:()=>Navigator.pop(dialogContext),child:const Text('না')),TextButton(onPressed:(){Navigator.pop(dialogContext);removeProduct(m);},child:const Text('মুছুন'))])),icon:const Icon(Icons.delete_outline,color:Colors.red))
     ])))),
@@ -581,8 +590,9 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
       Text('পণ্য: '+((o['items'] as List? ?? []).map((x)=>x['name']??'').join(', '))),
       Text('মোট: ৳'+(o['totalAmount']??0).toString(),style:const TextStyle(fontWeight:FontWeight.bold,color:green)),
       const SizedBox(height:8),
-      DropdownButtonFormField<String>(value:['local_pending','confirmed','processing','completed','cancelled'].contains(o['status'])?o['status']:'local_pending',decoration:const InputDecoration(labelText:'অর্ডারের অবস্থা',border:OutlineInputBorder()),items:const [
+      DropdownButtonFormField<String>(value:['local_pending','placed','confirmed','processing','completed','cancelled'].contains(o['status'])?o['status']:'local_pending',decoration:const InputDecoration(labelText:'অর্ডারের অবস্থা',border:OutlineInputBorder()),items:const [
         DropdownMenuItem(value:'local_pending',child:Text('নতুন')),
+        DropdownMenuItem(value:'placed',child:Text('নতুন অনলাইন')),
         DropdownMenuItem(value:'confirmed',child:Text('নিশ্চিত')),
         DropdownMenuItem(value:'processing',child:Text('প্রস্তুত হচ্ছে')),
         DropdownMenuItem(value:'completed',child:Text('সম্পন্ন')),
