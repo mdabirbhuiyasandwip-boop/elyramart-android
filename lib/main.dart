@@ -157,9 +157,12 @@ class _HomePageState extends State<HomePage> {
   }
   void removeFromCart(Product p){setState(()=>cart.remove(p));_saveCart();}
   void clearCartAfterOrder(){setState(cart.clear);_saveCart();}
-  @override Widget build(BuildContext context) {
+  @override Widget build(BuildContext context) =>
+    ValueListenableBuilder<bool>(
+      valueListenable: AppLanguage.english,
+      builder: (context, _, __) {
     final pages=[home(), const ServicesPage(), CartPage(items:cart,onRemove:removeFromCart,onOrderSaved:clearCartAfterOrder), const AccountPage()];
-    return Scaffold(
+        return Scaffold(
       appBar: AppBar(title: Row(children:[const ElyramartMark(size:38),const SizedBox(width:9),const Text('Elyramart',style:TextStyle(fontWeight:FontWeight.w800,letterSpacing:-.4))]), actions:[IconButton(tooltip:tx('সেটিংস','Settings'),onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const AppSettingsPage())),icon:const Icon(Icons.settings_outlined)),IconButton(onPressed:()=>setState(()=>tab=2),icon:Badge(label:Text('${cart.length}'),child:const Icon(Icons.shopping_bag_outlined)))],),
       body: pages[tab],
       bottomNavigationBar: NavigationBar(selectedIndex:tab,onDestinationSelected:(v)=>setState(()=>tab=v),destinations:[
@@ -168,8 +171,10 @@ class _HomePageState extends State<HomePage> {
         NavigationDestination(icon:Icon(Icons.shopping_cart_outlined),label:tx('কার্ট','Cart')),
         NavigationDestination(icon:Icon(Icons.person_outline),label:tx('অ্যাকাউন্ট','Account')),
       ]),
+        );
+      },
     );
-  }
+
   Widget home(){
     final allProducts=<Product>[...products,...sellerProducts];
     final visibleProducts=allProducts.where((p)=>(category=='সব'||p.category==category) && ('${p.name} ${p.category} ${p.detail}'.toLowerCase().contains(searchQuery.toLowerCase()))).toList();
