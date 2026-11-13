@@ -243,7 +243,40 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     setState(()=>order['status']=status);
   }
   Future<void> saveProfile() async {if([shop,owner,phone,address].any((x)=>x.text.trim().isEmpty)){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সব তথ্য পূরণ করুন')));return;}final p=await SharedPreferences.getInstance();await p.setString('elyramart_seller_profile_v1',jsonEncode({'shop':shop.text.trim(),'owner':owner.text.trim(),'phone':phone.text.trim(),'address':address.text.trim(),'status':'local_pending'}));if(!mounted)return;setState(()=>registered=true);ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সেলার তথ্য এই ফোনে সংরক্ষিত হয়েছে')));}
-  Future<void> removeProduct(Map<String,dynamic> item) async {final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];final target=jsonEncode(item);raw.remove(target);await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.remove(item));}\n  Future<void> addProduct() async {if(!registered){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('আগে সেলার তথ্য সংরক্ষণ করুন')));return;}if(product.text.trim().isEmpty||price.text.trim().isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্যের নাম ও দাম দিন')));return;}final item={'name':product.text.trim(),'price':price.text.trim(),'category':category,'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'};final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];raw.add(jsonEncode(item));await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.insert(0,item));product.clear();price.clear();}
+  Future<void> removeProduct(Map<String,dynamic> item) async {final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];final target=jsonEncode(item);raw.remove(target);await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.remove(item));}\n  Future<void> editProduct(Map<String,dynamic> item) async {
+    final nameController=TextEditingController(text:item['name']??'');
+    final priceController=TextEditingController(text:item['price']??'');
+    final result=await showDialog<bool>(context:context,builder:(dialogContext)=>AlertDialog(
+      title:const Text('পণ্যের তথ্য পরিবর্তন'),
+      content:Column(mainAxisSize:MainAxisSize.min,children:[
+        TextField(controller:nameController,decoration:const InputDecoration(labelText:'পণ্যের নাম')),
+        TextField(controller:priceController,keyboardType:TextInputType.text,decoration:const InputDecoration(labelText:'দাম')),
+      ]),
+      actions:[
+        TextButton(onPressed:()=>Navigator.pop(dialogContext,false),child:const Text('বাতিল')),
+        FilledButton(onPressed:()=>Navigator.pop(dialogContext,true),child:const Text('সংরক্ষণ')),
+      ],
+    ));
+    if(result!=true){nameController.dispose();priceController.dispose();return;}
+    if(nameController.text.trim().isEmpty||priceController.text.trim().isEmpty){
+      nameController.dispose();priceController.dispose();
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্যের নাম ও দাম দিন')));
+      return;
+    }
+    final updated={...item,'name':nameController.text.trim(),'price':priceController.text.trim()};
+    nameController.dispose();priceController.dispose();
+    final prefs=await SharedPreferences.getInstance();
+    final raw=prefs.getStringList('elyramart_seller_products_v1')??[];
+    final next=<String>[];
+    for(final encoded in raw){
+      try{final old=Map<String,dynamic>.from(jsonDecode(encoded));next.add(jsonEncode(old['createdAt']==item['createdAt']?updated:old));}
+      catch(_){next.add(encoded);}
+    }
+    await prefs.setStringList('elyramart_seller_products_v1',next);
+    if(!mounted)return;
+    setState(()=>mine[mine.indexOf(item)]=updated);
+  }
+  Future<void> addProduct() async {if(!registered){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('আগে সেলার তথ্য সংরক্ষণ করুন')));return;}if(product.text.trim().isEmpty||price.text.trim().isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্যের নাম ও দাম দিন')));return;}final item={'name':product.text.trim(),'price':price.text.trim(),'category':category,'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'};final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];raw.add(jsonEncode(item));await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.insert(0,item));product.clear();price.clear();}
   @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('সেলার সেন্টার')),body:ListView(padding:const EdgeInsets.all(18),children:[
     const Text('দোকানের তথ্য',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
     field(shop,'দোকানের নাম'),field(owner,'মালিকের নাম'),field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),field(address,'দোকানের ঠিকানা',lines:2),
@@ -254,7 +287,10 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     const SizedBox(height:12),FilledButton.icon(onPressed:addProduct,icon:const Icon(Icons.add),label:const Text('পণ্য সংরক্ষণ করুন')),
     const SizedBox(height:20),Text('আমার যোগ করা পণ্য (${mine.length})',style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold)),
     if(mine.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('এখনো কোনো পণ্য যোগ করা হয়নি')))
-    else ...mine.map((m)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.inventory_2,color:green),title:Text(m['name']??''),subtitle:Text('${m['category']??''} • ${m['price']??''}'),trailing:IconButton(tooltip:'পণ্য মুছুন',onPressed:()=>showDialog(context:c,builder:(dialogContext)=>AlertDialog(title:const Text('পণ্য মুছবেন?'),content:Text((m['name']??'')+' তালিকা থেকে মুছে যাবে।'),actions:[TextButton(onPressed:()=>Navigator.pop(dialogContext),child:const Text('না')),TextButton(onPressed:(){Navigator.pop(dialogContext);removeProduct(m);},child:const Text('মুছুন'))])),icon:const Icon(Icons.delete_outline,color:Colors.red)))),
+    else ...mine.map((m)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.inventory_2,color:green),title:Text(m['name']??''),subtitle:Text('${m['category']??''} • ${m['price']??''}'),trailing:Row(mainAxisSize:MainAxisSize.min,children:[
+      IconButton(tooltip:'পণ্য সম্পাদনা',onPressed:()=>editProduct(m),icon:const Icon(Icons.edit_outlined,color:green)),
+      IconButton(tooltip:'পণ্য মুছুন',onPressed:()=>showDialog(context:c,builder:(dialogContext)=>AlertDialog(title:const Text('পণ্য মুছবেন?'),content:Text((m['name']??'')+' তালিকা থেকে মুছে যাবে।'),actions:[TextButton(onPressed:()=>Navigator.pop(dialogContext),child:const Text('না')),TextButton(onPressed:(){Navigator.pop(dialogContext);removeProduct(m);},child:const Text('মুছুন'))])),icon:const Icon(Icons.delete_outline,color:Colors.red))
+    ]))),
     const SizedBox(height:24),const Divider(),Text('গ্রাহকের অর্ডার ('+orders.length.toString()+')',style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
     if(orders.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('এখনো কোনো অর্ডার নেই'),subtitle:Text('এই ফোনে সংরক্ষিত অর্ডার এখানে দেখা যাবে।')))
     else ...orders.map((o)=>Card(color:Colors.white,child:Padding(padding:const EdgeInsets.all(12),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
