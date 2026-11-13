@@ -193,3 +193,21 @@ export const notifyAssignedTechnician = onDocumentUpdated("serviceBookings/{book
       { type: "booking", bookingId });
   }
 });
+
+
+export const notifyOrderProgress = onDocumentUpdated("orders/{orderId}", async (event) => {
+  const before = event.data?.before.data();
+  const after = event.data?.after.data();
+  if (!before || !after) return;
+  const orderId = event.params.orderId;
+  const orderNumber = String(after.orderNumber ?? orderId);
+  if (before.status !== after.status && typeof after.customerId === "string") {
+    await sendUserNotification(after.customerId, "অর্ডারের অবস্থা আপডেট",
+      `অর্ডার ${orderNumber}: ${String(after.status)}`, { type: "order", orderId });
+  }
+  if (before.deliveryStatus !== after.deliveryStatus && typeof after.customerId === "string") {
+    const rider = typeof after.riderName === "string" ? after.riderName : "রাইডার";
+    await sendUserNotification(after.customerId, "ডেলিভারি আপডেট",
+      `${rider} আপনার অর্ডারের ডেলিভারির দায়িত্ব পেয়েছেন।`, { type: "order", orderId });
+  }
+});
