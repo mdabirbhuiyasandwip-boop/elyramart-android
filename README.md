@@ -8,7 +8,7 @@ The intended product targets Android, iOS and responsive Web from a shared Flutt
 
 ## Current prototype status
 
-The Android release APK and responsive Web build compile successfully. Static analysis and widget tests passed in the latest build.
+Build status is verified in GitHub Actions, not assumed from source changes. The most recent APK attempt before the Kotlin-DSL fix stopped during Firebase Gradle setup; a corrected build is running. Do not treat this prototype as a tested release until the APK workflow completes and uploads its artifact.
 
 The current app is still a **pre-launch prototype**, not a live marketplace:
 - Customer profile, cart, order history and service requests are still stored on the current device. Firebase email/password sign-in and registration UI is now connected to Firebase Auth; authenticated customer profiles can be written to Firestore when the required Firebase providers and database are enabled.
@@ -34,7 +34,7 @@ The workflow `.github/workflows/build-web.yml` builds the Flutter Web release an
 
 ## Suggested backend
 
-Firebase Authentication, Cloud Firestore, Firebase Storage, Cloud Functions and Firebase Cloud Messaging are proposed. Project-specific Firebase configuration is not included. A Firebase project, app registration and authorized configuration are required before cloud features can be connected. Never commit service-account private keys, admin credentials or payment secrets.
+Firebase Authentication, Cloud Firestore, Firebase Storage, Cloud Functions and Firebase Cloud Messaging are proposed. An Android Firebase client configuration (`google-services.json`) is included for the registered Android app. Firebase Console services (Authentication, Firestore, Storage and Functions) still need to be enabled/deployed and tested before cloud features are live. Never commit service-account private keys or admin credentials. Never commit service-account private keys, admin credentials or payment secrets.
 
 ## Versioning
 
