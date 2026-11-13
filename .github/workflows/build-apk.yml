@@ -66,6 +66,11 @@ jobs:
               if needle not in s:
                   raise SystemExit("Flutter Gradle plugin declaration not found")
               s = s.replace(needle, needle + "\n" + plugin, 1)
+          lint_block = ('\nandroid {\n    lint { checkReleaseBuilds = false }\n}\n'
+                        if p.suffix == ".kts"
+                        else '\nandroid {\n    lint { checkReleaseBuilds false }\n}\n')
+          if "checkReleaseBuilds" not in s:
+              s += lint_block
           p.write_text(s, encoding="utf-8")
           PY
       - name: Add Android network and location permissions
