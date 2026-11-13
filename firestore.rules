@@ -8,7 +8,7 @@ service cloud.firestore {
     }
     function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
     function isApprovedSeller() {
-      return signedIn()
+      return verifiedUser()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.sellerApproved == true;
     }
@@ -78,7 +78,7 @@ service cloud.firestore {
     }
 
     match /serviceBookings/{bookingId} {
-      allow create: if signedIn()
+      allow create: if verifiedUser()
         && request.resource.data.customerId == request.auth.uid
         && request.resource.data.status == 'requested'
         && request.resource.data.service is string
@@ -112,7 +112,7 @@ service cloud.firestore {
     }
 
     match /technicianApplications/{applicationId} {
-      allow create: if signedIn()
+      allow create: if verifiedUser()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.status == 'pending'
         && request.resource.data.name is string
