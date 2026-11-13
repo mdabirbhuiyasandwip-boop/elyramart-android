@@ -51,6 +51,7 @@ class _HomePageState extends State<HomePage> {
   int tab=0;
   final cart=<Product>[];
   String category='সব';
+  String searchQuery='';
   final categories=['সব','ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি'];
   void add(Product p) { setState(()=>cart.add(p)); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('${p.name} কার্টে যোগ হয়েছে'),duration:const Duration(seconds:1))); }
   @override Widget build(BuildContext context) {
@@ -66,21 +67,22 @@ class _HomePageState extends State<HomePage> {
       ]),
     );
   }
-  Widget home()=>ListView(padding:const EdgeInsets.fromLTRB(16,8,16,24),children:[
+  Widget home(){
+    final visibleProducts=products.where((p)=>(category=='সব'||p.category==category) && ('${p.name} ${p.category} ${p.detail}'.toLowerCase().contains(searchQuery.toLowerCase()))).toList();
+    return ListView(padding:const EdgeInsets.fromLTRB(16,8,16,24),children:[
     Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF075C48),Color(0xFF10966D)]),borderRadius:BorderRadius.circular(22)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
       const Text('আপনার প্রয়োজন, এক জায়গায়',style:TextStyle(color:Colors.white,fontSize:21,fontWeight:FontWeight.bold)),
       const SizedBox(height:7),const Text('পণ্য অর্ডার করুন, বাসার জন্য টেকনিশিয়ান নিন',style:TextStyle(color:Colors.white70)),
-      const SizedBox(height:16),Container(height:46,padding:const EdgeInsets.symmetric(horizontal:12),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(12)),child:const Row(children:[Icon(Icons.search,color:green),SizedBox(width:8),Text('পণ্য বা সার্ভিস খুঁজুন',style:TextStyle(color:Colors.black45))]))
+      const SizedBox(height:16),Container(height:46,padding:const EdgeInsets.symmetric(horizontal:12),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(12)),child:Row(children:[const Icon(Icons.search,color:green),const SizedBox(width:8),Expanded(child:TextField(onChanged:(v)=>setState(()=>searchQuery=v),decoration:const InputDecoration(hintText:'পণ্য খুঁজুন',border:InputBorder.none,isDense:true))) ]))
     ])),
     const SizedBox(height:22),section('ক্যাটাগরি', 'সব দেখুন'),
-    SizedBox(height:92,child:ListView(scrollDirection:Axis.horizontal,children:const [
-      Cat(icon:'💊',name:'ঔষধ'),Cat(icon:'🛒',name:'মুদিখানা'),Cat(icon:'🧴',name:'কসমেটিকস'),Cat(icon:'👕',name:'ফ্যাশন'),Cat(icon:'🔧',name:'স্যানিটারি'),Cat(icon:'🧰',name:'সার্ভিস'),
-    ])),
+    SizedBox(height:42,child:ListView(scrollDirection:Axis.horizontal,children:categories.map((c)=>Padding(padding:const EdgeInsets.only(right:8),child:ChoiceChip(label:Text(c),selected:category==c,onSelected:(_)=>setState(()=>category=c),selectedColor:const Color(0xFFD6EFE5),labelStyle:TextStyle(color:category==c?green:ink,fontWeight:FontWeight.w600)))).toList())),
     const SizedBox(height:18),Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:const Color(0xFFE2F3EC),borderRadius:BorderRadius.circular(18)),child:Row(children:[const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('বাসায় টেকনিশিয়ান লাগবে?',style:TextStyle(fontSize:17,fontWeight:FontWeight.bold,color:ink)),SizedBox(height:4),Text('ইলেকট্রিশিয়ান, প্লাম্বারসহ বিভিন্ন সার্ভিস বুক করুন',style:TextStyle(color:ink))])),FilledButton(onPressed:()=>setState(()=>tab=1),style:FilledButton.styleFrom(backgroundColor:green),child:const Text('বুক করুন'))])),
     const SizedBox(height:22),section('জনপ্রিয় পণ্য','আরও'),
-    Wrap(spacing:10,runSpacing:10,children:products.map((p)=>SizedBox(width:(MediaQuery.of(context).size.width-42)/2,child:ProductCard(p:p,onAdd:()=>add(p)))).toList()),
+    if(visibleProducts.isEmpty) const Padding(padding:EdgeInsets.all(18),child:Text('কোনো পণ্য পাওয়া যায়নি। অন্য শব্দ বা ক্যাটাগরি দিয়ে খুঁজুন।')) else Wrap(spacing:10,runSpacing:10,children:visibleProducts.map((p)=>SizedBox(width:(MediaQuery.of(context).size.width-42)/2,child:ProductCard(p:p,onAdd:()=>add(p)))).toList()),
     const SizedBox(height:12),const Text('Elyramart — Your World, Your Choice',textAlign:TextAlign.center,style:TextStyle(color:Colors.black45,fontSize:12)),
   ]);
+  }
   Widget section(String a,String b)=>Padding(padding:const EdgeInsets.only(bottom:12),child:Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[Text(a,style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold,color:ink)),Text(b,style:const TextStyle(color:green,fontWeight:FontWeight.w600))]));
 }
 
