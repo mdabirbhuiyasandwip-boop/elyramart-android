@@ -40,7 +40,15 @@ jobs:
           test -s google-services.json
           mkdir -p android/app
           cp google-services.json android/app/google-services.json
-          sed -i '/id "dev.flutter.flutter-gradle-plugin"/a\\    id "com.google.gms.google-services" version "4.4.2"' android/app/build.gradle
+          python3 - <<'PY'
+          p = "android/app/build.gradle"
+          s = open(p, encoding="utf-8").read()
+          needle = '    id "dev.flutter.flutter-gradle-plugin"'
+          if needle not in s:
+              raise SystemExit("Flutter Gradle plugin declaration not found")
+          s = s.replace(needle, needle + '\\n    id "com.google.gms.google-services" version "4.4.2"', 1)
+          open(p, "w", encoding="utf-8").write(s)
+          PY
       - name: Add Android location permissions
         run: |
           sed -i '/<application/i\\    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />' android/app/src/main/AndroidManifest.xml
