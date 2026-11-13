@@ -1127,7 +1127,8 @@ class _AccountPageState extends State<AccountPage> {
           color: Colors.white,
           child: ListTile(
             title: Text(order['orderNumber']?.toString() ?? 'অর্ডার'),
-            subtitle: Text('${order['customerName'] ?? ''} • ${order['phone'] ?? ''}'),
+            subtitle: Text('${order['customerName'] ?? ''} • ${order['phone'] ?? ''}\nঅবস্থা: ${order['status']??'নতুন'}'),
+            isThreeLine: true,
             trailing: Text('৳${order['totalAmount'] ?? 0}'),
           ),
         )),
