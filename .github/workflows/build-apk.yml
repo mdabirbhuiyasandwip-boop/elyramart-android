@@ -35,6 +35,9 @@ jobs:
           cache: true
       - name: Generate Android project files
         run: flutter create --platforms=android --org com.elyramartbd --project-name elyramart .
+      - name: Add Android location permissions
+        run: |
+          sed -i '/<application/i\\    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />' android/app/src/main/AndroidManifest.xml
       - name: Generate Elyramart E-only brand icons
         run: |
           python3 -m pip install pillow --break-system-packages
