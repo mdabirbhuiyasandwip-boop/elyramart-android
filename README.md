@@ -3,7 +3,7 @@
 Flutter-based marketplace and home-services app for Bangladesh.
 
 ## Platforms
-The intended product targets Android, iOS and responsive Web from a shared Flutter codebase. The current automated workflow builds Android APK only. iOS requires macOS/Xcode and Apple signing; Web needs a hosting deployment.
+The intended product targets Android, iOS and responsive Web from a shared Flutter codebase. Android APK and Flutter Web build workflows are provided. iOS requires macOS/Xcode and Apple signing. Web hosting and a shared cloud backend are separate launch steps.
 
 ## Current prototype status
 This repository currently contains a working-start Flutter prototype. Cart, sample catalog, seller/technician/admin demo screens and some order/booking data are local-device demonstrations. They are not yet shared across devices or connected to a live backend.
@@ -12,6 +12,9 @@ This repository currently contains a working-start Flutter prototype. Cart, samp
 
 ## Build Android APK
 The GitHub Actions workflow `.github/workflows/build-apk.yml` runs on pushes to `main` and can be started manually from Actions. It runs Flutter dependency resolution, static analysis and a release APK build. The output artifact is named `Elyramart-APK-release`.
+
+## Build Web
+The workflow `.github/workflows/build-web.yml` builds the Flutter Web release and uploads `Elyramart-Web-release`. The artifact can be deployed to HTTPS hosting after the cloud backend and production configuration are ready. It is not automatically published to a public domain.
 
 ## Developer documentation
 - [বাংলা Developer Handoff: Android, iPhone, Web, cloud architecture and launch checklist](docs/DEVELOPER_HANDOFF_BN.md)
