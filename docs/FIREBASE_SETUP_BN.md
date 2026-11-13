@@ -16,7 +16,7 @@ Android app startup-এ Firebase Core initialize হয়। `google-services.json
    `firebase init firestore storage`
 7. এই repository-র `firestore.rules` এবং `storage.rules` deploy করুন:
    `firebase deploy --only firestore:rules,storage`
-8. FlutterFire CLI দিয়ে `flutterfire configure` চালিয়ে generated `lib/firebase_options.dart` তৈরি করতে হবে। এই generated file project-specific; কখনো অন্যের config ব্যবহার করবেন না।
+8. Android native build-এ `google-services.json` থেকে Firebase options স্বয়ংক্রিয়ভাবে নেওয়া হয়। Web/iOS target চালু করার আগে FlutterFire CLI দিয়ে `flutterfire configure` চালিয়ে generated `lib/firebase_options.dart` তৈরি এবং `main.dart`-এ platform-aware initialization যোগ করতে হবে।
 
 ## নিরাপত্তা ও অনুমোদন নিয়ম
 
