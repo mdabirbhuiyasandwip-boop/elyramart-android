@@ -596,10 +596,26 @@ class AdminOverviewPage extends StatefulWidget {
 }
 class _AdminOverviewPageState extends State<AdminOverviewPage> {
   Map<String,dynamic>? seller,technician,ownerProfile;
-  List<Map<String,dynamic>> products=[],orders=[],bookings=[];
-  static const Map<String,String> statusNames={'local_pending':'নতুন','confirmed':'নিশ্চিত','processing':'প্রস্তুত হচ্ছে','completed':'সম্পন্ন','cancelled':'বাতিল'};
+  List<Map<String,dynamic>> products=[],orders=[],bookings=[],sellerApps=[],technicianApps=[];
+  bool accessReady=false,isAdmin=false;
+  String accessMessage='অ্যাডমিন অনুমতি যাচাই হচ্ছে...';
+  static const Map<String,String> statusNames={'local_pending':'নতুন','placed':'নতুন','requested':'নতুন','confirmed':'নিশ্চিত','processing':'প্রস্তুত হচ্ছে','completed':'সম্পন্ন','cancelled':'বাতিল'};
   @override void initState(){super.initState();_load();}
   Future<void> _load() async {
+    var allowed=false;
+    if(FirebaseRuntime.initialized){
+      final user=FirebaseAuth.instance.currentUser;
+      if(user!=null){
+        try{
+          final token=await user.getIdTokenResult(true);
+          allowed=token.claims?['admin']==true;
+        }catch(_){}
+      }
+    }
+    if(!allowed){
+      if(mounted)setState(()=>{isAdmin=false,accessReady=true,accessMessage='Owner Admin হিসেবে যাচাইকৃত লগইন প্রয়োজন।'});
+      return;
+    }
     final p=await SharedPreferences.getInstance();
     List<Map<String,dynamic>> decode(String k)=>(p.getStringList(k)??[]).map((v){try{return Map<String,dynamic>.from(jsonDecode(v) as Map);}catch(_){return <String,dynamic>{};}}).where((v)=>v.isNotEmpty).toList().reversed.toList();
     final raw=p.getString('elyramart_seller_profile_v1');
@@ -616,7 +632,53 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
       products=decode('elyramart_seller_products_v1');
       orders=decode('elyramart_local_orders_v1');
       bookings=decode('elyramart_service_requests_v1');
+      isAdmin=true;
+      accessReady=true;
+      accessMessage='';
     });
+    try{
+      final db=FirebaseFirestore.instance;
+      final results=await Future.wait([
+        db.collection('orders').limit(100).get(),
+        db.collection('products').limit(100).get(),
+        db.collection('serviceBookings').limit(100).get(),
+        db.collection('sellerApplications').limit(100).get(),
+        db.collection('technicianApplications').limit(100).get(),
+      ]);
+      List<Map<String,dynamic>> mapped(QuerySnapshot<Map<String,dynamic>> snap)=>snap.docs.map((d)=>{...d.data(),'_docId':d.id}).toList();
+      if(!mounted)return;
+      setState((){
+        orders=mapped(results[0]);
+        products=mapped(results[1]);
+        bookings=mapped(results[2]);
+        sellerApps=mapped(results[3]);
+        technicianApps=mapped(results[4]);
+      });
+    }catch(error){
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('অনলাইন অ্যাডমিন তথ্য লোড হয়নি: $error')));
+    }
+  }
+  Future<void> _approveApplication(String collection,Map<String,dynamic> item,String approvalField) async {
+    final uid=(item['userId']??'').toString();
+    final id=(item['_docId']??'').toString();
+    if(uid.isEmpty||id.isEmpty)return;
+    try{
+      final batch=FirebaseFirestore.instance.batch();
+      batch.update(FirebaseFirestore.instance.collection(collection).doc(id),{'status':'approved','reviewedAt':FieldValue.serverTimestamp()});
+      batch.set(FirebaseFirestore.instance.collection('users').doc(uid),{approvalField:true,'updatedAt':FieldValue.serverTimestamp()},SetOptions(merge:true));
+      await batch.commit();
+      if(mounted){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('আবেদন অনুমোদিত হয়েছে।')));_load();}
+    }catch(error){
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('অনুমোদন করা যায়নি: $error')));
+    }
+  }
+  Future<void> _changeCloudStatus(String collection,Map<String,dynamic> item,String status) async {
+    final id=(item['_docId']??'').toString();
+    if(id.isEmpty)return;
+    try{
+      await FirebaseFirestore.instance.collection(collection).doc(id).update({'status':status,'updatedAt':FieldValue.serverTimestamp()});
+      if(mounted){setState(()=>item['status']=status);ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('স্ট্যাটাস পরিবর্তন হয়েছে: ${statusNames[status]??status}')));}
+    }catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('স্ট্যাটাস পরিবর্তন হয়নি: $error')));}
   }
   Future<void> _changeStatus(String storageKey,String identityKey,Map<String,dynamic> item,String status) async {
     final p=await SharedPreferences.getInstance();
@@ -635,7 +697,17 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
   Widget build(BuildContext c) {
     return Scaffold(
       appBar: AppBar(title: const Text('অ্যাডমিন ওভারভিউ')),
-      body: RefreshIndicator(
+      body: !accessReady
+        ? const Center(child:CircularProgressIndicator())
+        : !isAdmin
+          ? Center(child:Padding(padding:const EdgeInsets.all(24),child:Column(mainAxisSize:MainAxisSize.min,children:[
+              const Icon(Icons.lock_outline,size:56,color:green),
+              const SizedBox(height:12),
+              Text(accessMessage,textAlign:TextAlign.center),
+              const SizedBox(height:12),
+              FilledButton(onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const CustomerLoginPage())),child:const Text('Owner লগইন খুলুন'))
+            ])))
+        : RefreshIndicator(
         onRefresh: _load,
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -697,6 +769,20 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
                   subtitle: Text('${v['category'] ?? ''} • ${v['price'] ?? ''}'),
                 ),
               )),
+            heading('অনলাইন সেলার আবেদন'),
+            if(sellerApps.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('কোনো অনলাইন আবেদন নেই')))
+            else ...sellerApps.map((v)=>Card(color:Colors.white,child:ListTile(
+              title:Text(v['shopName']??'দোকান'),
+              subtitle:Text('${v['contact']??''} • ${v['address']??''} • ${v['status']??''}'),
+              trailing:v['status']=='pending'?TextButton(onPressed:()=>_approveApplication('sellerApplications',v,'sellerApproved'),child:const Text('অনুমোদন')):const Icon(Icons.verified,color:green),
+            ))),
+            heading('অনলাইন টেকনিশিয়ান আবেদন'),
+            if(technicianApps.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('কোনো অনলাইন আবেদন নেই')))
+            else ...technicianApps.map((v)=>Card(color:Colors.white,child:ListTile(
+              title:Text(v['name']??'টেকনিশিয়ান'),
+              subtitle:Text('${v['phone']??''} • ${v['skills']??''} • ${v['status']??''}'),
+              trailing:v['status']=='pending'?TextButton(onPressed:()=>_approveApplication('technicianApplications',v,'technicianApproved'),child:const Text('অনুমোদন')):const Icon(Icons.verified,color:green),
+            ))),
             heading('সাম্প্রতিক অর্ডার'),
             if (orders.isEmpty)
               const Card(color: Colors.white, child: ListTile(title: Text('কোনো অর্ডার নেই')))
@@ -727,7 +813,7 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
               )),
             const SizedBox(height: 12),
             const Text(
-              'সতর্কতা: এই স্ক্রিন শুধু একই ফোনে থাকা ডেমো তথ্য দেখায়। স্ট্যাটাস পরিবর্তনও শুধু এই ফোনে সংরক্ষিত হয়; গ্রাহক, দোকান বা টেকনিশিয়ান অনলাইনে আপডেট পায়।',
+              'এটি Owner Admin-এর অনলাইন নিয়ন্ত্রণ প্যানেল। অনুমোদন ও স্ট্যাটাস পরিবর্তন Firestore-এ সংরক্ষিত হয়।',
               style: TextStyle(color: Colors.black54, fontSize: 12),
             ),
           ],
