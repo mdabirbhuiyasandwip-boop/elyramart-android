@@ -273,7 +273,7 @@ class CartPage extends StatelessWidget {
   final VoidCallback onOrderSaved;
   const CartPage({super.key,required this.items,required this.onRemove,required this.onOrderSaved});
   @override Widget build(BuildContext c)=>items.isEmpty
-    ?const Center(child:Column(mainAxisSize:MainAxisSize.min,children:[Icon(Icons.shopping_bag_outlined,size:60,color:Colors.black26),SizedBox(height:10),Text(tx('আপনার কার্ট এখনো খালি','Your cart is empty'))]))
+    ?Center(child:Column(mainAxisSize:MainAxisSize.min,children:[Icon(Icons.shopping_bag_outlined,size:60,color:Colors.black26),SizedBox(height:10),Text(tx('আপনার কার্ট এখনো খালি','Your cart is empty'))]))
     :ListView(padding:const EdgeInsets.all(16),children:[
       Text(tx('কার্টে ${items.length}টি পণ্য','${items.length} items in cart'),style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
       ...items.map((p)=>Card(color:Colors.white,child:ListTile(title:Text(p.name),subtitle:Text(p.price),trailing:IconButton(onPressed:()=>onRemove(p),icon:const Icon(Icons.delete_outline,color:Colors.red))))),
