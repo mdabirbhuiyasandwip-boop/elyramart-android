@@ -38,22 +38,7 @@ jobs:
             exit 1
           fi
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-service-account.json"
-          python3 - <<'PY'
-import json, os, sys
-path = os.path.join(os.environ['RUNNER_TEMP'], 'firebase-service-account.json')
-with open(path, encoding='utf-8') as f:
-    data = json.load(f)
-required = ['type', 'project_id', 'private_key', 'client_email', 'token_uri']
-missing = [key for key in required if not data.get(key)]
-if data.get('type') != 'service_account' or missing:
-    print('এই Secret-এ Service Account JSON নেই বা অসম্পূর্ণ। google-services.json নয়; Google Cloud service account key JSON প্রয়োজন।')
-    print('Missing fields: ' + ', '.join(missing or ['type=service_account']))
-    sys.exit(1)
-if data.get('project_id') != 'elyramart':
-    print('Service Account project_id elyramart নয়; সঠিক Firebase project-এর key দিন।')
-    sys.exit(1)
-print('Service Account JSON structure verified for elyramart.')
-PY
+          node -e "const fs=require('fs'); const p=process.env.RUNNER_TEMP+'/firebase-service-account.json'; const d=JSON.parse(fs.readFileSync(p,'utf8')); const required=['type','project_id','private_key','client_email','token_uri']; const missing=required.filter(k=>!d[k]); if(d.type!=='service_account'||missing.length){console.error('Secret-এ Service Account JSON নেই/অসম্পূর্ণ। google-services.json নয়; Google Cloud service account key JSON দিন. Missing: '+(missing.join(', ')||'type=service_account'));process.exit(1)} if(d.project_id!=='elyramart'){console.error('Service Account project_id elyramart নয়।');process.exit(1)} console.log('Service Account JSON verified for elyramart.')"
       - name: Configure Firebase owner email
         run: |
           printf '%s\n' 'ELYRAMART_OWNER_EMAIL=elyramartbd@gmail.com' > functions/.env.elyramart
