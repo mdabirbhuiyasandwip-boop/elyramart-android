@@ -160,6 +160,17 @@ class _HomePageState extends State<HomePage> {
     final sellerRaw=prefs.getStringList('elyramart_seller_products_v1')??[];
     final loadedSeller=<Product>[];
     for(final raw in sellerRaw){try{final m=Map<String,dynamic>.from(jsonDecode(raw) as Map);loadedSeller.add(Product(m['name']??'পণ্য',m['category']??'মুদিখানা','৳${m['price']??'0'}','🛍️','সেলার তালিকাভুক্ত পণ্য'));}catch(_){}}
+    if(FirebaseRuntime.initialized){
+      try{
+        final snapshot=await FirebaseFirestore.instance.collection('products').where('status',isEqualTo:'active').limit(60).get();
+        for(final doc in snapshot.docs){
+          final data=doc.data();
+          final title=(data['title']??'পণ্য').toString();
+          final price=data['price'];
+          loadedSeller.add(Product(title,(data['categoryId']??'অন্যান্য').toString(),'৳${price is num?price.toStringAsFixed(0):price}','🛍️','Elyramart verified seller'));
+        }
+      }catch(error){debugPrint('Elyramart product sync failed: $error');}
+    }
     if(!mounted)return;
     setState((){
       sellerProducts=loadedSeller;
