@@ -6,9 +6,11 @@ Elyramart হবে একটি cross-platform marketplace ও home-service pla
 ## বর্তমান অবস্থা
 - Flutter source: `lib/main.dart`
 - Android release build workflow: `.github/workflows/build-apk.yml`
-- বর্তমানে customer cart, sample products, checkout demo, seller/technician/admin portal-এর কিছু data `shared_preferences`-এ local-only।
-- Local demo data অন্য device-এ sync হয় না।
-- Firebase credentials/config এখনো repository-তে নেই; live authentication/database/storage/payment চালু নয়।
+- Android Firebase client config (`google-services.json`) repository-তে আছে; APK workflow সেটি Android build-এ বসায়।
+- Customer Email/Password authentication UI ও প্রাথমিক Firestore profile sync যুক্ত আছে; Firebase Console services enable/deploy ও real-device test ছাড়া live-ready বলা যাবে না।
+- Cart, checkout/order, seller/technician application, admin overview এবং service booking-এর গুরুত্বপূর্ণ অংশ এখনো local demo storage-এ; অন্য device-এ sync হয় না।
+- Web build তৈরি হয়, কিন্তু Web Firebase app registration/config এবং hosting enablement ছাড়া Web-এ online login/data live নয়।
+- Payment gateway, push notifications, seller/technician approval UI ও production cloud order flow এখনো চালু নয়.
 - বর্তমান APK-কে production marketplace হিসেবে প্রকাশ করা যাবে না।
 
 ## Platform strategy
