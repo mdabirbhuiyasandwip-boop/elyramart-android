@@ -130,16 +130,17 @@ class Product {
   final String name, category, price, emoji, detail;
   final String? sellerId;
   final String? imageUrl;
-  const Product(this.name, this.category, this.price, this.emoji, this.detail,{this.sellerId,this.imageUrl});
+  final bool demoOnly;
+  const Product(this.name, this.category, this.price, this.emoji, this.detail,{this.sellerId,this.imageUrl,this.demoOnly=false});
 }
 // Preview-only sample catalogue. Real listings come from approved seller records.
 const products = <Product>[
-  Product('প্যারাসিটামল ৫০০ মি.গ্রা. (ডেমো)', 'ঔষধ', '৳২০', '💊', 'ডেমো তালিকা — ওষুধ কেনার আগে চিকিৎসক/ফার্মাসিস্টের পরামর্শ ও আসল প্যাকেট যাচাই করুন'),
-  Product('চাল ১ কেজি (ডেমো)', 'মুদিখানা', '৳৮০', '🍚', 'ডেমো তালিকা — প্রকৃত মূল্য ও স্টক বিক্রেতার কাছ থেকে নিশ্চিত হবে'),
-  Product('সয়াবিন তেল ১ লিটার (ডেমো)', 'মুদিখানা', '৳১৭০', '🛒', 'ডেমো তালিকা — প্রকৃত মূল্য ও স্টক বিক্রেতার কাছ থেকে নিশ্চিত হবে'),
-  Product('ফেসওয়াশ (ডেমো)', 'কসমেটিকস', '৳২৫০', '🧴', 'ডেমো তালিকা — ব্র্যান্ড, আসল পণ্য ও মেয়াদ বিক্রেতার কাছ থেকে নিশ্চিত হবে'),
-  Product('টি-শার্ট (ডেমো)', 'ফ্যাশন', '৳৩৫০', '👕', 'ডেমো তালিকা — সাইজ ও প্রকৃত মূল্য বিক্রেতার কাছ থেকে নিশ্চিত হবে'),
-  Product('পানির কল / ট্যাপ (ডেমো)', 'স্যানিটারি', '৳২২০', '🚰', 'ডেমো তালিকা — পণ্য ও প্রকৃত মূল্য বিক্রেতার কাছ থেকে নিশ্চিত হবে'),
+  Product('প্যারাসিটামল ৫০০ মি.গ্রা. (ডেমো)', 'ঔষধ', '৳২০', '💊', 'ডেমো তালিকা — ওষুধ কেনার আগে চিকিৎসক/ফার্মাসিস্টের পরামর্শ ও আসল প্যাকেট যাচাই করুন',demoOnly:true),
+  Product('চাল ১ কেজি (ডেমো)', 'মুদিখানা', '৳৮০', '🍚', 'ডেমো তালিকা — প্রকৃত মূল্য ও স্টক বিক্রেতার কাছ থেকে নিশ্চিত হবে',demoOnly:true),
+  Product('সয়াবিন তেল ১ লিটার (ডেমো)', 'মুদিখানা', '৳১৭০', '🛒', 'ডেমো তালিকা — প্রকৃত মূল্য ও স্টক বিক্রেতার কাছ থেকে নিশ্চিত হবে',demoOnly:true),
+  Product('ফেসওয়াশ (ডেমো)', 'কসমেটিকস', '৳২৫০', '🧴', 'ডেমো তালিকা — ব্র্যান্ড, আসল পণ্য ও মেয়াদ বিক্রেতার কাছ থেকে নিশ্চিত হবে',demoOnly:true),
+  Product('টি-শার্ট (ডেমো)', 'ফ্যাশন', '৳৩৫০', '👕', 'ডেমো তালিকা — সাইজ ও প্রকৃত মূল্য বিক্রেতার কাছ থেকে নিশ্চিত হবে',demoOnly:true),
+  Product('পানির কল / ট্যাপ (ডেমো)', 'স্যানিটারি', '৳২২০', '🚰', 'ডেমো তালিকা — পণ্য ও প্রকৃত মূল্য বিক্রেতার কাছ থেকে নিশ্চিত হবে',demoOnly:true),
 ];
 
 const services = <(String, IconData, String)>[
@@ -187,12 +188,12 @@ class _HomePageState extends State<HomePage> {
     if(!mounted)return;
     setState((){
       sellerProducts=loadedSeller;
-      cart..clear()..addAll(saved.map((v){try{final m=Map<String,dynamic>.from(jsonDecode(v) as Map);return Product(m['name']??'',m['category']??'',m['price']??'',m['emoji']??'🛍️',m['detail']??'',sellerId:m['sellerId']?.toString(),imageUrl:m['imageUrl']?.toString());}catch(_){final i=int.tryParse(v);return i!=null&&i>=0&&i<products.length?products[i]:null;}}).whereType<Product>());
+      cart..clear()..addAll(saved.map((v){try{final m=Map<String,dynamic>.from(jsonDecode(v) as Map);return Product(m['name']??'',m['category']??'',m['price']??'',m['emoji']??'🛍️',m['detail']??'',sellerId:m['sellerId']?.toString(),imageUrl:m['imageUrl']?.toString(),demoOnly:m['demoOnly']==true||m['sellerId']==null);}catch(_){final i=int.tryParse(v);return i!=null&&i>=0&&i<products.length?products[i]:null;}}).whereType<Product>());
     });
   }
   Future<void> _saveCart() async {
     final prefs=await SharedPreferences.getInstance();
-    await prefs.setStringList('elyramart_cart_v1',cart.map((p)=>jsonEncode({'name':p.name,'category':p.category,'price':p.price,'emoji':p.emoji,'detail':p.detail,'sellerId':p.sellerId,'imageUrl':p.imageUrl})).toList());
+    await prefs.setStringList('elyramart_cart_v1',cart.map((p)=>jsonEncode({'name':p.name,'category':p.category,'price':p.price,'emoji':p.emoji,'detail':p.detail,'sellerId':p.sellerId,'imageUrl':p.imageUrl,'demoOnly':p.demoOnly})).toList());
   }
   void add(Product p) {
     setState(()=>cart.add(p)); _saveCart();
@@ -266,7 +267,7 @@ class _HomePageState extends State<HomePage> {
 
 class Cat extends StatelessWidget { final String icon,name; const Cat({super.key,required this.icon,required this.name}); @override Widget build(BuildContext c)=>Container(width:76,margin:const EdgeInsets.only(right:10),padding:const EdgeInsets.all(8),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Text(icon,style:const TextStyle(fontSize:27)),const SizedBox(height:5),Text(name,style:const TextStyle(fontSize:11,fontWeight:FontWeight.w600))])); }
 
-class ProductCard extends StatelessWidget { final Product p; final VoidCallback onAdd; const ProductCard({super.key,required this.p,required this.onAdd}); @override Widget build(BuildContext c)=>Container(padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Container(height:92,width:double.infinity,decoration:BoxDecoration(color:pale,borderRadius:BorderRadius.circular(12)),child:p.imageUrl!=null?ClipRRect(borderRadius:BorderRadius.circular(12),child:Image.network(p.imageUrl!,fit:BoxFit.cover,width:double.infinity,errorBuilder:(_,__,___)=>Center(child:Text(p.emoji,style:const TextStyle(fontSize:42))))):Center(child:Text(p.emoji,style:const TextStyle(fontSize:42)))),const SizedBox(height:9),Text(p.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.bold)),Text(p.detail,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.black54,fontSize:11)),const SizedBox(height:8),Row(children:[Text(p.price,style:const TextStyle(color:green,fontWeight:FontWeight.bold)),const Spacer(),IconButton.filled(onPressed:onAdd,icon:const Icon(Icons.add,size:18),style:IconButton.styleFrom(backgroundColor:green,foregroundColor:Colors.white,minimumSize:const Size(34,34)))]) ])); }
+class ProductCard extends StatelessWidget { final Product p; final VoidCallback onAdd; const ProductCard({super.key,required this.p,required this.onAdd}); @override Widget build(BuildContext c)=>Container(padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Container(height:92,width:double.infinity,decoration:BoxDecoration(color:pale,borderRadius:BorderRadius.circular(12)),child:p.imageUrl!=null?ClipRRect(borderRadius:BorderRadius.circular(12),child:Image.network(p.imageUrl!,fit:BoxFit.cover,width:double.infinity,errorBuilder:(_,__,___)=>Center(child:Text(p.emoji,style:const TextStyle(fontSize:42))))):Center(child:Text(p.emoji,style:const TextStyle(fontSize:42)))),const SizedBox(height:9),Text(p.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.bold)),Text(p.detail,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.black54,fontSize:11)),const SizedBox(height:8),Row(children:[Text(p.price,style:const TextStyle(color:green,fontWeight:FontWeight.bold)),const Spacer(),IconButton.filled(onPressed:p.demoOnly?null:onAdd,icon:Icon(p.demoOnly?Icons.info_outline:Icons.add,size:18),style:IconButton.styleFrom(backgroundColor:green,foregroundColor:Colors.white,minimumSize:const Size(34,34)))]) ])); }
 
 class ServicesPage extends StatelessWidget {
   const ServicesPage({super.key});
@@ -393,6 +394,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
   @override void dispose(){name.dispose();phone.dispose();address.dispose();super.dispose();}
   Future<void> saveOrder(BuildContext c) async {
+    if(widget.items.any((p)=>p.demoOnly||p.sellerId==null)){
+      ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('ডেমো পণ্য অর্ডার করা যাবে না। সেলারদের প্রকাশিত পণ্য নির্বাচন করুন।')));return;
+    }
     if(name.text.trim().isEmpty||phone.text.trim().isEmpty||address.text.trim().isEmpty){
       ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('নাম, ফোন ও ঠিকানা পূরণ করুন')));return;
     }
