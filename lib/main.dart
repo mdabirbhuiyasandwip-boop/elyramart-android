@@ -218,6 +218,44 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     const SizedBox(height:12),const Text('গুরুত্বপূর্ণ: সেলার আবেদন ও পণ্য শুধু এই ফোনে সংরক্ষিত। অ্যাডমিন অনুমোদন বা গ্রাহকের কাছে অনলাইনে দেখাতে সার্ভার সংযোগ প্রয়োজন।',style:TextStyle(color:Colors.black54,fontSize:12))
   ]));
 }
+class AdminOverviewPage extends StatefulWidget {
+  const AdminOverviewPage({super.key});
+  @override State<AdminOverviewPage> createState()=>_AdminOverviewPageState();
+}
+class _AdminOverviewPageState extends State<AdminOverviewPage> {
+  Map<String,dynamic>? seller;
+  List<Map<String,dynamic>> products=[],orders=[],bookings=[];
+  @override void initState(){super.initState();_load();}
+  Future<void> _load() async {
+    final p=await SharedPreferences.getInstance();
+    List<Map<String,dynamic>> decode(String k)=>(p.getStringList(k)??[]).map((v){try{return Map<String,dynamic>.from(jsonDecode(v) as Map);}catch(_){return <String,dynamic>{};}}).where((v)=>v.isNotEmpty).toList().reversed.toList();
+    final raw=p.getString('elyramart_seller_profile_v1');
+    if(!mounted)return;
+    setState((){seller=raw==null?null:Map<String,dynamic>.from(jsonDecode(raw));products=decode('elyramart_seller_products_v1');orders=decode('elyramart_local_orders_v1');bookings=decode('elyramart_service_requests_v1');});
+  }
+  Widget heading(String t)=>Padding(padding:const EdgeInsets.only(top:18,bottom:8),child:Text(t,style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold)));
+  @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('অ্যাডমিন ওভারভিউ')),body:RefreshIndicator(onRefresh:_load,child:ListView(padding:const EdgeInsets.all(16),children:[
+    const Text('এই ডিভাইসের ডেমো ডেটা',style:TextStyle(color:Colors.deepOrange,fontWeight:FontWeight.w600)),
+    const SizedBox(height:12),
+    Wrap(spacing:8,runSpacing:8,children:[
+      _stat('অর্ডার',orders.length,Icons.receipt_long),_stat('সেলার পণ্য',products.length,Icons.inventory_2),_stat('সার্ভিস বুকিং',bookings.length,Icons.handyman)
+    ]),
+    heading('সেলার আবেদন'),
+    if(seller==null) const Card(color:Colors.white,child:ListTile(title:Text('কোনো সেলার তথ্য নেই')))
+    else Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.store,color:green),title:Text(seller!['shop']??''),subtitle:Text('${seller!['owner']??''} • ${seller!['phone']??''}\\n${seller!['address']??''}'),isThreeLine:true,trailing:const Text('লোকাল',style:TextStyle(color:Colors.deepOrange)))),
+    heading('সেলার পণ্য'),
+    if(products.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('কোনো পণ্য নেই')))
+    else ...products.map((v)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.inventory,color:green),title:Text(v['name']??''),subtitle:Text('${v['category']??''} • ${v['price']??''}')))),
+    heading('সাম্প্রতিক অর্ডার'),
+    if(orders.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('কোনো অর্ডার নেই')))
+    else ...orders.take(10).map((v)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.receipt,color:green),title:Text(v['orderNumber']??''),subtitle:Text('${v['customerName']??''} • ${v['phone']??''}\\n${v['address']??''}'),isThreeLine:true))),
+    heading('সার্ভিস বুকিং'),
+    if(bookings.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('কোনো বুকিং নেই')))
+    else ...bookings.take(10).map((v)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.handyman,color:green),title:Text(v['service']??''),subtitle:Text('${v['name']??''} • ${v['phone']??''}\\n${v['problem']??''}'),isThreeLine:true))),
+    const SizedBox(height:12),const Text('সতর্কতা: এই স্ক্রিন শুধু একই ফোনে থাকা ডেমো তথ্য দেখায়। এটি নিরাপদ অনলাইন অ্যাডমিন প্যানেল নয় এবং অন্য ব্যবহারকারীর তথ্য পায় না.',style:TextStyle(color:Colors.black54,fontSize:12))
+  ])));
+  Widget _stat(String label,int value,IconData icon)=>Container(width:MediaQuery.of(context).size.width/3-20,padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),child:Column(children:[Icon(icon,color:green),const SizedBox(height:6),Text('$value',style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),Text(label,style:const TextStyle(fontSize:11))]));
+}
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
   @override State<AccountPage> createState()=>_AccountPageState();
@@ -247,7 +285,7 @@ class _AccountPageState extends State<AccountPage> {
       Divider(height:1),
       ListTile(leading:Icon(Icons.storefront_outlined),title:Text('সেলার অ্যাকাউন্ট'),subtitle:Text('সেলার নিবন্ধন ও পণ্য ব্যবস্থাপনা'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const SellerPortalPage()))),
       const Divider(height:1),
-      const ListTile(leading:Icon(Icons.admin_panel_settings_outlined),title:Text('অ্যাডমিন প্যানেল'),subtitle:Text('অনুমোদন ও অর্ডার ব্যবস্থাপনা'))
+      ListTile(leading:const Icon(Icons.admin_panel_settings_outlined),title:const Text('অ্যাডমিন প্যানেল'),subtitle:const Text('অর্ডার ও বুকিংয়ের ডেমো তালিকা'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const AdminOverviewPage())))
     ])),
     const SizedBox(height:18),
     Row(children:[const Expanded(child:Text('আমার অর্ডার',style:TextStyle(fontSize:18,fontWeight:FontWeight.bold))),Text(orders.length.toString()+'টি')]),
