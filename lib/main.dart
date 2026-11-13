@@ -13,8 +13,15 @@ class FirebaseRuntime { static bool initialized = false; }
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-    await Firebase.initializeApp();
-    FirebaseRuntime.initialized = true;
+    try {
+      await Firebase.initializeApp();
+      FirebaseRuntime.initialized = true;
+    } catch (error, stack) {
+      // Keep the app usable in offline/demo mode if Firebase Console setup
+      // is incomplete; online actions will show a clear unavailable message.
+      debugPrint('Elyramart Firebase initialization failed: $error');
+      debugPrintStack(stackTrace: stack);
+    }
   }
   await AppLanguage.load();
   runApp(const ElyramartApp());
@@ -1151,6 +1158,7 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
         'name': name.text.trim(),
         'phone': normalizeBangladeshPhone(phone.text) ?? '',
         'email': user.email ?? email.text.trim(),
+        'address': address.text.trim(),
         'role': 'customer',
         'createdAt': FieldValue.serverTimestamp(),
       });
