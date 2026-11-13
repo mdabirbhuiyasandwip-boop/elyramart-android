@@ -24,6 +24,9 @@ service cloud.firestore {
           .hasOnly(['name','phone','address','photoUrl','updatedAt']))
         || isAdmin();
       allow delete: if isAdmin();
+      match /fcmTokens/{tokenId} {
+        allow read, write, delete: if isOwner(uid);
+      }
     }
 
     match /products/{productId} {
