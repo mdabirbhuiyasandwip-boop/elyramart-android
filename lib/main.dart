@@ -129,9 +129,10 @@ class _ElyramartMarkPainter extends CustomPainter {
 class Product {
   final String name, category, price, emoji, detail;
   final String? sellerId;
+  final String? productId;
   final String? imageUrl;
   final bool demoOnly;
-  const Product(this.name, this.category, this.price, this.emoji, this.detail,{this.sellerId,this.imageUrl,this.demoOnly=false});
+  const Product(this.name, this.category, this.price, this.emoji, this.detail,{this.sellerId,this.productId,this.imageUrl,this.demoOnly=false});
 }
 // Preview-only sample catalogue. Real listings come from approved seller records.
 const products = <Product>[
@@ -181,19 +182,19 @@ class _HomePageState extends State<HomePage> {
           final title=(data['title']??'পণ্য').toString();
           final price=data['price'];
           final imageUrls=data['imageUrls'] as List? ?? [];
-          loadedSeller.add(Product(title,(data['categoryId']??'অন্যান্য').toString(),'৳${price is num?price.toStringAsFixed(0):price}','🛍️','Elyramart verified seller',sellerId:data['sellerId']?.toString(),imageUrl:imageUrls.isNotEmpty?imageUrls.first.toString():null));
+          loadedSeller.add(Product(title,(data['categoryId']??'অন্যান্য').toString(),'৳${price is num?price.toStringAsFixed(0):price}','🛍️','Elyramart verified seller',sellerId:data['sellerId']?.toString(),productId:doc.id,imageUrl:imageUrls.isNotEmpty?imageUrls.first.toString():null));
         }
       }catch(error){debugPrint('Elyramart product sync failed: $error');}
     }
     if(!mounted)return;
     setState((){
       sellerProducts=loadedSeller;
-      cart..clear()..addAll(saved.map((v){try{final m=Map<String,dynamic>.from(jsonDecode(v) as Map);return Product(m['name']??'',m['category']??'',m['price']??'',m['emoji']??'🛍️',m['detail']??'',sellerId:m['sellerId']?.toString(),imageUrl:m['imageUrl']?.toString(),demoOnly:m['demoOnly']==true||m['sellerId']==null);}catch(_){final i=int.tryParse(v);return i!=null&&i>=0&&i<products.length?products[i]:null;}}).whereType<Product>());
+      cart..clear()..addAll(saved.map((v){try{final m=Map<String,dynamic>.from(jsonDecode(v) as Map);return Product(m['name']??'',m['category']??'',m['price']??'',m['emoji']??'🛍️',m['detail']??'',sellerId:m['sellerId']?.toString(),productId:m['productId']?.toString(),imageUrl:m['imageUrl']?.toString(),demoOnly:m['demoOnly']==true||m['sellerId']==null);}catch(_){final i=int.tryParse(v);return i!=null&&i>=0&&i<products.length?products[i]:null;}}).whereType<Product>());
     });
   }
   Future<void> _saveCart() async {
     final prefs=await SharedPreferences.getInstance();
-    await prefs.setStringList('elyramart_cart_v1',cart.map((p)=>jsonEncode({'name':p.name,'category':p.category,'price':p.price,'emoji':p.emoji,'detail':p.detail,'sellerId':p.sellerId,'imageUrl':p.imageUrl,'demoOnly':p.demoOnly})).toList());
+    await prefs.setStringList('elyramart_cart_v1',cart.map((p)=>jsonEncode({'name':p.name,'category':p.category,'price':p.price,'emoji':p.emoji,'detail':p.detail,'sellerId':p.sellerId,'productId':p.productId,'imageUrl':p.imageUrl,'demoOnly':p.demoOnly})).toList());
   }
   void add(Product p) {
     setState(()=>cart.add(p)); _saveCart();
@@ -414,7 +415,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       'customerName': name.text.trim(),
       'phone': normalizedPhone,
       'address': address.text.trim(),
-      'items': widget.items.map((p)=>{'name':p.name,'category':p.category,'price':p.price,'sellerId':p.sellerId}).toList(),
+      'items': widget.items.map((p)=>{'productId':p.productId,'name':p.name,'category':p.category,'price':p.price,'sellerId':p.sellerId}).toList(),
       'sellerIds': widget.items.map((p)=>p.sellerId).whereType<String>().toSet().toList(),
       'totalAmount': totalAmount,
       'paymentMethod': paymentMethod,
