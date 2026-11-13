@@ -35,6 +35,10 @@ jobs:
           cache: true
       - name: Generate Android project files
         run: flutter create --platforms=android --org com.elyramartbd --project-name elyramart --overwrite .
+      - name: Generate Elyramart E-only brand icons
+        run: |
+          python3 -m pip install --user pillow
+          python3 tools/generate_brand_assets.py
       - name: Resolve Flutter packages
         run: flutter pub get
       - name: Analyze Dart source
