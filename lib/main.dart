@@ -160,27 +160,33 @@ class CheckoutPage extends StatefulWidget {
 }
 class _CheckoutPageState extends State<CheckoutPage> {
   final name=TextEditingController(),phone=TextEditingController(),address=TextEditingController();
+  bool saving=false;
   @override void dispose(){name.dispose();phone.dispose();address.dispose();super.dispose();}
+  Future<void> saveOrder(BuildContext c) async {
+    if(name.text.trim().isEmpty||phone.text.trim().isEmpty||address.text.trim().isEmpty){
+      ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('নাম, ফোন ও ঠিকানা পূরণ করুন')));return;
+    }
+    setState(()=>saving=true);
+    final prefs=await SharedPreferences.getInstance();
+    final orders=prefs.getStringList('elyramart_local_orders_v1')??[];
+    final orderNumber='ELY-${DateTime.now().millisecondsSinceEpoch}';
+    orders.add(jsonEncode({'orderNumber':orderNumber,'customerName':name.text.trim(),'phone':phone.text.trim(),'address':address.text.trim(),'items':widget.items.map((p)=>{'name':p.name,'price':p.price}).toList(),'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'}));
+    await prefs.setStringList('elyramart_local_orders_v1',orders);
+    if(!mounted)return;
+    setState(()=>saving=false);
+    showDialog(context:c,builder:(_)=>AlertDialog(title:const Text('অর্ডারের তথ্য সংরক্ষিত'),content:Text('অর্ডার নম্বর: $orderNumber\\nতথ্য এই ফোনে রাখা হয়েছে। সার্ভার সংযুক্ত না থাকায় দোকান বা ডেলিভারি টিম এখনো অর্ডারটি পায়নি।'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
+  }
   @override Widget build(BuildContext c)=>Scaffold(
     appBar:AppBar(title:const Text('ডেলিভারি তথ্য')),
     body:ListView(padding:const EdgeInsets.all(18),children:[
       const Text('আপনার অর্ডার',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
       ...widget.items.map((p)=>ListTile(contentPadding:EdgeInsets.zero,title:Text(p.name),trailing:Text(p.price))),
-      const Divider(),
-      field(name,'আপনার নাম'),
-      field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),
-      field(address,'সম্পূর্ণ ডেলিভারি ঠিকানা',lines:3),
+      const Divider(),field(name,'আপনার নাম'),field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),field(address,'সম্পূর্ণ ডেলিভারি ঠিকানা',lines:3),
       const SizedBox(height:8),
-      Container(padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:const Color(0xFFFFF4D6),borderRadius:BorderRadius.circular(12)),child:const Text('নোট: এটি এখন ডেমো চেকআউট। সার্ভার ও পেমেন্ট সংযোগ না থাকায় অর্ডার বাস্তবে জমা হবে না।')),
+      Container(padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:const Color(0xFFFFF4D6),borderRadius:BorderRadius.circular(12)),child:const Text('ডেমো মোড: অর্ডারটি এই ফোনে সংরক্ষণ হবে। অনলাইন অর্ডার পাঠাতে সার্ভার সংযোগ প্রয়োজন।')),
       const SizedBox(height:12),
-      FilledButton(onPressed:(){
-        if(name.text.trim().isEmpty||phone.text.trim().isEmpty||address.text.trim().isEmpty){
-          ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('নাম, ফোন ও ঠিকানা পূরণ করুন')));return;
-        }
-        showDialog(context:c,builder:(_)=>AlertDialog(title:const Text('তথ্য যাচাই হয়েছে'),content:const Text('আপনার ডেলিভারি তথ্য পূরণ হয়েছে। এটি পরীক্ষামূলক স্ক্রিন; অর্ডার এখনো সার্ভারে পাঠানো হয়নি।'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
-      },child:const Text('তথ্য যাচাই করুন'))
+      FilledButton(onPressed:saving?null:()=>saveOrder(c),child:Text(saving?'সংরক্ষণ হচ্ছে...':'অর্ডার তথ্য সংরক্ষণ করুন'))
     ])
   );
 }
-
 class AccountPage extends StatelessWidget { const AccountPage({super.key}); @override Widget build(BuildContext c)=>ListView(padding:const EdgeInsets.all(18),children:[const CircleAvatar(radius:36,child:Icon(Icons.person,size:38)),const SizedBox(height:12),const Center(child:Text('Elyramart অ্যাকাউন্ট',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold))),const SizedBox(height:18),const Card(color:Colors.white,child:Column(children:[ListTile(leading:Icon(Icons.login),title:Text('লগইন / রেজিস্ট্রেশন'),subtitle:Text('অ্যাকাউন্ট সিস্টেম সংযোগ করা বাকি')),Divider(height:1),ListTile(leading:Icon(Icons.storefront_outlined),title:Text('সেলার অ্যাকাউন্ট'),subtitle:Text('সেলার নিবন্ধন ও পণ্য ব্যবস্থাপনা')),Divider(height:1),ListTile(leading:Icon(Icons.admin_panel_settings_outlined),title:Text('অ্যাডমিন প্যানেল'),subtitle:Text('অনুমোদন ও অর্ডার ব্যবস্থাপনা'))]))]); }
