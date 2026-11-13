@@ -1,0 +1,59 @@
+name: Deploy Elyramart Web to GitHub Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: elyramart-pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Verify Flutter source
+        run: |
+          test -s pubspec.yaml
+          test -s lib/main.dart
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate Web project files
+        run: flutter create --platforms=web --org com.elyramartbd --project-name elyramart --overwrite .
+      - name: Resolve Flutter packages
+        run: flutter pub get
+      - name: Analyze Dart source
+        run: flutter analyze --no-pub
+      - name: Run widget tests
+        run: flutter test
+      - name: Build Web app for repository Pages path
+        run: flutter build web --release --base-href /elyramart-android/
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
