@@ -311,7 +311,8 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     setState(()=>order['status']=status);
   }
   Future<void> saveProfile() async {if([shop,owner,phone,address].any((x)=>x.text.trim().isEmpty)){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সব তথ্য পূরণ করুন')));return;}final p=await SharedPreferences.getInstance();await p.setString('elyramart_seller_profile_v1',jsonEncode({'shop':shop.text.trim(),'owner':owner.text.trim(),'phone':phone.text.trim(),'address':address.text.trim(),'status':'local_pending'}));if(!mounted)return;setState(()=>registered=true);ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সেলার তথ্য এই ফোনে সংরক্ষিত হয়েছে')));}
-  Future<void> removeProduct(Map<String,dynamic> item) async {final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];final target=jsonEncode(item);raw.remove(target);await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.remove(item));}\n  Future<void> editProduct(Map<String,dynamic> item) async {
+  Future<void> removeProduct(Map<String,dynamic> item) async {final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];final target=jsonEncode(item);raw.remove(target);await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.remove(item));}
+  Future<void> editProduct(Map<String,dynamic> item) async {
     final nameController=TextEditingController(text:item['name']??'');
     final priceController=TextEditingController(text:item['price']??'');
     final result=await showDialog<bool>(context:context,builder:(dialogContext)=>AlertDialog(
@@ -549,7 +550,34 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
     normalized=normalized.replaceAll(RegExp(r'[\\s\\-()]'), '');
     if(normalized.startsWith('+880')){normalized='0'+normalized.substring(4);}
     else if(normalized.startsWith('8801')){normalized='0'+normalized.substring(3);}
-    if(!RegExp(r'^01[3-9]\\d{8}$').hasMatch(normalized)){
+    if(!RegExp(r'^01[3-9]\d{8}.hasMatch(normalized)){
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
+    }
+    final prefs=await SharedPreferences.getInstance();
+    await prefs.setString('elyramart_customer_profile_v1',jsonEncode({'name':name.text.trim(),'phone':normalized,'address':address.text.trim(),'updatedAt':DateTime.now().toIso8601String()}));
+    if(!mounted)return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('ডেমো প্রোফাইল এই ফোনে সংরক্ষিত হয়েছে')));
+  }
+  @override Widget build(BuildContext context)=>Scaffold(
+    appBar:AppBar(title:const Text('গ্রাহক অ্যাকাউন্ট')),
+    body:loading?const Center(child:CircularProgressIndicator()):ListView(padding:const EdgeInsets.all(18),children:[
+      const CircleAvatar(radius:34,child:Icon(Icons.person_outline,size:36)),
+      const SizedBox(height:12),
+      const Text('আপনার প্রোফাইল',textAlign:TextAlign.center,style:TextStyle(fontSize:21,fontWeight:FontWeight.bold)),
+      const SizedBox(height:6),
+      const Text('নাম ও যোগাযোগের তথ্য সংরক্ষণ করুন।',textAlign:TextAlign.center),
+      const SizedBox(height:20),
+      field(name,'আপনার নাম'),
+      field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),
+      field(address,'ডেলিভারি ঠিকানা',lines:3),
+      const SizedBox(height:8),
+      FilledButton.icon(onPressed:_save,icon:const Icon(Icons.save_outlined),label:const Text('প্রোফাইল সংরক্ষণ করুন')),
+      const SizedBox(height:14),
+      const Text('এটি আপাতত এই ডিভাইসের ডেমো প্রোফাইল। অনলাইন লগইন ও সব ডিভাইসে একই অ্যাকাউন্ট ব্যবহারের জন্য নিরাপদ সার্ভার ও Firebase Auth সংযোগ এখনো প্রয়োজন।',style:TextStyle(color:Colors.black54,fontSize:12))
+    ])
+  );
+}
+).hasMatch(normalized)){
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
     }
     final prefs=await SharedPreferences.getInstance();
