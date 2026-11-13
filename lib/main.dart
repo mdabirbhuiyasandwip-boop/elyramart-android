@@ -2,7 +2,40 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(const ElyramartApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AppLanguage.load();
+  runApp(const ElyramartApp());
+}
+
+class AppLanguage {
+  static final ValueNotifier<bool> english = ValueNotifier<bool>(false);
+  static Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    english.value = prefs.getBool('elyramart_language_en_v1') ?? false;
+  }
+  static Future<void> setEnglish(bool value) async {
+    english.value = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('elyramart_language_en_v1', value);
+  }
+}
+
+String tx(String bangla, String english) =>
+    AppLanguage.english.value ? english : bangla;
+
+String englishServiceName(String bangla) => switch (bangla) {
+  'ইলেকট্রিশিয়ান' => 'Electrician',
+  'প্লাম্বার / স্যানিটারি' => 'Plumber / Sanitary',
+  'এসি সার্ভিসিং' => 'AC servicing',
+  'ফ্রিজ / ওয়াশিং মেশিন' => 'Fridge / Washing machine',
+  'কম্পিউটার / ল্যাপটপ' => 'Computer / Laptop',
+  'মোবাইল সার্ভিসিং' => 'Mobile repair',
+  'আইপিএস / জেনারেটর' => 'IPS / Generator',
+  'টিভি ও অন্যান্য' => 'TV & appliances',
+  'রেস্টুরেন্ট সার্ভিস' => 'Restaurant services',
+  _ => bangla,
+};
 
 const ink = Color(0xFF152238);
 const green = Color(0xFF087F5B);
@@ -11,13 +44,16 @@ const pale = Color(0xFFF4F7F6);
 class ElyramartApp extends StatelessWidget {
   const ElyramartApp({super.key});
   @override
-  Widget build(BuildContext context) => MaterialApp(
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: AppLanguage.english,
+    builder: (context, _) => MaterialApp(
     title: 'Elyramart',
     debugShowCheckedModeBanner: false,
     theme: ThemeData(useMaterial3: true, scaffoldBackgroundColor: pale,
       colorScheme: ColorScheme.fromSeed(seedColor: green),
       appBarTheme: const AppBarTheme(backgroundColor: pale, foregroundColor: ink)),
-    home: const HomePage(),
+    home: HomePage(key: ValueKey(AppLanguage.english.value)),
+  ),
   );
 }
 
@@ -108,10 +144,10 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(title: Row(children:[const ElyramartMark(size:38),const SizedBox(width:9),const Text('Elyramart',style:TextStyle(fontWeight:FontWeight.w800,letterSpacing:-.4))]), actions:[IconButton(onPressed:()=>setState(()=>tab=2),icon:Badge(label:Text('${cart.length}'),child:const Icon(Icons.shopping_bag_outlined)))],),
       body: pages[tab],
       bottomNavigationBar: NavigationBar(selectedIndex:tab,onDestinationSelected:(v)=>setState(()=>tab=v),destinations:const [
-        NavigationDestination(icon:Icon(Icons.home_outlined),selectedIcon:Icon(Icons.home),label:'হোম'),
-        NavigationDestination(icon:Icon(Icons.handyman_outlined),label:'সার্ভিস'),
-        NavigationDestination(icon:Icon(Icons.shopping_cart_outlined),label:'কার্ট'),
-        NavigationDestination(icon:Icon(Icons.person_outline),label:'অ্যাকাউন্ট'),
+        NavigationDestination(icon:Icon(Icons.home_outlined),selectedIcon:Icon(Icons.home),label:tx('হোম','Home')),
+        NavigationDestination(icon:Icon(Icons.handyman_outlined),label:tx('সার্ভিস','Services')),
+        NavigationDestination(icon:Icon(Icons.shopping_cart_outlined),label:tx('কার্ট','Cart')),
+        NavigationDestination(icon:Icon(Icons.person_outline),label:tx('অ্যাকাউন্ট','Account')),
       ]),
     );
   }
@@ -120,13 +156,13 @@ class _HomePageState extends State<HomePage> {
     final visibleProducts=allProducts.where((p)=>(category=='সব'||p.category==category) && ('${p.name} ${p.category} ${p.detail}'.toLowerCase().contains(searchQuery.toLowerCase()))).toList();
     return ListView(padding:const EdgeInsets.fromLTRB(16,8,16,24),children:[
     Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF075C48),Color(0xFF10966D)]),borderRadius:BorderRadius.circular(22)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-      const Text('আপনার প্রয়োজন, এক জায়গায়',style:TextStyle(color:Colors.white,fontSize:21,fontWeight:FontWeight.bold)),
-      const SizedBox(height:7),const Text('পণ্য অর্ডার করুন, বাসার জন্য টেকনিশিয়ান নিন',style:TextStyle(color:Colors.white70)),
-      const SizedBox(height:16),Container(height:46,padding:const EdgeInsets.symmetric(horizontal:12),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(12)),child:Row(children:[const Icon(Icons.search,color:green),const SizedBox(width:8),Expanded(child:TextField(onChanged:(v)=>setState(()=>searchQuery=v),decoration:const InputDecoration(hintText:'পণ্য খুঁজুন',border:InputBorder.none,isDense:true))) ]))
+      const Text(tx('আপনার প্রয়োজন, এক জায়গায়','Everything you need, in one place'),style:TextStyle(color:Colors.white,fontSize:21,fontWeight:FontWeight.bold)),
+      const SizedBox(height:7),const Text(tx('পণ্য অর্ডার করুন, বাসার জন্য টেকনিশিয়ান নিন','Order products and book home technicians'),style:TextStyle(color:Colors.white70)),
+      const SizedBox(height:16),Container(height:46,padding:const EdgeInsets.symmetric(horizontal:12),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(12)),child:Row(children:[const Icon(Icons.search,color:green),const SizedBox(width:8),Expanded(child:TextField(onChanged:(v)=>setState(()=>searchQuery=v),decoration:const InputDecoration(hintText:tx('পণ্য খুঁজুন','Search products'),border:InputBorder.none,isDense:true))) ]))
     ])),
-    const SizedBox(height:22),section('ক্যাটাগরি', 'সব দেখুন'),
+    const SizedBox(height:22),section(tx('ক্যাটাগরি','Categories'), tx('সব দেখুন','View all')),
     SizedBox(height:42,child:ListView(scrollDirection:Axis.horizontal,children:categories.map((c)=>Padding(padding:const EdgeInsets.only(right:8),child:ChoiceChip(label:Text(c),selected:category==c,onSelected:(_)=>setState(()=>category=c),selectedColor:const Color(0xFFD6EFE5),labelStyle:TextStyle(color:category==c?green:ink,fontWeight:FontWeight.w600)))).toList())),
-    const SizedBox(height:18),Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:const Color(0xFFE2F3EC),borderRadius:BorderRadius.circular(18)),child:Row(children:[const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('বাসায় টেকনিশিয়ান লাগবে?',style:TextStyle(fontSize:17,fontWeight:FontWeight.bold,color:ink)),SizedBox(height:4),Text('ইলেকট্রিশিয়ান, প্লাম্বারসহ বিভিন্ন সার্ভিস বুক করুন',style:TextStyle(color:ink))])),FilledButton(onPressed:()=>setState(()=>tab=1),style:FilledButton.styleFrom(backgroundColor:green),child:const Text('বুক করুন'))])),
+    const SizedBox(height:18),Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:const Color(0xFFE2F3EC),borderRadius:BorderRadius.circular(18)),child:Row(children:[const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(tx('বাসায় টেকনিশিয়ান লাগবে?','Need a technician at home?'),style:TextStyle(fontSize:17,fontWeight:FontWeight.bold,color:ink)),SizedBox(height:4),Text(tx('ইলেকট্রিশিয়ান, প্লাম্বারসহ বিভিন্ন সার্ভিস বুক করুন','Book electricians, plumbers and more'),style:TextStyle(color:ink))])),FilledButton(onPressed:()=>setState(()=>tab=1),style:FilledButton.styleFrom(backgroundColor:green),child:Text(tx('বুক করুন','Book now')))])),
     const SizedBox(height:18),
     Row(children:[
       Expanded(child:InkWell(
@@ -135,8 +171,8 @@ class _HomePageState extends State<HomePage> {
         child:Container(padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),
           child:const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
             Icon(Icons.storefront_outlined,color:green,size:25),SizedBox(height:7),
-            Text('সেলার হোন',style:TextStyle(fontWeight:FontWeight.bold,color:ink)),
-            Text('দোকান খুলুন ও পরে পণ্য যোগ করুন',style:TextStyle(fontSize:11,color:Colors.black54))
+            Text(tx('সেলার হোন','Become a seller'),style:TextStyle(fontWeight:FontWeight.bold,color:ink)),
+            Text(tx('দোকান খুলুন ও পরে পণ্য যোগ করুন','Open your shop and add products'),style:TextStyle(fontSize:11,color:Colors.black54))
           ])
         )
       )),
@@ -147,14 +183,14 @@ class _HomePageState extends State<HomePage> {
         child:Container(padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),
           child:const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
             Icon(Icons.engineering_outlined,color:green,size:25),SizedBox(height:7),
-            Text('টেকনিশিয়ান হোন',style:TextStyle(fontWeight:FontWeight.bold,color:ink)),
-            Text('দক্ষতা ও প্রোফাইল দিন',style:TextStyle(fontSize:11,color:Colors.black54))
+            Text(tx('টেকনিশিয়ান হোন','Become a technician'),style:TextStyle(fontWeight:FontWeight.bold,color:ink)),
+            Text(tx('দক্ষতা ও প্রোফাইল দিন','Add your skills and profile'),style:TextStyle(fontSize:11,color:Colors.black54))
           ])
         )
       ))
     ]),
-    const SizedBox(height:22),section('সেলারদের পণ্য',''),
-    if(visibleProducts.isEmpty) const Padding(padding:EdgeInsets.all(18),child:Text('এখনো কোনো পণ্য যোগ করা হয়নি। সেলাররা পণ্য যোগ করলে এখানে দেখা যাবে।')) else Wrap(spacing:10,runSpacing:10,children:visibleProducts.map((p)=>SizedBox(width:(MediaQuery.of(context).size.width-42)/2,child:ProductCard(p:p,onAdd:()=>add(p)))).toList()),
+    const SizedBox(height:22),section(tx('সেলারদের পণ্য','Seller products'),''),
+    if(visibleProducts.isEmpty) const Padding(padding:EdgeInsets.all(18),child:Text(tx('এখনো কোনো পণ্য যোগ করা হয়নি। সেলাররা পণ্য যোগ করলে এখানে দেখা যাবে。','No products yet. Products will appear here when sellers add them.'))) else Wrap(spacing:10,runSpacing:10,children:visibleProducts.map((p)=>SizedBox(width:(MediaQuery.of(context).size.width-42)/2,child:ProductCard(p:p,onAdd:()=>add(p)))).toList()),
     const SizedBox(height:12),const Text('Elyramart — Your World, Your Choice',textAlign:TextAlign.center,style:TextStyle(color:Colors.black45,fontSize:12)),
   ]);
   }
@@ -171,7 +207,7 @@ class ServicesPage extends StatelessWidget {
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.all(16),
     children: [
-      const Text('টেকনিশিয়ান ও হোম সার্ভিস', style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold, color: ink)),
+      const Text(tx('টেকনিশিয়ান ও হোম সার্ভিস','Technicians & home services'), style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold, color: ink)),
       const SizedBox(height: 6),
       const Text('আপনার সমস্যার জন্য প্রয়োজনীয় সার্ভিস নির্বাচন করুন। বুকিংয়ের তথ্য দিয়ে অনুরোধ পাঠান।'),
       const SizedBox(height: 16),
@@ -237,12 +273,12 @@ class CartPage extends StatelessWidget {
   final VoidCallback onOrderSaved;
   const CartPage({super.key,required this.items,required this.onRemove,required this.onOrderSaved});
   @override Widget build(BuildContext c)=>items.isEmpty
-    ?const Center(child:Column(mainAxisSize:MainAxisSize.min,children:[Icon(Icons.shopping_bag_outlined,size:60,color:Colors.black26),SizedBox(height:10),Text('আপনার কার্ট এখনো খালি')]))
+    ?const Center(child:Column(mainAxisSize:MainAxisSize.min,children:[Icon(Icons.shopping_bag_outlined,size:60,color:Colors.black26),SizedBox(height:10),Text(tx('আপনার কার্ট এখনো খালি','Your cart is empty'))]))
     :ListView(padding:const EdgeInsets.all(16),children:[
-      Text('কার্টে ${items.length}টি পণ্য',style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
+      Text(tx('কার্টে ${items.length}টি পণ্য','${items.length} items in cart'),style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
       ...items.map((p)=>Card(color:Colors.white,child:ListTile(title:Text(p.name),subtitle:Text(p.price),trailing:IconButton(onPressed:()=>onRemove(p),icon:const Icon(Icons.delete_outline,color:Colors.red))))),
       const SizedBox(height:12),
-      FilledButton(onPressed:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>CheckoutPage(items:items,onOrderSaved:onOrderSaved))),child:const Text('অর্ডার তথ্য দিন'))
+      FilledButton(onPressed:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>CheckoutPage(items:items,onOrderSaved:onOrderSaved))),child:const Text(tx('অর্ডার তথ্য দিন','Continue to checkout')))
     ]);
 }
 
@@ -595,7 +631,7 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
   @override
   Widget build(BuildContext c) {
     return Scaffold(
-      appBar: AppBar(title: const Text('টেকনিশিয়ান সেন্টার')),
+      appBar: AppBar(title: const Text(tx('টেকনিশিয়ান সেন্টার','Technician centre'))),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -690,29 +726,36 @@ class _AccountPageState extends State<AccountPage> {
     children: [
       const CircleAvatar(radius: 36, child: Icon(Icons.person, size: 38)),
       const SizedBox(height: 12),
-      const Center(child: Text('Elyramart অ্যাকাউন্ট', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
+      const Center(child: Text(tx('Elyramart অ্যাকাউন্ট','Elyramart account'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
       const SizedBox(height: 18),
       Card(
         color: Colors.white,
         child: Column(children: [
           ListTile(
             leading: const Icon(Icons.login),
-            title: const Text('লগইন / রেজিস্ট্রেশন'),
-            subtitle: const Text('ডেমো প্রোফাইল তৈরি ও তথ্য সংরক্ষণ'),
+            title: const Text(tx('লগইন / রেজিস্ট্রেশন','Login / Register')),
+            subtitle: const Text(tx('ডেমো প্রোফাইল তৈরি ও তথ্য সংরক্ষণ','Create a demo profile and save your details')),
             onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => const CustomerLoginPage())),
           ),
           const Divider(height: 1),
           ListTile(
+            leading: const Icon(Icons.settings_outlined),
+            title: Text(tx('অ্যাপ সেটিংস','App settings')),
+            subtitle: Text(tx('ভাষা ও অ্যাপের পছন্দ পরিবর্তন করুন','Change language and app preferences')),
+            onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => const AppSettingsPage())),
+          ),
+          const Divider(height: 1),
+          ListTile(
             leading: const Icon(Icons.storefront_outlined),
-            title: const Text('সেলার অ্যাকাউন্ট'),
-            subtitle: const Text('সেলার নিবন্ধন ও পণ্য ব্যবস্থাপনা'),
+            title: const Text(tx('সেলার অ্যাকাউন্ট','Seller account')),
+            subtitle: const Text(tx('সেলার নিবন্ধন ও পণ্য ব্যবস্থাপনা','Seller registration and product management')),
             onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => const SellerPortalPage())),
           ),
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.admin_panel_settings_outlined),
-            title: const Text('অ্যাডমিন প্যানেল'),
-            subtitle: const Text('অর্ডার ও বুকিংয়ের ডেমো তালিকা'),
+            title: const Text(tx('অ্যাডমিন প্যানেল','Admin panel')),
+            subtitle: const Text(tx('অর্ডার ও বুকিংয়ের ডেমো তালিকা','Demo orders and bookings')),
             onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => const AdminOverviewPage())),
           ),
           const Divider(height: 1),
@@ -725,14 +768,14 @@ class _AccountPageState extends State<AccountPage> {
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.engineering_outlined),
-            title: const Text('টেকনিশিয়ান সেন্টার'),
-            subtitle: const Text('প্রোফাইল ও সার্ভিস বুকিং দেখুন'),
+            title: const Text(tx('টেকনিশিয়ান সেন্টার','Technician centre')),
+            subtitle: const Text(tx('প্রোফাইল ও সার্ভিস বুকিং দেখুন','View profile and service bookings')),
             onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => const TechnicianPortalPage())),
           ),
         ]),
       ),
       const SizedBox(height: 18),
-      Text('আমার অর্ডার (${orders.length})', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      Text(tx('আমার অর্ডার (${orders.length})','My orders (${orders.length})'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       if (orders.isEmpty)
         const Card(color: Colors.white, child: ListTile(title: Text('এখনো কোনো অর্ডার নেই')))
       else
@@ -745,7 +788,7 @@ class _AccountPageState extends State<AccountPage> {
           ),
         )),
       const SizedBox(height: 18),
-      Text('আমার সার্ভিস বুকিং (${bookings.length})', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      Text(tx('আমার সার্ভিস বুকিং (${bookings.length})','My service bookings (${bookings.length})'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       if (bookings.isEmpty)
         const Card(color: Colors.white, child: ListTile(title: Text('এখনো কোনো বুকিং নেই')))
       else
@@ -760,6 +803,62 @@ class _AccountPageState extends State<AccountPage> {
       const SizedBox(height: 10),
       const Text('নোট: অর্ডার ও বুকিং এখনো এই ডিভাইসে সংরক্ষিত। অনলাইনে পাঠাতে সার্ভার সংযোগ প্রয়োজন।', style: TextStyle(color: Colors.black54, fontSize: 12)),
     ],
+  );
+}
+
+class AppSettingsPage extends StatelessWidget {
+  const AppSettingsPage({super.key});
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: AppLanguage.english,
+    builder: (context, _) {
+      final isEnglish = AppLanguage.english.value;
+      return Scaffold(
+        appBar: AppBar(title: Text(tx('অ্যাপ সেটিংস','App settings'))),
+        body: ListView(
+          padding: const EdgeInsets.all(18),
+          children: [
+            const CircleAvatar(radius: 34, child: Icon(Icons.settings, size: 34)),
+            const SizedBox(height: 14),
+            Text(tx('পছন্দের ভাষা','Preferred language'),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Card(
+              color: Colors.white,
+              child: Column(children: [
+                RadioListTile<bool>(
+                  value: false, groupValue: isEnglish,
+                  title: const Text('বাংলা'),
+                  subtitle: const Text('Bangla'),
+                  onChanged: (value) { if (value != null) AppLanguage.setEnglish(value); },
+                ),
+                const Divider(height: 1),
+                RadioListTile<bool>(
+                  value: true, groupValue: isEnglish,
+                  title: const Text('English'),
+                  subtitle: const Text('Use Elyramart in English'),
+                  onChanged: (value) { if (value != null) AppLanguage.setEnglish(value); },
+                ),
+              ]),
+            ),
+            const SizedBox(height: 18),
+            Text(tx('অ্যাপ সম্পর্কে','About the app'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Card(color: Colors.white, child: ListTile(
+              leading: const ElyramartMark(),
+              title: const Text('Elyramart'),
+              subtitle: Text(tx('Your World, Your Choice','Your World, Your Choice')),
+            )),
+            const SizedBox(height: 12),
+            Text(tx('ভাষা পরিবর্তন করলে সেটি এই ডিভাইসে সংরক্ষিত থাকবে।','Your language choice is saved on this device.'),
+              style: const TextStyle(color: Colors.black54, fontSize: 12)),
+            const SizedBox(height: 8),
+            Text(tx('দ্রষ্টব্য: কিছু ডেমো/অ্যাডমিন স্ক্রিনের অনুবাদ পরবর্তী আপডেটে সম্পূর্ণ করা হবে।','Note: Translation of some demo and admin screens will be completed in a later update.'),
+              style: const TextStyle(color: Colors.deepOrange, fontSize: 12)),
+          ],
+        ),
+      );
+    },
   );
 }
 
