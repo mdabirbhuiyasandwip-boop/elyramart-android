@@ -22,6 +22,25 @@
 - পণ্যের public status `active` কেবল admin/server অনুমোদনের পর হবে। Admin claim কখনো Flutter client থেকে সেট করা যাবে না।
 - Firestore/Storage rules পরিবর্তনের পর Emulator-এ customer, pending seller, approved seller ও admin—এই চারটি role দিয়ে read/write পরীক্ষা করে তারপর deploy করুন।
 
+## প্রথম Owner Admin claim (বিশ্বস্ত Cloud Function)
+
+এই repository-তে `functions/src/index.ts`-এ `claimOwnerAdmin` callable function যোগ করা হয়েছে। এটি কেবল Firebase Authentication-এ লগইন করা এবং email-verified অ্যাকাউন্টকে অনুমতি দেবে, যার ইমেইল Firebase Functions parameter `ELYRAMART_OWNER_EMAIL`-এর সঙ্গে হুবহু মেলে। Flutter client নিজে admin claim লিখতে পারবে না।
+
+প্রস্তুতির ধাপ:
+1. Firebase Console → Authentication → Sign-in method থেকে Email/Password চালু করুন।
+2. মালিকের ইমেইল `elyramartbd@gmail.com` দিয়ে অ্যাকাউন্ট তৈরি করে verification email নিশ্চিত করুন।
+3. স্থানীয় নিরাপদ কম্পিউটারে Firebase CLI দিয়ে project select করুন: `firebase use --add`।
+4. Functions parameter সেট করুন: `firebase functions:params:set ELYRAMART_OWNER_EMAIL` এবং prompt-এ `elyramartbd@gmail.com` দিন।
+5. `cd functions && npm install && npm run build && cd ..`
+6. `firebase deploy --only functions,firestore:rules,storage`
+7. অ্যাপ/পরবর্তী Auth UI থেকে লগইন করা মালিক `claimOwnerAdmin` function call করবেন। সফল হলে sign-out/sign-in বা ID token refresh করে নতুন admin claim নিতে হবে।
+
+নিরাপত্তা:
+- Google/Firebase password, OTP, service-account JSON বা private key কাউকে দেবেন না এবং GitHub-এ commit করবেন না।
+- মালিকের ইমেইল inbox-এর নিয়ন্ত্রণ ও email verification আবশ্যক। ওই ইমেইলের অ্যাক্সেস হারালে admin claim পুনরুদ্ধারে project owner-এর trusted server access লাগবে।
+- Function deploy না হওয়া পর্যন্ত admin claim তৈরি হবে না। এই commit একা live login চালু করে না।
+- App Check enforcement production launch-এর আগে configure ও enable করতে হবে; এখন callable function-এ App Check enforcement বন্ধ রাখা হয়েছে যাতে client integration না থাকা অবস্থায় owner bootstrap আটকে না যায়।
+
 ## Proposed collections
 - `users/{uid}`: customer/seller/technician profile; admin role must be custom claim, never client-editable.
 - `products/{productId}`: sellerId, title, category, price, stock, imageUrls, status.
