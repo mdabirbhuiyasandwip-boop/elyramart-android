@@ -60,6 +60,8 @@ export const placeOrder = onCall(async (request) => {
     throw new HttpsError("invalid-argument", "অর্ডারের তথ্য সঠিক নয়।");
   }
 
+  const customerName = data.customerName.trim();
+  const deliveryAddress = data.address.trim();
   const quantities = new Map<string, number>();
   for (const item of data.items) {
     const productId = item && typeof item === "object"
@@ -110,8 +112,8 @@ export const placeOrder = onCall(async (request) => {
     transaction.set(orderRef, {
       orderNumber: typeof data.orderNumber === "string" ? data.orderNumber : orderRef.id,
       customerId: request.auth!.uid,
-      customerName: data.customerName.trim(), phone: data.phone,
-      address: data.address.trim(), items: orderItems,
+      customerName, phone: data.phone,
+      address: deliveryAddress, items: orderItems,
       sellerIds: [...sellerIds], totalAmount: amount,
       paymentMethod: "cash_on_delivery", createdAt: FieldValue.serverTimestamp(),
       status: "placed"
