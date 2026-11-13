@@ -1307,46 +1307,76 @@ class OwnerSettingsPage extends StatefulWidget {
 }
 class _OwnerSettingsPageState extends State<OwnerSettingsPage> {
   final company=TextEditingController(text:'Elyramart');
-  // Owner contact defaults supplied by the business owner; editable in Owner Settings.
   final owner=TextEditingController(text:'Minhajul Islam Abir');
   final phone=TextEditingController(text:'01733814802');
   final email=TextEditingController(text:'elyramartbd@gmail.com');
-  bool loading=true;
+  bool loading=true,isAdmin=false;
   @override void initState(){super.initState();_load();}
   @override void dispose(){company.dispose();owner.dispose();phone.dispose();email.dispose();super.dispose();}
   Future<void> _load() async {
-    final p=await SharedPreferences.getInstance();
-    final raw=p.getString('elyramart_owner_profile_v1');
-    if(raw!=null){try{final m=Map<String,dynamic>.from(jsonDecode(raw) as Map);company.text=m['company']??'Elyramart';owner.text=m['owner']??'Minhajul Islam Abir';phone.text=m['phone']??'01733814802';email.text=m['email']??'elyramartbd@gmail.com';}catch(_){}}
+    final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;
+    if(user!=null){
+      try{
+        final token=await user.getIdTokenResult(true);
+        isAdmin=token.claims?['admin']==true;
+      }catch(_){}
+    }
+    if(!isAdmin){if(mounted)setState(()=>loading=false);return;}
+    try{
+      final snap=await FirebaseFirestore.instance.collection('settings').doc('business').get();
+      final m=snap.data();
+      if(m!=null){
+        company.text=m['company']??'Elyramart';
+        owner.text=m['owner']??'';
+        phone.text=m['phone']??'';
+        email.text=m['email']??'';
+      }else{
+        final p=await SharedPreferences.getInstance();
+        final raw=p.getString('elyramart_owner_profile_v1');
+        if(raw!=null){final local=Map<String,dynamic>.from(jsonDecode(raw) as Map);company.text=local['company']??'Elyramart';owner.text=local['owner']??'Minhajul Islam Abir';phone.text=local['phone']??'01733814802';email.text=local['email']??'elyramartbd@gmail.com';}
+      }
+    }catch(error){debugPrint('Owner settings cloud load failed: $error');}
     if(mounted)setState(()=>loading=false);
   }
   Future<void> _save() async {
+    if(!isAdmin){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('শুধু Owner Admin এই তথ্য পরিবর্তন করতে পারবেন।')));return;}
     if(company.text.trim().isEmpty||phone.text.trim().isEmpty){
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('কোম্পানির নাম ও মালিকের মোবাইল নম্বর দিন')));return;
     }
     final normalized=normalizeBangladeshPhone(phone.text);
     if(normalized==null){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক বাংলাদেশি মোবাইল নম্বর দিন')));return;}
-    final p=await SharedPreferences.getInstance();
-    await p.setString('elyramart_owner_profile_v1',jsonEncode({'company':company.text.trim(),'owner':owner.text.trim(),'phone':normalized,'email':email.text.trim(),'updatedAt':DateTime.now().toIso8601String()}));
-    if(!mounted)return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('মালিকের তথ্য এই ডিভাইসে সংরক্ষিত হয়েছে')));
+    final data={'company':company.text.trim(),'owner':owner.text.trim(),'phone':normalized,'email':email.text.trim(),'updatedAt':FieldValue.serverTimestamp()};
+    try{
+      await FirebaseFirestore.instance.collection('settings').doc('business').set(data,SetOptions(merge:true));
+      final p=await SharedPreferences.getInstance();
+      await p.setString('elyramart_owner_profile_v1',jsonEncode({...data,'updatedAt':DateTime.now().toIso8601String()}));
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('মালিকের তথ্য অনলাইনে সংরক্ষিত হয়েছে।')));
+    }catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('তথ্য সংরক্ষণ হয়নি: $error')));}
   }
   @override Widget build(BuildContext c)=>Scaffold(
     appBar:AppBar(title:const Text('কোম্পানির মালিকানা ও সেটিংস')),
-    body:loading?const Center(child:CircularProgressIndicator()):ListView(padding:const EdgeInsets.all(18),children:[
-      const CircleAvatar(radius:34,child:Icon(Icons.business,size:36)),
-      const SizedBox(height:12),
-      const Text('Elyramart — মালিকের তথ্য',textAlign:TextAlign.center,style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
-      const SizedBox(height:18),
-      field(company,'কোম্পানির নাম'),
-      field(owner,'মালিকের নাম'),
-      field(phone,'মালিকের মোবাইল নম্বর',keyboard:TextInputType.phone),
-      field(email,'কোম্পানির ইমেইল',keyboard:TextInputType.emailAddress),
-      const SizedBox(height:10),
-      FilledButton.icon(onPressed:_save,icon:const Icon(Icons.save),label:const Text('মালিকের তথ্য সংরক্ষণ')),
-      const SizedBox(height:16),
-      const Text('গুরুত্বপূর্ণ: এই সংস্করণে তথ্য শুধু এই ফোনে থাকে। এটি এখনো মালিকানা যাচাই, নিরাপদ অ্যাডমিন লগইন বা ক্লাউড সিঙ্ক নয়। আসল মালিক-নিয়ন্ত্রণ চালু করতে Firebase Auth/Firestore ও সার্ভার-সাইড Admin role সংযোগ করতে হবে।',style:TextStyle(color:Colors.deepOrange,fontSize:12))
-    ])
+    body:loading?const Center(child:CircularProgressIndicator()):!isAdmin
+      ?Center(child:Padding(padding:const EdgeInsets.all(24),child:Column(mainAxisSize:MainAxisSize.min,children:[
+        const Icon(Icons.lock_outline,size:52,color:green),
+        const SizedBox(height:12),
+        const Text('এই সেটিংস শুধু যাচাইকৃত Owner Admin-এর জন্য।',textAlign:TextAlign.center),
+        const SizedBox(height:12),
+        FilledButton(onPressed:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const CustomerLoginPage())),child:const Text('Owner লগইন খুলুন'))
+      ])))
+      :ListView(padding:const EdgeInsets.all(18),children:[
+        const CircleAvatar(radius:34,child:Icon(Icons.business,size:36)),
+        const SizedBox(height:12),
+        const Text('Elyramart — মালিকের তথ্য',textAlign:TextAlign.center,style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
+        const SizedBox(height:18),
+        field(company,'কোম্পানির নাম'),
+        field(owner,'মালিকের নাম'),
+        field(phone,'মালিকের মোবাইল নম্বর',keyboard:TextInputType.phone),
+        field(email,'কোম্পানির ইমেইল',keyboard:TextInputType.emailAddress),
+        const SizedBox(height:10),
+        FilledButton.icon(onPressed:_save,icon:const Icon(Icons.save),label:const Text('মালিকের তথ্য সংরক্ষণ')),
+        const SizedBox(height:16),
+        const Text('তথ্য Firebase settings/business ডকুমেন্টে সংরক্ষিত হবে; পরিবর্তন শুধু Owner Admin করতে পারবেন।',style:TextStyle(color:Colors.black54,fontSize:12))
+      ])
   );
 }
 
