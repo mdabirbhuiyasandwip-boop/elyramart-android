@@ -1,0 +1,58 @@
+name: Build Elyramart APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Verify source archive
+        run: |
+          test -f Elyramart_GitHub_Upload.zip
+          unzip -q Elyramart_GitHub_Upload.zip -d extracted
+          APP_DIR="$(find extracted -name pubspec.yaml -printf '%h\\n' | head -n 1)"
+          test -n "$APP_DIR" || (echo "pubspec.yaml not found in source ZIP"; exit 1)
+          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
+
+      - name: Generate Android project files
+        run: |
+          cd "$APP_DIR"
+          flutter create --platforms=android --org com.elyramartbd --project-name elyramart --overwrite .
+
+      - name: Resolve Flutter packages
+        run: |
+          cd "$APP_DIR"
+          flutter pub get
+
+      - name: Build release APK
+        run: |
+          cd "$APP_DIR"
+          flutter build apk --release
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Elyramart-APK
+          path: ${{ env.APP_DIR }}/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
