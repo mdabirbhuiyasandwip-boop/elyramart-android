@@ -54,25 +54,7 @@ class Product {
   final String name, category, price, emoji, detail;
   const Product(this.name, this.category, this.price, this.emoji, this.detail);
 }
-const products = <Product>[
-  Product('Premium Face Wash','কসমেটিকস','৳২৫০','🧴','দৈনন্দিন ত্বক পরিচর্যা'),
-  Product('চাল ৫ কেজি','মুদিখানা','৳৩৮০','🍚','পরিবারের নিত্যপ্রয়োজন'),
-  Product('প্যারাসিটামল','ঔষধ','৳২০','💊','ঔষধ কেনার আগে চিকিৎসকের পরামর্শ নিন'),
-  Product('ড্রপ শোল্ডার টি-শার্ট','ফ্যাশন','৳৪৫০','👕','আরামদায়ক ক্যাজুয়াল পোশাক'),
-  Product('প্লাম্বিং পাইপ','স্যানিটারি','৳১৮০','🛠️','বাড়ির প্রয়োজনীয় সামগ্রী'),
-  Product('পারফিউম','কসমেটিকস','৳৫৫০','🌸','দীর্ঘস্থায়ী সুগন্ধ'),
-  Product('হ্যান্ডওয়াশ','কসমেটিকস','৳১২০','🧼','হাত পরিষ্কারের পণ্য'),
-  Product('শ্যাম্পু','কসমেটিকস','৳২২০','🧴','দৈনন্দিন পরিচর্যা'),
-  Product('ময়দা ১ কেজি','মুদিখানা','৳৭০','🌾','রান্নার প্রয়োজনীয় সামগ্রী'),
-  Product('সয়াবিন তেল ১ লিটার','মুদিখানা','৳১৭৫','🫗','রান্নার তেল'),
-  Product('ডিম ১২টি','মুদিখানা','৳১৫০','🥚','দৈনন্দিন খাবার'),
-  Product('দুধ ১ লিটার','মুদিখানা','৳৯০','🥛','প্যাকেটজাত দুধ'),
-  Product('বিস্কুট','মুদিখানা','৳৩০','🍪','হালকা নাস্তা'),
-  Product('টি-শার্ট','ফ্যাশন','৳৩৫০','👕','ক্যাজুয়াল পোশাক'),
-  Product('ক্যাপ','ফ্যাশন','৳১৮০','🧢','দৈনন্দিন ব্যবহার'),
-  Product('পিভিসি এলবো','স্যানিটারি','৳৩৫','🔧','পাইপ ফিটিংস'),
-  Product('পানির কল','স্যানিটারি','৳৩২০','🚰','বাথরুম ও রান্নাঘর'),
-];
+const products = <Product>[];
 
 const services = <(String, IconData, String)>[
   ('ইলেকট্রিশিয়ান',Icons.electrical_services,'বিদ্যুৎ ও ওয়্যারিং সমস্যা'),
@@ -154,7 +136,7 @@ class _HomePageState extends State<HomePage> {
           child:const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
             Icon(Icons.storefront_outlined,color:green,size:25),SizedBox(height:7),
             Text('সেলার হোন',style:TextStyle(fontWeight:FontWeight.bold,color:ink)),
-            Text('দোকান ও পণ্য যোগ করুন',style:TextStyle(fontSize:11,color:Colors.black54))
+            Text('দোকান খুলুন ও পরে পণ্য যোগ করুন',style:TextStyle(fontSize:11,color:Colors.black54))
           ])
         )
       )),
