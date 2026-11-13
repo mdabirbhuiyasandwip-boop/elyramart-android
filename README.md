@@ -3,25 +3,39 @@
 Flutter-based marketplace and home-services app for Bangladesh.
 
 ## Platforms
+
 The intended product targets Android, iOS and responsive Web from a shared Flutter codebase. Android APK and Flutter Web build workflows are provided. iOS requires macOS/Xcode and Apple signing. Web hosting and a shared cloud backend are separate launch steps.
 
 ## Current prototype status
-This repository currently contains a working-start Flutter prototype. Cart, sample catalog, seller/technician/admin demo screens and some order/booking data are local-device demonstrations. They are not yet shared across devices or connected to a live backend.
 
-**Do not treat the current prototype as a production marketplace.** Phone login, cloud sync, seller approval, technician assignment, online payments, push notifications and cross-device account access still need implementation and testing.
+The Android release APK and responsive Web build compile successfully. Static analysis and widget tests passed in the latest build.
+
+The current app is a **local-device prototype**, not a live marketplace:
+- Customer profile, cart, order history and service requests are stored on the current device.
+- Seller demo can create and manage products locally. The public product list starts empty; no sample products are included.
+- Seller, admin and technician screens demonstrate the intended workflows on the same device only.
+- Home-services include technicians and restaurant-related services. Restaurant food/products are not preloaded.
+- The Elyramart brand mark uses the short E symbol.
+
+**Not live yet:** real phone/email authentication, shared cloud database, cross-device sync, seller/technician approval, remote order dispatch, payment gateway, notifications and production hosting.
 
 ## Build Android APK
-The GitHub Actions workflow `.github/workflows/build-apk.yml` runs on pushes to `main` and can be started manually from Actions. It runs Flutter dependency resolution, static analysis and a release APK build. The output artifact is named `Elyramart-APK-release`.
+
+The GitHub Actions workflow `.github/workflows/build-apk.yml` runs on pushes to `main` and can be started manually from Actions. It runs Flutter dependency resolution, static analysis, widget tests and a release APK build. The output artifact is named `Elyramart-APK-release`.
 
 ## Build Web
-The workflow `.github/workflows/build-web.yml` builds the Flutter Web release and uploads `Elyramart-Web-release`. The artifact can be deployed to HTTPS hosting after the cloud backend and production configuration are ready. It is not automatically published to a public domain.
+
+The workflow `.github/workflows/build-web.yml` builds the Flutter Web release and uploads `Elyramart-Web-release`. A separate GitHub Pages workflow exists, but automatic Pages enablement currently fails because the repository's Pages site has not been enabled/authorized. The Web build artifact itself succeeds.
 
 ## Developer documentation
+
 - [বাংলা Developer Handoff: Android, iPhone, Web, cloud architecture and launch checklist](docs/DEVELOPER_HANDOFF_BN.md)
 - [বাংলা Firebase setup and proposed data model](docs/FIREBASE_SETUP_BN.md)
 
 ## Suggested backend
-Firebase Authentication, Cloud Firestore, Firebase Storage, Cloud Functions and Firebase Cloud Messaging are proposed. Project-specific Firebase configuration is not included. Never commit service-account private keys, admin credentials or payment secrets.
+
+Firebase Authentication, Cloud Firestore, Firebase Storage, Cloud Functions and Firebase Cloud Messaging are proposed. Project-specific Firebase configuration is not included. A Firebase project, app registration and authorized configuration are required before cloud features can be connected. Never commit service-account private keys, admin credentials or payment secrets.
 
 ## Versioning
+
 Keep the Flutter source as the single source of truth. Add automated tests and document schema changes before production releases.
