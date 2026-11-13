@@ -16,6 +16,8 @@ void main() {
     expect(find.text('Elyramart'), findsOneWidget);
     expect(find.text('আপনার প্রয়োজন, এক জায়গায়'), findsOneWidget);
     expect(find.text('জনপ্রিয় পণ্য'), findsOneWidget);
+    expect(find.text('Premium Face Wash'), findsOneWidget);
+    expect(find.text('বার্গার'), findsOneWidget);
 
     await tester.tap(find.text('সার্ভিস').last);
     await tester.pumpAndSettle();
