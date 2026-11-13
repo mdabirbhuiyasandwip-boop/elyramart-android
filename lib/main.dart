@@ -435,6 +435,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
           'items':widget.items.map((p)=>{'productId':p.productId}).toList(),
         });
         final result=Map<String,dynamic>.from(response.data as Map);
+        if(result['success']!=true || result['orderId'] is! String || (result['orderId'] as String).isEmpty){
+          throw StateError('সার্ভার অর্ডার নিশ্চিত করেনি।');
+        }
         orderData['totalAmount']=result['totalAmount'];
         orderData['orderNumber']=result['orderNumber']??orderNumber;
         cloudSaved=true;
