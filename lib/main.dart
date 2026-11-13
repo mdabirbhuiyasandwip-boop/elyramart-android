@@ -424,7 +424,10 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
     setState((){
       seller=raw==null?null:Map<String,dynamic>.from(jsonDecode(raw));
       technician=technicianRaw==null?null:Map<String,dynamic>.from(jsonDecode(technicianRaw));
-      ownerProfile=ownerRaw==null?null:Map<String,dynamic>.from(jsonDecode(ownerRaw));
+      // Show the business owner's supplied contact details even before first save.
+      ownerProfile=ownerRaw==null
+        ? <String,dynamic>{'company':'Elyramart','owner':'Minhajul Islam Abir','phone':'01733814802','email':'elyramartbd@gmail.com'}
+        : Map<String,dynamic>.from(jsonDecode(ownerRaw));
       products=decode('elyramart_seller_products_v1');
       orders=decode('elyramart_local_orders_v1');
       bookings=decode('elyramart_service_requests_v1');
