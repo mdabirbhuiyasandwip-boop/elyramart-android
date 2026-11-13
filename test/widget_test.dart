@@ -16,8 +16,12 @@ void main() {
 
     expect(find.text('Elyramart'), findsOneWidget);
     expect(find.text('আপনার প্রয়োজন, এক জায়গায়'), findsOneWidget);
+    final homeScroll = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(find.text('জনপ্রিয় পণ্য'), 250, scrollable: homeScroll);
     expect(find.text('জনপ্রিয় পণ্য'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Premium Face Wash'), 250, scrollable: homeScroll);
     expect(find.text('Premium Face Wash'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('বার্গার'), 400, scrollable: homeScroll);
     expect(find.text('বার্গার'), findsOneWidget);
 
     await tester.tap(find.text('সার্ভিস').last);
