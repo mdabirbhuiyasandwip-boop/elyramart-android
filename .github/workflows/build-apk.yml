@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: elyramart-android-apk
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
