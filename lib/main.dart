@@ -1024,10 +1024,21 @@ class _AccountPageState extends State<AccountPage> {
         }
       }).where((item) => item.isNotEmpty).toList().reversed.toList();
     }
+    var loadedOrders=decode('elyramart_local_orders_v1');
+    var loadedBookings=decode('elyramart_service_requests_v1');
+    final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;
+    if(user!=null){
+      try{
+        final cloudOrders=await FirebaseFirestore.instance.collection('orders').where('customerId',isEqualTo:user.uid).limit(100).get();
+        final cloudBookings=await FirebaseFirestore.instance.collection('serviceBookings').where('customerId',isEqualTo:user.uid).limit(100).get();
+        loadedOrders.insertAll(0,cloudOrders.docs.map((d)=>{...d.data(),'_docId':d.id}));
+        loadedBookings.insertAll(0,cloudBookings.docs.map((d)=>{...d.data(),'_docId':d.id}));
+      }catch(error){debugPrint('Customer history sync failed: $error');}
+    }
     if (!mounted) return;
     setState(() {
-      orders = decode('elyramart_local_orders_v1');
-      bookings = decode('elyramart_service_requests_v1');
+      orders = loadedOrders;
+      bookings = loadedBookings;
     });
   }
 
@@ -1112,7 +1123,7 @@ class _AccountPageState extends State<AccountPage> {
           ),
         )),
       const SizedBox(height: 10),
-      const Text('নোট: অর্ডার ও বুকিং এখনো এই ডিভাইসে সংরক্ষিত। অনলাইনে পাঠাতে সার্ভার সংযোগ প্রয়োজন।', style: TextStyle(color: Colors.black54, fontSize: 12)),
+      const Text('লগইন করলে অনলাইন অর্ডার ও বুকিং এখানে দেখা যাবে। লগইন ছাড়া তৈরি ডেমো তথ্য শুধু এই ডিভাইসে থাকে।', style: TextStyle(color: Colors.black54, fontSize: 12)),
     ],
   );
 }
