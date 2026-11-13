@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() => runApp(const ElyramartApp());
 
@@ -53,9 +54,26 @@ class _HomePageState extends State<HomePage> {
   String category='সব';
   String searchQuery='';
   final categories=['সব','ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি'];
-  void add(Product p) { setState(()=>cart.add(p)); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('${p.name} কার্টে যোগ হয়েছে'),duration:const Duration(seconds:1))); }
+  @override void initState(){super.initState();_loadCart();}
+  Future<void> _loadCart() async {
+    final prefs=await SharedPreferences.getInstance();
+    final saved=prefs.getStringList('elyramart_cart_v1')??[];
+    if(!mounted)return;
+    setState((){
+      cart..clear()..addAll(saved.map((v)=>int.tryParse(v)).whereType<int>().where((i)=>i>=0&&i<products.length).map((i)=>products[i]));
+    });
+  }
+  Future<void> _saveCart() async {
+    final prefs=await SharedPreferences.getInstance();
+    await prefs.setStringList('elyramart_cart_v1',cart.map((p)=>products.indexOf(p).toString()).toList());
+  }
+  void add(Product p) {
+    setState(()=>cart.add(p)); _saveCart();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('${p.name} কার্টে যোগ হয়েছে'),duration:const Duration(seconds:1)));
+  }
+  void removeFromCart(Product p){setState(()=>cart.remove(p));_saveCart();}
   @override Widget build(BuildContext context) {
-    final pages=[home(), const ServicesPage(), CartPage(items:cart,onRemove:(p)=>setState(()=>cart.remove(p))), const AccountPage()];
+    final pages=[home(), const ServicesPage(), CartPage(items:cart,onRemove:removeFromCart), const AccountPage()];
     return Scaffold(
       appBar: AppBar(title: Row(children:[Container(width:36,height:36,decoration:BoxDecoration(color:green,borderRadius:BorderRadius.circular(11)),child:const Center(child:Text('E',style:TextStyle(color:Colors.white,fontSize:25,fontWeight:FontWeight.w900)))),const SizedBox(width:9),const Text('Elyramart',style:TextStyle(fontWeight:FontWeight.w800,letterSpacing:-.4))]), actions:[IconButton(onPressed:()=>setState(()=>tab=2),icon:Badge(label:Text('${cart.length}'),child:const Icon(Icons.shopping_bag_outlined)))],),
       body: pages[tab],
