@@ -460,7 +460,7 @@ class _AccountPageState extends State<AccountPage> {
     const Center(child:Text('Elyramart অ্যাকাউন্ট',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold))),
     const SizedBox(height:18),
     Card(color:Colors.white,child:Column(children:[
-      const ListTile(leading:Icon(Icons.login),title:Text('লগইন / রেজিস্ট্রেশন'),subtitle:Text('অ্যাকাউন্ট সিস্টেম সংযোগ করা বাকি')),
+      ListTile(leading:const Icon(Icons.login),title:const Text('লগইন / রেজিস্ট্রেশন'),subtitle:const Text('ডেমো প্রোফাইল তৈরি ও তথ্য সংরক্ষণ'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const CustomerLoginPage()))),
       Divider(height:1),
       ListTile(leading:Icon(Icons.storefront_outlined),title:Text('সেলার অ্যাকাউন্ট'),subtitle:Text('সেলার নিবন্ধন ও পণ্য ব্যবস্থাপনা'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const SellerPortalPage()))),
       const Divider(height:1),
@@ -1151,4 +1151,61 @@ class _AccountPageState extends State<AccountPage> {
     const SizedBox(height:10),
     const Text('নোট: এই অর্ডার ও বুকিং শুধু এই ফোনে সংরক্ষিত। অনলাইনে পাঠাতে সার্ভার সংযোগ প্রয়োজন।',style:TextStyle(color:Colors.black54,fontSize:12))
   ])));
+}
+
+
+class CustomerLoginPage extends StatefulWidget {
+  const CustomerLoginPage({super.key});
+  @override State<CustomerLoginPage> createState()=>_CustomerLoginPageState();
+}
+class _CustomerLoginPageState extends State<CustomerLoginPage> {
+  final name=TextEditingController();
+  final phone=TextEditingController();
+  final address=TextEditingController();
+  bool loading=true;
+  @override void initState(){super.initState();_load();}
+  @override void dispose(){name.dispose();phone.dispose();address.dispose();super.dispose();}
+  Future<void> _load() async {
+    final prefs=await SharedPreferences.getInstance();
+    final raw=prefs.getString('elyramart_customer_profile_v1');
+    if(!mounted)return;
+    if(raw!=null){try{final data=Map<String,dynamic>.from(jsonDecode(raw) as Map);name.text=data['name']??'';phone.text=data['phone']??'';address.text=data['address']??'';}catch(_){}}
+    setState(()=>loading=false);
+  }
+  Future<void> _save() async {
+    if(name.text.trim().isEmpty||phone.text.trim().isEmpty){
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('নাম ও মোবাইল নম্বর লিখুন')));return;
+    }
+    const bn='০১২৩৪৫৬৭৮৯';
+    var normalized=phone.text.trim();
+    for(var i=0;i<10;i++){normalized=normalized.replaceAll(bn[i], '$i');}
+    normalized=normalized.replaceAll(RegExp(r'[\\s\\-()]'), '');
+    if(normalized.startsWith('+880')){normalized='0'+normalized.substring(4);}
+    else if(normalized.startsWith('8801')){normalized='0'+normalized.substring(3);}
+    if(!RegExp(r'^01[3-9]\\d{8}$').hasMatch(normalized)){
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
+    }
+    final prefs=await SharedPreferences.getInstance();
+    await prefs.setString('elyramart_customer_profile_v1',jsonEncode({'name':name.text.trim(),'phone':normalized,'address':address.text.trim(),'updatedAt':DateTime.now().toIso8601String()}));
+    if(!mounted)return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('ডেমো প্রোফাইল এই ফোনে সংরক্ষিত হয়েছে')));
+  }
+  @override Widget build(BuildContext context)=>Scaffold(
+    appBar:AppBar(title:const Text('গ্রাহক অ্যাকাউন্ট')),
+    body:loading?const Center(child:CircularProgressIndicator()):ListView(padding:const EdgeInsets.all(18),children:[
+      const CircleAvatar(radius:34,child:Icon(Icons.person_outline,size:36)),
+      const SizedBox(height:12),
+      const Text('আপনার প্রোফাইল',textAlign:TextAlign.center,style:TextStyle(fontSize:21,fontWeight:FontWeight.bold)),
+      const SizedBox(height:6),
+      const Text('নাম ও যোগাযোগের তথ্য সংরক্ষণ করুন।',textAlign:TextAlign.center),
+      const SizedBox(height:20),
+      field(name,'আপনার নাম'),
+      field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),
+      field(address,'ডেলিভারি ঠিকানা',lines:3),
+      const SizedBox(height:8),
+      FilledButton.icon(onPressed:_save,icon:const Icon(Icons.save_outlined),label:const Text('প্রোফাইল সংরক্ষণ করুন')),
+      const SizedBox(height:14),
+      const Text('এটি আপাতত এই ডিভাইসের ডেমো প্রোফাইল। অনলাইন লগইন ও সব ডিভাইসে একই অ্যাকাউন্ট ব্যবহারের জন্য নিরাপদ সার্ভার ও Firebase Auth সংযোগ এখনো প্রয়োজন।',style:TextStyle(color:Colors.black54,fontSize:12))
+    ])
+  );
 }
