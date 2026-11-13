@@ -225,6 +225,7 @@ class AdminOverviewPage extends StatefulWidget {
 class _AdminOverviewPageState extends State<AdminOverviewPage> {
   Map<String,dynamic>? seller;
   List<Map<String,dynamic>> products=[],orders=[],bookings=[];
+  static const Map<String,String> statusNames={'local_pending':'নতুন','confirmed':'নিশ্চিত','processing':'প্রস্তুত হচ্ছে','completed':'সম্পন্ন','cancelled':'বাতিল'};
   @override void initState(){super.initState();_load();}
   Future<void> _load() async {
     final p=await SharedPreferences.getInstance();
@@ -233,13 +234,23 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
     if(!mounted)return;
     setState((){seller=raw==null?null:Map<String,dynamic>.from(jsonDecode(raw));products=decode('elyramart_seller_products_v1');orders=decode('elyramart_local_orders_v1');bookings=decode('elyramart_service_requests_v1');});
   }
+  Future<void> _changeStatus(String storageKey,String identityKey,Map<String,dynamic> item,String status) async {
+    final p=await SharedPreferences.getInstance();
+    final raw=p.getStringList(storageKey)??[];
+    final updated=<String>[];
+    for(final encoded in raw){try{final m=Map<String,dynamic>.from(jsonDecode(encoded) as Map);if(m[identityKey]==item[identityKey])m['status']=status;updated.add(jsonEncode(m));}catch(_){updated.add(encoded);}}
+    await p.setStringList(storageKey,updated);
+    if(!mounted)return;
+    setState((){item['status']=status;});
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('স্ট্যাটাস: ${statusNames[status]??status}')));
+  }
+  Widget _statusMenu(String key,String identity,Map<String,dynamic> item)=>PopupMenuButton<String>(tooltip:'স্ট্যাটাস পরিবর্তন',onSelected:(v)=>_changeStatus(key,identity,item,v),itemBuilder:(_)=>statusNames.entries.map((e)=>PopupMenuItem<String>(value:e.key,child:Text(e.value))).toList(),icon:const Icon(Icons.more_vert));
+  String _status(Map<String,dynamic> item)=>statusNames[item['status']]??'নতুন';
   Widget heading(String t)=>Padding(padding:const EdgeInsets.only(top:18,bottom:8),child:Text(t,style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold)));
   @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('অ্যাডমিন ওভারভিউ')),body:RefreshIndicator(onRefresh:_load,child:ListView(padding:const EdgeInsets.all(16),children:[
     const Text('এই ডিভাইসের ডেমো ডেটা',style:TextStyle(color:Colors.deepOrange,fontWeight:FontWeight.w600)),
     const SizedBox(height:12),
-    Wrap(spacing:8,runSpacing:8,children:[
-      _stat('অর্ডার',orders.length,Icons.receipt_long),_stat('সেলার পণ্য',products.length,Icons.inventory_2),_stat('সার্ভিস বুকিং',bookings.length,Icons.handyman)
-    ]),
+    Wrap(spacing:8,runSpacing:8,children:[_stat('অর্ডার',orders.length,Icons.receipt_long),_stat('সেলার পণ্য',products.length,Icons.inventory_2),_stat('সার্ভিস বুকিং',bookings.length,Icons.handyman)]),
     heading('সেলার আবেদন'),
     if(seller==null) const Card(color:Colors.white,child:ListTile(title:Text('কোনো সেলার তথ্য নেই')))
     else Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.store,color:green),title:Text(seller!['shop']??''),subtitle:Text('${seller!['owner']??''} • ${seller!['phone']??''}\\n${seller!['address']??''}'),isThreeLine:true,trailing:const Text('লোকাল',style:TextStyle(color:Colors.deepOrange)))),
@@ -248,11 +259,11 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
     else ...products.map((v)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.inventory,color:green),title:Text(v['name']??''),subtitle:Text('${v['category']??''} • ${v['price']??''}')))),
     heading('সাম্প্রতিক অর্ডার'),
     if(orders.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('কোনো অর্ডার নেই')))
-    else ...orders.take(10).map((v)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.receipt,color:green),title:Text(v['orderNumber']??''),subtitle:Text('${v['customerName']??''} • ${v['phone']??''}\\n${v['address']??''}'),isThreeLine:true))),
+    else ...orders.take(10).map((v)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.receipt,color:green),title:Text(v['orderNumber']??''),subtitle:Text('${v['customerName']??''} • ${v['phone']??''}\\n${v['address']??''}\\nস্ট্যাটাস: ${_status(v)}'),isThreeLine:true,trailing:_statusMenu('elyramart_local_orders_v1','orderNumber',v)))),
     heading('সার্ভিস বুকিং'),
     if(bookings.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('কোনো বুকিং নেই')))
-    else ...bookings.take(10).map((v)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.handyman,color:green),title:Text(v['service']??''),subtitle:Text('${v['name']??''} • ${v['phone']??''}\\n${v['problem']??''}'),isThreeLine:true))),
-    const SizedBox(height:12),const Text('সতর্কতা: এই স্ক্রিন শুধু একই ফোনে থাকা ডেমো তথ্য দেখায়। এটি নিরাপদ অনলাইন অ্যাডমিন প্যানেল নয় এবং অন্য ব্যবহারকারীর তথ্য পায় না.',style:TextStyle(color:Colors.black54,fontSize:12))
+    else ...bookings.take(10).map((v)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.handyman,color:green),title:Text(v['service']??''),subtitle:Text('${v['name']??''} • ${v['phone']??''}\\n${v['problem']??''}\\nস্ট্যাটাস: ${_status(v)}'),isThreeLine:true,trailing:_statusMenu('elyramart_service_requests_v1','createdAt',v)))),
+    const SizedBox(height:12),const Text('সতর্কতা: এই স্ক্রিন শুধু একই ফোনে থাকা ডেমো তথ্য দেখায়। স্ট্যাটাস পরিবর্তনও শুধু এই ফোনে সংরক্ষিত হয়; গ্রাহক, দোকান বা টেকনিশিয়ান অনলাইনে আপডেট পায় না.',style:TextStyle(color:Colors.black54,fontSize:12))
   ])));
   Widget _stat(String label,int value,IconData icon)=>Container(width:MediaQuery.of(context).size.width/3-20,padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),child:Column(children:[Icon(icon,color:green),const SizedBox(height:6),Text('$value',style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),Text(label,style:const TextStyle(fontSize:11))]));
 }
