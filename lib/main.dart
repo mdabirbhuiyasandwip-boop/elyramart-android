@@ -410,7 +410,7 @@ class AdminOverviewPage extends StatefulWidget {
   @override State<AdminOverviewPage> createState()=>_AdminOverviewPageState();
 }
 class _AdminOverviewPageState extends State<AdminOverviewPage> {
-  Map<String,dynamic>? seller;
+  Map<String,dynamic>? seller,technician,ownerProfile;
   List<Map<String,dynamic>> products=[],orders=[],bookings=[];
   static const Map<String,String> statusNames={'local_pending':'নতুন','confirmed':'নিশ্চিত','processing':'প্রস্তুত হচ্ছে','completed':'সম্পন্ন','cancelled':'বাতিল'};
   @override void initState(){super.initState();_load();}
@@ -418,8 +418,17 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
     final p=await SharedPreferences.getInstance();
     List<Map<String,dynamic>> decode(String k)=>(p.getStringList(k)??[]).map((v){try{return Map<String,dynamic>.from(jsonDecode(v) as Map);}catch(_){return <String,dynamic>{};}}).where((v)=>v.isNotEmpty).toList().reversed.toList();
     final raw=p.getString('elyramart_seller_profile_v1');
+    final technicianRaw=p.getString('elyramart_technician_profile_v1');
+    final ownerRaw=p.getString('elyramart_owner_profile_v1');
     if(!mounted)return;
-    setState((){seller=raw==null?null:Map<String,dynamic>.from(jsonDecode(raw));products=decode('elyramart_seller_products_v1');orders=decode('elyramart_local_orders_v1');bookings=decode('elyramart_service_requests_v1');});
+    setState((){
+      seller=raw==null?null:Map<String,dynamic>.from(jsonDecode(raw));
+      technician=technicianRaw==null?null:Map<String,dynamic>.from(jsonDecode(technicianRaw));
+      ownerProfile=ownerRaw==null?null:Map<String,dynamic>.from(jsonDecode(ownerRaw));
+      products=decode('elyramart_seller_products_v1');
+      orders=decode('elyramart_local_orders_v1');
+      bookings=decode('elyramart_service_requests_v1');
+    });
   }
   Future<void> _changeStatus(String storageKey,String identityKey,Map<String,dynamic> item,String status) async {
     final p=await SharedPreferences.getInstance();
@@ -445,6 +454,26 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
           children: <Widget>[
             const Text('এই ডিভাইসের ডেমো ডেটা', style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.w600)),
             const SizedBox(height: 12),
+            heading('কোম্পানির মালিক'),
+            if (ownerProfile == null)
+              const Card(color: Colors.white, child: ListTile(title: Text('মালিকের তথ্য সেট করা হয়নি'), subtitle: Text('Owner Settings থেকে তথ্য যোগ করুন')))
+            else
+              Card(color: Colors.white, child: ListTile(
+                leading: const Icon(Icons.verified_user_outlined, color: green),
+                title: Text(ownerProfile!['company'] ?? 'Elyramart'),
+                subtitle: Text('মালিক: ${ownerProfile!['owner'] ?? 'নাম দেওয়া হয়নি'}\\nমোবাইল: ${ownerProfile!['phone'] ?? ''}\\nইমেইল: ${ownerProfile!['email'] ?? ''}'),
+                isThreeLine: true,
+              )),
+            heading('টেকনিশিয়ান প্রোফাইল'),
+            if (technician == null)
+              const Card(color: Colors.white, child: ListTile(title: Text('এখনো টেকনিশিয়ান প্রোফাইল নেই')))
+            else
+              Card(color: Colors.white, child: ListTile(
+                leading: const Icon(Icons.engineering_outlined, color: green),
+                title: Text(technician!['name'] ?? ''),
+                subtitle: Text('মোবাইল: ${technician!['phone'] ?? ''}\\nদক্ষতা: ${technician!['skills'] ?? ''}\\nঠিকানা: ${technician!['address'] ?? ''}'),
+                isThreeLine: true,
+              )),
             Wrap(
               spacing: 8,
               runSpacing: 8,
