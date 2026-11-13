@@ -24,6 +24,25 @@ class AppLanguage {
 String tx(String bangla, String english) =>
     AppLanguage.english.value ? english : bangla;
 
+String englishCategory(String bangla) => switch (bangla) {
+  'সব' => 'All', 'ঔষধ' => 'Medicine', 'মুদিখানা' => 'Groceries',
+  'কসমেটিকস' => 'Cosmetics', 'ফ্যাশন' => 'Fashion', 'স্যানিটারি' => 'Sanitary',
+  _ => bangla,
+};
+
+String englishServiceDetail(String bangla) => switch (bangla) {
+  'বিদ্যুৎ ও ওয়্যারিং সমস্যা' => 'Electrical and wiring problems',
+  'পানির লাইন, পাইপ ও লিকেজ' => 'Water lines, pipes and leaks',
+  'এসি মেরামত ও পরিষ্কার' => 'AC repair and cleaning',
+  'গৃহস্থালি যন্ত্র মেরামত' => 'Home appliance repair',
+  'সফটওয়্যার ও হার্ডওয়্যার' => 'Software and hardware support',
+  'মোবাইল মেরামত' => 'Mobile phone repair',
+  'ব্যাকআপ ও পাওয়ার সমস্যা' => 'Backup and power issues',
+  'ইলেকট্রনিক্স মেরামত' => 'Electronics repair',
+  'ক্যাটারিং, খাবার আয়োজন ও সংশ্লিষ্ট সেবা' => 'Catering, food arrangements and related services',
+  _ => bangla,
+};
+
 String englishServiceName(String bangla) => switch (bangla) {
   'ইলেকট্রিশিয়ান' => 'Electrician',
   'প্লাম্বার / স্যানিটারি' => 'Plumber / Sanitary',
@@ -134,14 +153,14 @@ class _HomePageState extends State<HomePage> {
   }
   void add(Product p) {
     setState(()=>cart.add(p)); _saveCart();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('${p.name} কার্টে যোগ হয়েছে'),duration:const Duration(seconds:1)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(tx('${p.name} কার্টে যোগ হয়েছে','${p.name} added to cart')),duration:const Duration(seconds:1)));
   }
   void removeFromCart(Product p){setState(()=>cart.remove(p));_saveCart();}
   void clearCartAfterOrder(){setState(cart.clear);_saveCart();}
   @override Widget build(BuildContext context) {
     final pages=[home(), const ServicesPage(), CartPage(items:cart,onRemove:removeFromCart,onOrderSaved:clearCartAfterOrder), const AccountPage()];
     return Scaffold(
-      appBar: AppBar(title: Row(children:[const ElyramartMark(size:38),const SizedBox(width:9),const Text('Elyramart',style:TextStyle(fontWeight:FontWeight.w800,letterSpacing:-.4))]), actions:[IconButton(onPressed:()=>setState(()=>tab=2),icon:Badge(label:Text('${cart.length}'),child:const Icon(Icons.shopping_bag_outlined)))],),
+      appBar: AppBar(title: Row(children:[const ElyramartMark(size:38),const SizedBox(width:9),const Text('Elyramart',style:TextStyle(fontWeight:FontWeight.w800,letterSpacing:-.4))]), actions:[IconButton(tooltip:tx('সেটিংস','Settings'),onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const AppSettingsPage())),icon:const Icon(Icons.settings_outlined)),IconButton(onPressed:()=>setState(()=>tab=2),icon:Badge(label:Text('${cart.length}'),child:const Icon(Icons.shopping_bag_outlined)))],),
       body: pages[tab],
       bottomNavigationBar: NavigationBar(selectedIndex:tab,onDestinationSelected:(v)=>setState(()=>tab=v),destinations:[
         NavigationDestination(icon:Icon(Icons.home_outlined),selectedIcon:Icon(Icons.home),label:tx('হোম','Home')),
@@ -161,7 +180,7 @@ class _HomePageState extends State<HomePage> {
       const SizedBox(height:16),Container(height:46,padding:const EdgeInsets.symmetric(horizontal:12),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(12)),child:Row(children:[const Icon(Icons.search,color:green),const SizedBox(width:8),Expanded(child:TextField(onChanged:(v)=>setState(()=>searchQuery=v),decoration:InputDecoration(hintText:tx('পণ্য খুঁজুন','Search products'),border:InputBorder.none,isDense:true))) ]))
     ])),
     const SizedBox(height:22),section(tx('ক্যাটাগরি','Categories'), tx('সব দেখুন','View all')),
-    SizedBox(height:42,child:ListView(scrollDirection:Axis.horizontal,children:categories.map((c)=>Padding(padding:const EdgeInsets.only(right:8),child:ChoiceChip(label:Text(c),selected:category==c,onSelected:(_)=>setState(()=>category=c),selectedColor:const Color(0xFFD6EFE5),labelStyle:TextStyle(color:category==c?green:ink,fontWeight:FontWeight.w600)))).toList())),
+    SizedBox(height:42,child:ListView(scrollDirection:Axis.horizontal,children:categories.map((c)=>Padding(padding:const EdgeInsets.only(right:8),child:ChoiceChip(label:Text(AppLanguage.english.value?englishCategory(c):c),selected:category==c,onSelected:(_)=>setState(()=>category=c),selectedColor:const Color(0xFFD6EFE5),labelStyle:TextStyle(color:category==c?green:ink,fontWeight:FontWeight.w600)))).toList())),
     const SizedBox(height:18),Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:const Color(0xFFE2F3EC),borderRadius:BorderRadius.circular(18)),child:Row(children:[Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(tx('বাসায় টেকনিশিয়ান লাগবে?','Need a technician at home?'),style:TextStyle(fontSize:17,fontWeight:FontWeight.bold,color:ink)),SizedBox(height:4),Text(tx('ইলেকট্রিশিয়ান, প্লাম্বারসহ বিভিন্ন সার্ভিস বুক করুন','Book electricians, plumbers and more'),style:TextStyle(color:ink))])),FilledButton(onPressed:()=>setState(()=>tab=1),style:FilledButton.styleFrom(backgroundColor:green),child:Text(tx('বুক করুন','Book now')))])),
     const SizedBox(height:18),
     Row(children:[
@@ -209,16 +228,16 @@ class ServicesPage extends StatelessWidget {
     children: [
       Text(tx('টেকনিশিয়ান ও হোম সার্ভিস','Technicians & home services'), style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold, color: ink)),
       const SizedBox(height: 6),
-      const Text('আপনার সমস্যার জন্য প্রয়োজনীয় সার্ভিস নির্বাচন করুন। বুকিংয়ের তথ্য দিয়ে অনুরোধ পাঠান।'),
+      Text(tx('আপনার সমস্যার জন্য প্রয়োজনীয় সার্ভিস নির্বাচন করুন। বুকিংয়ের তথ্য দিয়ে অনুরোধ পাঠান।','Choose the service you need and submit a booking request.')),
       const SizedBox(height: 16),
       ...services.map((s) => Card(
         color: Colors.white, elevation: 0,
         child: ListTile(
           leading: CircleAvatar(backgroundColor: const Color(0xFFE2F3EC), child: Icon(s.$2, color: green)),
-          title: Text(s.$1, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text(s.$3),
+          title: Text(AppLanguage.english.value?englishServiceName(s.$1):s.$1, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text(AppLanguage.english.value?englishServiceDetail(s.$3):s.$3),
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookingPage(service: s.$1))),
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookingPage(service: AppLanguage.english.value?englishServiceName(s.$1):s.$1))),
         ),
       )),
     ],
@@ -761,8 +780,8 @@ class _AccountPageState extends State<AccountPage> {
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.verified_user_outlined),
-            title: const Text('কোম্পানির মালিক / Owner Settings'),
-            subtitle: const Text('কোম্পানির নাম, মালিকের নম্বর ও যোগাযোগের তথ্য'),
+            title: Text(tx('কোম্পানির মালিক / Owner Settings','Company owner / Owner settings')),
+            subtitle: Text(tx('কোম্পানির নাম, মালিকের নম্বর ও যোগাযোগের তথ্য','Company name, owner phone and contact details')),
             onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => const OwnerSettingsPage())),
           ),
           const Divider(height: 1),
