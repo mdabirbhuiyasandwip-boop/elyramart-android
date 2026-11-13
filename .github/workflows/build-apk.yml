@@ -46,7 +46,7 @@ jobs:
           needle = '    id "dev.flutter.flutter-gradle-plugin"'
           if needle not in s:
               raise SystemExit("Flutter Gradle plugin declaration not found")
-          s = s.replace(needle, needle + '\\n    id "com.google.gms.google-services" version "4.4.2"', 1)
+          s = s.replace(needle, needle + '\n    id "com.google.gms.google-services" version "4.4.2"', 1)
           open(p, "w", encoding="utf-8").write(s)
           PY
       - name: Add Android location permissions
