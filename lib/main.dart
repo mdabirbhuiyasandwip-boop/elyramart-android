@@ -172,7 +172,7 @@ class _HomePageState extends State<HomePage> {
     final saved=prefs.getStringList('elyramart_cart_v1')??[];
     final sellerRaw=prefs.getStringList('elyramart_seller_products_v1')??[];
     final loadedSeller=<Product>[];
-    for(final raw in sellerRaw){try{final m=Map<String,dynamic>.from(jsonDecode(raw) as Map);loadedSeller.add(Product(m['name']??'পণ্য',m['category']??'মুদিখানা','৳${m['price']??'0'}','🛍️','সেলার তালিকাভুক্ত পণ্য'));}catch(_){}}
+    for(final raw in sellerRaw){try{final m=Map<String,dynamic>.from(jsonDecode(raw) as Map);loadedSeller.add(Product(m['name']??'পণ্য',m['category']??'মুদিখানা','৳${m['price']??'0'}','🛍️','সেলার তালিকাভুক্ত পণ্য',demoOnly:true));}catch(_){}}
     if(FirebaseRuntime.initialized){
       try{
         final snapshot=await FirebaseFirestore.instance.collection('products').where('status',isEqualTo:'active').limit(60).get();
