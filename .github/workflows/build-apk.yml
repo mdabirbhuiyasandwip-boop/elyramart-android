@@ -49,9 +49,22 @@ jobs:
           s = s.replace(needle, needle + '\n    id "com.google.gms.google-services" version "4.4.2"', 1)
           open(p, "w", encoding="utf-8").write(s)
           PY
-      - name: Add Android location permissions
+      - name: Add Android network and location permissions
         run: |
-          sed -i '/<application/i\\    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />' android/app/src/main/AndroidManifest.xml
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text(encoding="utf-8")
+          permissions = [
+              '    <uses-permission android:name="android.permission.INTERNET" />',
+              '    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />',
+              '    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />',
+          ]
+          missing = [line for line in permissions if line not in s]
+          if missing:
+              s = s.replace("<application", "\\n".join(missing) + "\\n    <application", 1)
+              p.write_text(s, encoding="utf-8")
+          PY
       - name: Generate Elyramart E-only brand icons
         run: |
           python3 -m pip install pillow --break-system-packages
