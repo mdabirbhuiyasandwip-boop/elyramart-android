@@ -510,15 +510,17 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
       if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্যের নাম ও দাম দিন')));
       return;
     }
-    final updated={...item,'name':nameController.text.trim(),'title':nameController.text.trim(),'price':priceController.text.trim()};
+    final editedName=nameController.text.trim();
+    final editedPrice=priceController.text.trim();
+    final updated={...item,'name':editedName,'title':editedName,'price':editedPrice};
     nameController.dispose();priceController.dispose();
     if(item['_docId']!=null){
-      var digits=priceController.text;
+      var digits=editedPrice;
       const bn='০১২৩৪৫৬৭৮৯';
       for(var i=0;i<10;i++){digits=digits.replaceAll(bn[i],'$i');}
       final numericPrice=double.tryParse(digits.replaceAll(RegExp(r'[^0-9.]'), ''));
       if(numericPrice==null||numericPrice<=0){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক দাম লিখুন')));return;}
-      try{await FirebaseFirestore.instance.collection('products').doc(item['_docId']).update({'title':nameController.text.trim(),'price':numericPrice,'updatedAt':FieldValue.serverTimestamp()});if(mounted)setState(()=>mine[mine.indexOf(item)]=updated);}catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('পণ্য আপডেট হয়নি: $error')));}
+      try{await FirebaseFirestore.instance.collection('products').doc(item['_docId']).update({'title':editedName,'price':numericPrice,'updatedAt':FieldValue.serverTimestamp()});if(mounted)setState(()=>mine[mine.indexOf(item)]=updated);}catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('পণ্য আপডেট হয়নি: $error')));}
       return;
     }
     final prefs=await SharedPreferences.getInstance();
