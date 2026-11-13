@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> {
   List<Product> sellerProducts=[];
   String category='সব';
   String searchQuery='';
-  final categories=['সব','ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি','রেস্টুরেন্ট'];
+  final categories=['সব','ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি'];
   @override void initState(){super.initState();_loadCart();}
   Future<void> _loadCart() async {
     final prefs=await SharedPreferences.getInstance();
