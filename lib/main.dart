@@ -61,6 +61,19 @@ const products = <Product>[
   Product('ড্রপ শোল্ডার টি-শার্ট','ফ্যাশন','৳৪৫০','👕','আরামদায়ক ক্যাজুয়াল পোশাক'),
   Product('প্লাম্বিং পাইপ','স্যানিটারি','৳১৮০','🛠️','বাড়ির প্রয়োজনীয় সামগ্রী'),
   Product('পারফিউম','কসমেটিকস','৳৫৫০','🌸','দীর্ঘস্থায়ী সুগন্ধ'),
+  Product('হ্যান্ডওয়াশ','কসমেটিকস','৳১২০','🧼','হাত পরিষ্কারের পণ্য'),
+  Product('শ্যাম্পু','কসমেটিকস','৳২২০','🧴','দৈনন্দিন পরিচর্যা'),
+  Product('ময়দা ১ কেজি','মুদিখানা','৳৭০','🌾','রান্নার প্রয়োজনীয় সামগ্রী'),
+  Product('সয়াবিন তেল ১ লিটার','মুদিখানা','৳১৭৫','🫗','রান্নার তেল'),
+  Product('ডিম ১২টি','মুদিখানা','৳১৫০','🥚','দৈনন্দিন খাবার'),
+  Product('দুধ ১ লিটার','মুদিখানা','৳৯০','🥛','প্যাকেটজাত দুধ'),
+  Product('বিস্কুট','মুদিখানা','৳৩০','🍪','হালকা নাস্তা'),
+  Product('টি-শার্ট','ফ্যাশন','৳৩৫০','👕','ক্যাজুয়াল পোশাক'),
+  Product('ক্যাপ','ফ্যাশন','৳১৮০','🧢','দৈনন্দিন ব্যবহার'),
+  Product('পিভিসি এলবো','স্যানিটারি','৳৩৫','🔧','পাইপ ফিটিংস'),
+  Product('পানির কল','স্যানিটারি','৳৩২০','🚰','বাথরুম ও রান্নাঘর'),
+  Product('বার্গার','রেস্টুরেন্ট','৳১৮০','🍔','রেস্টুরেন্ট খাবার'),
+  Product('পিজ্জা','রেস্টুরেন্ট','৳৪৫০','🍕','রেস্টুরেন্ট খাবার'),
 ];
 
 const services = <(String, IconData, String)>[
@@ -84,7 +97,7 @@ class _HomePageState extends State<HomePage> {
   List<Product> sellerProducts=[];
   String category='সব';
   String searchQuery='';
-  final categories=['সব','ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি'];
+  final categories=['সব','ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি','রেস্টুরেন্ট'];
   @override void initState(){super.initState();_loadCart();}
   Future<void> _loadCart() async {
     final prefs=await SharedPreferences.getInstance();
@@ -160,6 +173,7 @@ class _HomePageState extends State<HomePage> {
       ))
     ]),
     const SizedBox(height:22),section('জনপ্রিয় পণ্য','আরও'),
+    const Padding(padding:EdgeInsets.only(bottom:10),child:Text('নমুনা পণ্য ও মূল্য — বিক্রেতা যুক্ত হলে আসল পণ্য, স্টক ও মূল্য দেখানো হবে।',style:TextStyle(fontSize:11,color:Colors.black54))),
     if(visibleProducts.isEmpty) const Padding(padding:EdgeInsets.all(18),child:Text('কোনো পণ্য পাওয়া যায়নি। অন্য শব্দ বা ক্যাটাগরি দিয়ে খুঁজুন।')) else Wrap(spacing:10,runSpacing:10,children:visibleProducts.map((p)=>SizedBox(width:(MediaQuery.of(context).size.width-42)/2,child:ProductCard(p:p,onAdd:()=>add(p)))).toList()),
     const SizedBox(height:12),const Text('Elyramart — Your World, Your Choice',textAlign:TextAlign.center,style:TextStyle(color:Colors.black45,fontSize:12)),
   ]);
