@@ -766,16 +766,17 @@ class OwnerSettingsPage extends StatefulWidget {
 }
 class _OwnerSettingsPageState extends State<OwnerSettingsPage> {
   final company=TextEditingController(text:'Elyramart');
-  final owner=TextEditingController();
-  final phone=TextEditingController();
-  final email=TextEditingController();
+  // Owner contact defaults supplied by the business owner; editable in Owner Settings.
+  final owner=TextEditingController(text:'Minhajul Islam Abir');
+  final phone=TextEditingController(text:'01733814802');
+  final email=TextEditingController(text:'elyramartbd@gmail.com');
   bool loading=true;
   @override void initState(){super.initState();_load();}
   @override void dispose(){company.dispose();owner.dispose();phone.dispose();email.dispose();super.dispose();}
   Future<void> _load() async {
     final p=await SharedPreferences.getInstance();
     final raw=p.getString('elyramart_owner_profile_v1');
-    if(raw!=null){try{final m=Map<String,dynamic>.from(jsonDecode(raw) as Map);company.text=m['company']??'Elyramart';owner.text=m['owner']??'';phone.text=m['phone']??'';email.text=m['email']??'';}catch(_){}}
+    if(raw!=null){try{final m=Map<String,dynamic>.from(jsonDecode(raw) as Map);company.text=m['company']??'Elyramart';owner.text=m['owner']??'Minhajul Islam Abir';phone.text=m['phone']??'01733814802';email.text=m['email']??'elyramartbd@gmail.com';}catch(_){}}
     if(mounted)setState(()=>loading=false);
   }
   Future<void> _save() async {
