@@ -458,11 +458,23 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     if(normalizedPhone==null){
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
     }
+    final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;
+    if(user!=null){
+      try{
+        await FirebaseFirestore.instance.collection('sellerApplications').add({
+          'userId':user.uid,'shopName':shop.text.trim(),'contact':normalizedPhone,
+          'address':address.text.trim(),'status':'pending','createdAt':FieldValue.serverTimestamp(),
+        });
+      }catch(error){
+        if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('সেলার আবেদন অনলাইনে পাঠানো যায়নি: $error')));
+        return;
+      }
+    }
     final p=await SharedPreferences.getInstance();
-    await p.setString('elyramart_seller_profile_v1',jsonEncode({'shop':shop.text.trim(),'owner':owner.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'status':'local_pending'}));
+    await p.setString('elyramart_seller_profile_v1',jsonEncode({'shop':shop.text.trim(),'owner':owner.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'status':user==null?'local_pending':'pending'}));
     if(!mounted)return;
     setState(()=>registered=true);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সেলার তথ্য এই ফোনে সংরক্ষিত হয়েছে')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(user==null?'সেলার তথ্য শুধু এই ফোনে রাখা হয়েছে। অনলাইন আবেদনের জন্য লগইন করুন।':'সেলার আবেদন অনলাইনে পাঠানো হয়েছে। অ্যাডমিন অনুমোদনের পর পণ্য যোগ করতে পারবেন।')));
   }
   Future<void> removeProduct(Map<String,dynamic> item) async {final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];final target=jsonEncode(item);raw.remove(target);await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.remove(item));}
   Future<void> editProduct(Map<String,dynamic> item) async {
@@ -498,7 +510,41 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     if(!mounted)return;
     setState(()=>mine[mine.indexOf(item)]=updated);
   }
-  Future<void> addProduct() async {if(!registered){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('আগে সেলার তথ্য সংরক্ষণ করুন')));return;}if(product.text.trim().isEmpty||price.text.trim().isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্যের নাম ও দাম দিন')));return;}final item={'name':product.text.trim(),'price':price.text.trim(),'category':category,'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'};final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];raw.add(jsonEncode(item));await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.insert(0,item));product.clear();price.clear();}
+  Future<void> addProduct() async {
+    if(!registered){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('আগে সেলার তথ্য সংরক্ষণ করুন')));return;}
+    if(product.text.trim().isEmpty||price.text.trim().isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্যের নাম ও দাম দিন')));return;}
+    final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;
+    if(user!=null){
+      try{
+        final profile=await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        if(profile.data()?['sellerApproved']!=true){
+          if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('আপনার সেলার আবেদন এখনো অ্যাডমিন অনুমোদন করেননি।')));
+          return;
+        }
+        var digits=price.text;
+        const bn='০১২৩৪৫৬৭৮৯';
+        for(var i=0;i<10;i++){digits=digits.replaceAll(bn[i],'$i');}
+        final numericPrice=double.tryParse(digits.replaceAll(RegExp(r'[^0-9.]'), ''));
+        if(numericPrice==null||numericPrice<=0){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক পণ্যমূল্য লিখুন')));return;}
+        await FirebaseFirestore.instance.collection('products').add({
+          'sellerId':user.uid,'title':product.text.trim(),'categoryId':category,
+          'price':numericPrice,'stock':0,'imageUrls':<String>[],
+          'status':'pending','createdAt':FieldValue.serverTimestamp(),'updatedAt':FieldValue.serverTimestamp(),
+        });
+        if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্য অনলাইনে জমা হয়েছে। অ্যাডমিন প্রকাশ করলে দেখা যাবে।')));
+      }catch(error){
+        if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('পণ্য অনলাইনে যোগ হয়নি: $error')));
+        return;
+      }
+    }else{
+      final item={'name':product.text.trim(),'price':price.text.trim(),'category':category,'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'};
+      final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];raw.add(jsonEncode(item));await p.setStringList('elyramart_seller_products_v1',raw);
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্য শুধু এই ফোনে ডেমো হিসেবে সংরক্ষিত হয়েছে।')));
+    }
+    if(!mounted)return;
+    setState(()=>mine.insert(0,{'name':product.text.trim(),'price':price.text.trim(),'category':category,'status':user==null?'local_pending':'pending'}));
+    product.clear();price.clear();
+  }
   @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('সেলার সেন্টার')),body:ListView(padding:const EdgeInsets.all(18),children:[
     const Text('দোকানের তথ্য',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
     field(shop,'দোকানের নাম'),field(owner,'মালিকের নাম'),field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),field(address,'দোকানের ঠিকানা',lines:2),
@@ -708,11 +754,24 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
     if(normalizedPhone==null){
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
     }
+    final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;
+    if(user!=null){
+      try{
+        await FirebaseFirestore.instance.collection('technicianApplications').add({
+          'userId':user.uid,'name':name.text.trim(),'phone':normalizedPhone,
+          'address':address.text.trim(),'skills':skills.text.trim(),
+          'status':'pending','createdAt':FieldValue.serverTimestamp(),
+        });
+      }catch(error){
+        if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('টেকনিশিয়ান আবেদন পাঠানো যায়নি: $error')));
+        return;
+      }
+    }
     final p=await SharedPreferences.getInstance();
-    await p.setString('elyramart_technician_profile_v1',jsonEncode({'name':name.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'skills':skills.text.trim()}));
+    await p.setString('elyramart_technician_profile_v1',jsonEncode({'name':name.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'skills':skills.text.trim(),'status':user==null?'local_pending':'pending'}));
     if(!mounted)return;
     setState(()=>saved=true);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('টেকনিশিয়ান প্রোফাইল এই ফোনে সংরক্ষিত হয়েছে')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(user==null?'টেকনিশিয়ান তথ্য শুধু এই ফোনে রাখা হয়েছে। অনলাইনে আবেদনের জন্য লগইন করুন।':'টেকনিশিয়ান আবেদন অনলাইনে পাঠানো হয়েছে। অ্যাডমিন যাচাই করবেন।')));
   }
   Future<void> _status(Map<String,dynamic> item,String value) async {
     final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_service_requests_v1')??[];final updated=<String>[];
