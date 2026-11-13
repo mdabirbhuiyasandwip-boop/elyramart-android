@@ -37,5 +37,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('আপনার প্রোফাইল'), findsOneWidget);
     expect(find.text('প্রোফাইল সংরক্ষণ করুন'), findsOneWidget);
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'Abir');
+    await tester.enterText(fields.at(1), '01712345678');
+    await tester.tap(find.text('প্রোফাইল সংরক্ষণ করুন'));
+    await tester.pumpAndSettle();
+    expect(find.text('ডেমো প্রোফাইল এই ফোনে সংরক্ষিত হয়েছে'), findsOneWidget);
   });
 }
