@@ -412,6 +412,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       'items': widget.items.map((p)=>{'name':p.name,'category':p.category,'price':p.price,'sellerId':p.sellerId}).toList(),
       'sellerIds': widget.items.map((p)=>p.sellerId).whereType<String>().toSet().toList(),
       'totalAmount': totalAmount,
+      'paymentMethod': 'cash_on_delivery',
       'createdAt': FieldValue.serverTimestamp(),
       'status': 'placed',
     };
@@ -446,7 +447,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       ListTile(contentPadding:EdgeInsets.zero,title:const Text('পণ্যের মোট',style:TextStyle(fontWeight:FontWeight.bold)),trailing:Text('৳$totalAmount',style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold,color:green))),
       const SizedBox(height:8),field(name,'আপনার নাম'),field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),field(address,'সম্পূর্ণ ডেলিভারি ঠিকানা',lines:3),
       const SizedBox(height:8),
-      Container(padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:const Color(0xFFFFF4D6),borderRadius:BorderRadius.circular(12)),child:const Text('ডেমো মোড: অর্ডারটি এই ফোনে সংরক্ষণ হবে। অনলাইন অর্ডার পাঠাতে সার্ভার সংযোগ প্রয়োজন।')),
+      Container(padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:const Color(0xFFEAF7EF),borderRadius:BorderRadius.circular(12)),child:const Text('পেমেন্ট: ক্যাশ অন ডেলিভারি (পণ্য হাতে পেয়ে মূল্য পরিশোধ করুন)। অনলাইন অর্ডারের জন্য লগইন ও Firebase সংযোগ প্রয়োজন।')),
       const SizedBox(height:12),
       FilledButton(onPressed:saving?null:()=>saveOrder(c),child:Text(saving?'সংরক্ষণ হচ্ছে...':'অর্ডার তথ্য সংরক্ষণ করুন'))
     ])
