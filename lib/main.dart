@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 
 class FirebaseRuntime { static bool initialized = false; }
 
@@ -127,7 +128,8 @@ class _ElyramartMarkPainter extends CustomPainter {
 class Product {
   final String name, category, price, emoji, detail;
   final String? sellerId;
-  const Product(this.name, this.category, this.price, this.emoji, this.detail,{this.sellerId});
+  final String? imageUrl;
+  const Product(this.name, this.category, this.price, this.emoji, this.detail,{this.sellerId,this.imageUrl});
 }
 const products = <Product>[];
 
@@ -168,19 +170,19 @@ class _HomePageState extends State<HomePage> {
           final data=doc.data();
           final title=(data['title']??'পণ্য').toString();
           final price=data['price'];
-          loadedSeller.add(Product(title,(data['categoryId']??'অন্যান্য').toString(),'৳${price is num?price.toStringAsFixed(0):price}','🛍️','Elyramart verified seller',sellerId:data['sellerId']?.toString()));
+          loadedSeller.add(Product(title,(data['categoryId']??'অন্যান্য').toString(),'৳${price is num?price.toStringAsFixed(0):price}','🛍️','Elyramart verified seller',sellerId:data['sellerId']?.toString(),imageUrl:(data['imageUrls'] as List?)?.whereType<String>().firstOrNull));
         }
       }catch(error){debugPrint('Elyramart product sync failed: $error');}
     }
     if(!mounted)return;
     setState((){
       sellerProducts=loadedSeller;
-      cart..clear()..addAll(saved.map((v){try{final m=Map<String,dynamic>.from(jsonDecode(v) as Map);return Product(m['name']??'',m['category']??'',m['price']??'',m['emoji']??'🛍️',m['detail']??'',sellerId:m['sellerId']?.toString());}catch(_){final i=int.tryParse(v);return i!=null&&i>=0&&i<products.length?products[i]:null;}}).whereType<Product>());
+      cart..clear()..addAll(saved.map((v){try{final m=Map<String,dynamic>.from(jsonDecode(v) as Map);return Product(m['name']??'',m['category']??'',m['price']??'',m['emoji']??'🛍️',m['detail']??'',sellerId:m['sellerId']?.toString(),imageUrl:m['imageUrl']?.toString());}catch(_){final i=int.tryParse(v);return i!=null&&i>=0&&i<products.length?products[i]:null;}}).whereType<Product>());
     });
   }
   Future<void> _saveCart() async {
     final prefs=await SharedPreferences.getInstance();
-    await prefs.setStringList('elyramart_cart_v1',cart.map((p)=>jsonEncode({'name':p.name,'category':p.category,'price':p.price,'emoji':p.emoji,'detail':p.detail,'sellerId':p.sellerId})).toList());
+    await prefs.setStringList('elyramart_cart_v1',cart.map((p)=>jsonEncode({'name':p.name,'category':p.category,'price':p.price,'emoji':p.emoji,'detail':p.detail,'sellerId':p.sellerId,'imageUrl':p.imageUrl})).toList());
   }
   void add(Product p) {
     setState(()=>cart.add(p)); _saveCart();
@@ -254,7 +256,7 @@ class _HomePageState extends State<HomePage> {
 
 class Cat extends StatelessWidget { final String icon,name; const Cat({super.key,required this.icon,required this.name}); @override Widget build(BuildContext c)=>Container(width:76,margin:const EdgeInsets.only(right:10),padding:const EdgeInsets.all(8),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Text(icon,style:const TextStyle(fontSize:27)),const SizedBox(height:5),Text(name,style:const TextStyle(fontSize:11,fontWeight:FontWeight.w600))])); }
 
-class ProductCard extends StatelessWidget { final Product p; final VoidCallback onAdd; const ProductCard({super.key,required this.p,required this.onAdd}); @override Widget build(BuildContext c)=>Container(padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Container(height:92,width:double.infinity,decoration:BoxDecoration(color:pale,borderRadius:BorderRadius.circular(12)),child:Center(child:Text(p.emoji,style:const TextStyle(fontSize:42)))),const SizedBox(height:9),Text(p.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.bold)),Text(p.detail,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.black54,fontSize:11)),const SizedBox(height:8),Row(children:[Text(p.price,style:const TextStyle(color:green,fontWeight:FontWeight.bold)),const Spacer(),IconButton.filled(onPressed:onAdd,icon:const Icon(Icons.add,size:18),style:IconButton.styleFrom(backgroundColor:green,foregroundColor:Colors.white,minimumSize:const Size(34,34)))]) ])); }
+class ProductCard extends StatelessWidget { final Product p; final VoidCallback onAdd; const ProductCard({super.key,required this.p,required this.onAdd}); @override Widget build(BuildContext c)=>Container(padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Container(height:92,width:double.infinity,decoration:BoxDecoration(color:pale,borderRadius:BorderRadius.circular(12)),child:p.imageUrl!=null?ClipRRect(borderRadius:BorderRadius.circular(12),child:Image.network(p.imageUrl!,fit:BoxFit.cover,width:double.infinity,errorBuilder:(_,__,___)=>Center(child:Text(p.emoji,style:const TextStyle(fontSize:42))))):Center(child:Text(p.emoji,style:const TextStyle(fontSize:42)))),const SizedBox(height:9),Text(p.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.bold)),Text(p.detail,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.black54,fontSize:11)),const SizedBox(height:8),Row(children:[Text(p.price,style:const TextStyle(color:green,fontWeight:FontWeight.bold)),const Spacer(),IconButton.filled(onPressed:onAdd,icon:const Icon(Icons.add,size:18),style:IconButton.styleFrom(backgroundColor:green,foregroundColor:Colors.white,minimumSize:const Size(34,34)))]) ])); }
 
 class ServicesPage extends StatelessWidget {
   const ServicesPage({super.key});
@@ -447,6 +449,7 @@ class SellerPortalPage extends StatefulWidget {
 class _SellerPortalPageState extends State<SellerPortalPage> {
   final shop=TextEditingController(),owner=TextEditingController(),phone=TextEditingController(),address=TextEditingController();
   final product=TextEditingController(),price=TextEditingController(),stock=TextEditingController(text:'1');
+  XFile? selectedImage;
   String category='মুদিখানা';
   List<Map<String,dynamic>> mine=[],orders=[];
   bool registered=false;
@@ -534,6 +537,13 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     if(!mounted)return;
     setState(()=>mine[mine.indexOf(item)]=updated);
   }
+  Future<void> pickProductImage() async {
+    try{
+      final image=await ImagePicker().pickImage(source:ImageSource.gallery,imageQuality:80,maxWidth:1600);
+      if(!mounted||image==null)return;
+      setState(()=>selectedImage=image);
+    }catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('ছবি নির্বাচন করা যায়নি: $error')));}
+  }
   Future<void> addProduct() async {
     if(!registered){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('আগে সেলার তথ্য সংরক্ষণ করুন')));return;}
     if(product.text.trim().isEmpty||price.text.trim().isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্যের নাম ও দাম দিন')));return;}
@@ -550,9 +560,16 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
         for(var i=0;i<10;i++){digits=digits.replaceAll(bn[i],'$i');}
         final numericPrice=double.tryParse(digits.replaceAll(RegExp(r'[^0-9.]'), ''));
         if(numericPrice==null||numericPrice<=0){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক পণ্যমূল্য লিখুন')));return;}
+        final imageUrls=<String>[];
+        if(selectedImage!=null){
+          final bytes=await selectedImage!.readAsBytes();
+          final imageRef=FirebaseStorage.instance.ref().child('products/${user.uid}/${DateTime.now().millisecondsSinceEpoch}.jpg');
+          await imageRef.putData(bytes,SettableMetadata(contentType:selectedImage!.mimeType??'image/jpeg'));
+          imageUrls.add(await imageRef.getDownloadURL());
+        }
         await FirebaseFirestore.instance.collection('products').add({
           'sellerId':user.uid,'title':product.text.trim(),'categoryId':category,
-          'price':numericPrice,'stock':int.tryParse(stock.text.trim())??1,'imageUrls':<String>[],
+          'price':numericPrice,'stock':int.tryParse(stock.text.trim())??1,'imageUrls':imageUrls,
           'status':'pending','createdAt':FieldValue.serverTimestamp(),'updatedAt':FieldValue.serverTimestamp(),
         });
         if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্য অনলাইনে জমা হয়েছে। অ্যাডমিন প্রকাশ করলে দেখা যাবে।')));
@@ -575,6 +592,7 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     FilledButton(onPressed:saveProfile,child:Text(registered?'সেলার তথ্য আপডেট করুন':'সেলার হিসেবে নিবন্ধন করুন')),
     const SizedBox(height:24),const Divider(),const Text('নতুন পণ্য যোগ করুন',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
     field(product,'পণ্যের নাম'),field(price,'দাম (যেমন ৳২৫০)',keyboard:TextInputType.text),field(stock,'স্টক / পরিমাণ',keyboard:TextInputType.number),
+    OutlinedButton.icon(onPressed:pickProductImage,icon:const Icon(Icons.image_outlined),label:Text(selectedImage==null?'পণ্যের ছবি নির্বাচন করুন':'ছবি নির্বাচিত: ${selectedImage!.name}')),
     DropdownButtonFormField<String>(value:category,decoration:const InputDecoration(labelText:'ক্যাটাগরি',border:OutlineInputBorder()),items:const ['ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি','অন্যান্য'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)setState(()=>category=v);}),
     const SizedBox(height:12),FilledButton.icon(onPressed:addProduct,icon:const Icon(Icons.add),label:const Text('পণ্য সংরক্ষণ করুন')),
     const SizedBox(height:20),Text('আমার যোগ করা পণ্য (${mine.length})',style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold)),
