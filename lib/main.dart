@@ -685,6 +685,13 @@ class _AccountPageState extends State<AccountPage> {
           ),
           const Divider(height: 1),
           ListTile(
+            leading: const Icon(Icons.verified_user_outlined),
+            title: const Text('কোম্পানির মালিক / Owner Settings'),
+            subtitle: const Text('কোম্পানির নাম, মালিকের নম্বর ও যোগাযোগের তথ্য'),
+            onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => const OwnerSettingsPage())),
+          ),
+          const Divider(height: 1),
+          ListTile(
             leading: const Icon(Icons.engineering_outlined),
             title: const Text('টেকনিশিয়ান সেন্টার'),
             subtitle: const Text('প্রোফাইল ও সার্ভিস বুকিং দেখুন'),
@@ -721,6 +728,54 @@ class _AccountPageState extends State<AccountPage> {
       const SizedBox(height: 10),
       const Text('নোট: অর্ডার ও বুকিং এখনো এই ডিভাইসে সংরক্ষিত। অনলাইনে পাঠাতে সার্ভার সংযোগ প্রয়োজন।', style: TextStyle(color: Colors.black54, fontSize: 12)),
     ],
+  );
+}
+
+class OwnerSettingsPage extends StatefulWidget {
+  const OwnerSettingsPage({super.key});
+  @override State<OwnerSettingsPage> createState()=>_OwnerSettingsPageState();
+}
+class _OwnerSettingsPageState extends State<OwnerSettingsPage> {
+  final company=TextEditingController(text:'Elyramart');
+  final owner=TextEditingController();
+  final phone=TextEditingController();
+  final email=TextEditingController();
+  bool loading=true;
+  @override void initState(){super.initState();_load();}
+  @override void dispose(){company.dispose();owner.dispose();phone.dispose();email.dispose();super.dispose();}
+  Future<void> _load() async {
+    final p=await SharedPreferences.getInstance();
+    final raw=p.getString('elyramart_owner_profile_v1');
+    if(raw!=null){try{final m=Map<String,dynamic>.from(jsonDecode(raw) as Map);company.text=m['company']??'Elyramart';owner.text=m['owner']??'';phone.text=m['phone']??'';email.text=m['email']??'';}catch(_){}}
+    if(mounted)setState(()=>loading=false);
+  }
+  Future<void> _save() async {
+    if(company.text.trim().isEmpty||phone.text.trim().isEmpty){
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('কোম্পানির নাম ও মালিকের মোবাইল নম্বর দিন')));return;
+    }
+    final normalized=normalizeBangladeshPhone(phone.text);
+    if(normalized==null){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক বাংলাদেশি মোবাইল নম্বর দিন')));return;}
+    final p=await SharedPreferences.getInstance();
+    await p.setString('elyramart_owner_profile_v1',jsonEncode({'company':company.text.trim(),'owner':owner.text.trim(),'phone':normalized,'email':email.text.trim(),'updatedAt':DateTime.now().toIso8601String()}));
+    if(!mounted)return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('মালিকের তথ্য এই ডিভাইসে সংরক্ষিত হয়েছে')));
+  }
+  @override Widget build(BuildContext c)=>Scaffold(
+    appBar:AppBar(title:const Text('কোম্পানির মালিকানা ও সেটিংস')),
+    body:loading?const Center(child:CircularProgressIndicator()):ListView(padding:const EdgeInsets.all(18),children:[
+      const CircleAvatar(radius:34,child:Icon(Icons.business,size:36)),
+      const SizedBox(height:12),
+      const Text('Elyramart — মালিকের তথ্য',textAlign:TextAlign.center,style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
+      const SizedBox(height:18),
+      field(company,'কোম্পানির নাম'),
+      field(owner,'মালিকের নাম'),
+      field(phone,'মালিকের মোবাইল নম্বর',keyboard:TextInputType.phone),
+      field(email,'কোম্পানির ইমেইল',keyboard:TextInputType.emailAddress),
+      const SizedBox(height:10),
+      FilledButton.icon(onPressed:_save,icon:const Icon(Icons.save),label:const Text('মালিকের তথ্য সংরক্ষণ')),
+      const SizedBox(height:16),
+      const Text('গুরুত্বপূর্ণ: এই সংস্করণে তথ্য শুধু এই ফোনে থাকে। এটি এখনো মালিকানা যাচাই, নিরাপদ অ্যাডমিন লগইন বা ক্লাউড সিঙ্ক নয়। আসল মালিক-নিয়ন্ত্রণ চালু করতে Firebase Auth/Firestore ও সার্ভার-সাইড Admin role সংযোগ করতে হবে।',style:TextStyle(color:Colors.deepOrange,fontSize:12))
+    ])
   );
 }
 
