@@ -184,7 +184,29 @@ class Cat extends StatelessWidget { final String icon,name; const Cat({super.key
 
 class ProductCard extends StatelessWidget { final Product p; final VoidCallback onAdd; const ProductCard({super.key,required this.p,required this.onAdd}); @override Widget build(BuildContext c)=>Container(padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Container(height:92,width:double.infinity,decoration:BoxDecoration(color:pale,borderRadius:BorderRadius.circular(12)),child:Center(child:Text(p.emoji,style:const TextStyle(fontSize:42)))),const SizedBox(height:9),Text(p.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.bold)),Text(p.detail,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.black54,fontSize:11)),const SizedBox(height:8),Row(children:[Text(p.price,style:const TextStyle(color:green,fontWeight:FontWeight.bold)),const Spacer(),IconButton.filled(onPressed:onAdd,icon:const Icon(Icons.add,size:18),style:IconButton.styleFrom(backgroundColor:green,foregroundColor:Colors.white,minimumSize:const Size(34,34)))]) ])); }
 
-class ServicesPage extends StatelessWidget { const ServicesPage({super.key}); @override Widget build(BuildContext context)=>ListView(padding:const EdgeInsets.all(16),children:[const Text('টেকনিশিয়ান ও হোম সার্ভিস',style:TextStyle(fontSize:21,fontWeight:FontWeight.bold,color:ink)),const SizedBox(height:6),const Text('আপনার সমস্যার জন্য প্রয়োজনীয় সার্ভিস নির্বাচন করুন। বুকিংয়ের তথ্য দিয়ে অনুরোধ পাঠান।'),const SizedBox(height:16),...services.map((s)=>Card(color:Colors.white,elevation:0,child:ListTile(leading:CircleAvatar(backgroundColor:const Color(0xFFE2F3EC),child:Icon(s.$2,color:green)),title:Text(s.$1,style:const TextStyle(fontWeight:FontWeight.bold)),subtitle:Text(s.$3),trailing:const Icon(Icons.arrow_forward_ios,size:16),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>BookingPage(service:s.$1)))))]); }
+class ServicesPage extends StatelessWidget {
+  const ServicesPage({super.key});
+  @override
+  Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.all(16),
+    children: [
+      const Text('টেকনিশিয়ান ও হোম সার্ভিস', style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold, color: ink)),
+      const SizedBox(height: 6),
+      const Text('আপনার সমস্যার জন্য প্রয়োজনীয় সার্ভিস নির্বাচন করুন। বুকিংয়ের তথ্য দিয়ে অনুরোধ পাঠান।'),
+      const SizedBox(height: 16),
+      ...services.map((s) => Card(
+        color: Colors.white, elevation: 0,
+        child: ListTile(
+          leading: CircleAvatar(backgroundColor: const Color(0xFFE2F3EC), child: Icon(s.$2, color: green)),
+          title: Text(s.$1, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text(s.$3),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookingPage(service: s.$1))),
+        ),
+      )),
+    ],
+  );
+}
 
 class BookingPage extends StatefulWidget { final String service; const BookingPage({super.key,required this.service}); @override State<BookingPage> createState()=>_BookingPageState(); }
 class _BookingPageState extends State<BookingPage> {
@@ -359,7 +381,7 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     else ...mine.map((m)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.inventory_2,color:green),title:Text(m['name']??''),subtitle:Text('${m['category']??''} • ${m['price']??''}'),trailing:Row(mainAxisSize:MainAxisSize.min,children:[
       IconButton(tooltip:'পণ্য সম্পাদনা',onPressed:()=>editProduct(m),icon:const Icon(Icons.edit_outlined,color:green)),
       IconButton(tooltip:'পণ্য মুছুন',onPressed:()=>showDialog(context:c,builder:(dialogContext)=>AlertDialog(title:const Text('পণ্য মুছবেন?'),content:Text((m['name']??'')+' তালিকা থেকে মুছে যাবে।'),actions:[TextButton(onPressed:()=>Navigator.pop(dialogContext),child:const Text('না')),TextButton(onPressed:(){Navigator.pop(dialogContext);removeProduct(m);},child:const Text('মুছুন'))])),icon:const Icon(Icons.delete_outline,color:Colors.red))
-    ]))),
+    ])))),
     const SizedBox(height:24),const Divider(),Text('গ্রাহকের অর্ডার ('+orders.length.toString()+')',style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
     if(orders.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('এখনো কোনো অর্ডার নেই'),subtitle:Text('এই ফোনে সংরক্ষিত অর্ডার এখানে দেখা যাবে।')))
     else ...orders.map((o)=>Card(color:Colors.white,child:Padding(padding:const EdgeInsets.all(12),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -426,7 +448,7 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
     if(bookings.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('কোনো বুকিং নেই')))
     else ...bookings.take(10).map((v)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.handyman,color:green),title:Text(v['service']??''),subtitle:Text('${v['name']??''} • ${v['phone']??''}\\n${v['problem']??''}\\nস্ট্যাটাস: ${_status(v)}'),isThreeLine:true,trailing:_statusMenu('elyramart_service_requests_v1','createdAt',v)))),
     const SizedBox(height:12),const Text('সতর্কতা: এই স্ক্রিন শুধু একই ফোনে থাকা ডেমো তথ্য দেখায়। স্ট্যাটাস পরিবর্তনও শুধু এই ফোনে সংরক্ষিত হয়; গ্রাহক, দোকান বা টেকনিশিয়ান অনলাইনে আপডেট পায় না.',style:TextStyle(color:Colors.black54,fontSize:12))
-  ])));
+  ]));
   Widget _stat(String label,int value,IconData icon)=>Container(width:MediaQuery.of(context).size.width/3-20,padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),child:Column(children:[Icon(icon,color:green),const SizedBox(height:6),Text('$value',style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),Text(label,style:const TextStyle(fontSize:11))]));
 }
 class TechnicianPortalPage extends StatefulWidget {
@@ -525,82 +547,4 @@ class _AccountPageState extends State<AccountPage> {
 class CustomerLoginPage extends StatefulWidget {
   const CustomerLoginPage({super.key});
   @override State<CustomerLoginPage> createState()=>_CustomerLoginPageState();
-}
-class _CustomerLoginPageState extends State<CustomerLoginPage> {
-  final name=TextEditingController();
-  final phone=TextEditingController();
-  final address=TextEditingController();
-  bool loading=true;
-  @override void initState(){super.initState();_load();}
-  @override void dispose(){name.dispose();phone.dispose();address.dispose();super.dispose();}
-  Future<void> _load() async {
-    final prefs=await SharedPreferences.getInstance();
-    final raw=prefs.getString('elyramart_customer_profile_v1');
-    if(!mounted)return;
-    if(raw!=null){try{final data=Map<String,dynamic>.from(jsonDecode(raw) as Map);name.text=data['name']??'';phone.text=data['phone']??'';address.text=data['address']??'';}catch(_){}}
-    setState(()=>loading=false);
-  }
-  Future<void> _save() async {
-    if(name.text.trim().isEmpty||phone.text.trim().isEmpty){
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('নাম ও মোবাইল নম্বর লিখুন')));return;
-    }
-    const bn='০১২৩৪৫৬৭৮৯';
-    var normalized=phone.text.trim();
-    for(var i=0;i<10;i++){normalized=normalized.replaceAll(bn[i], '$i');}
-    normalized=normalized.replaceAll(RegExp(r'[\\s\\-()]'), '');
-    if(normalized.startsWith('+880')){normalized='0'+normalized.substring(4);}
-    else if(normalized.startsWith('8801')){normalized='0'+normalized.substring(3);}
-    if(!RegExp(r'^01[3-9]\d{8}$').hasMatch(normalized)){
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
-    }
-    final prefs=await SharedPreferences.getInstance();
-    await prefs.setString('elyramart_customer_profile_v1',jsonEncode({'name':name.text.trim(),'phone':normalized,'address':address.text.trim(),'updatedAt':DateTime.now().toIso8601String()}));
-    if(!mounted)return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('ডেমো প্রোফাইল এই ফোনে সংরক্ষিত হয়েছে')));
-  }
-  @override Widget build(BuildContext context)=>Scaffold(
-    appBar:AppBar(title:const Text('গ্রাহক অ্যাকাউন্ট')),
-    body:loading?const Center(child:CircularProgressIndicator()):ListView(padding:const EdgeInsets.all(18),children:[
-      const CircleAvatar(radius:34,child:Icon(Icons.person_outline,size:36)),
-      const SizedBox(height:12),
-      const Text('আপনার প্রোফাইল',textAlign:TextAlign.center,style:TextStyle(fontSize:21,fontWeight:FontWeight.bold)),
-      const SizedBox(height:6),
-      const Text('নাম ও যোগাযোগের তথ্য সংরক্ষণ করুন।',textAlign:TextAlign.center),
-      const SizedBox(height:20),
-      field(name,'আপনার নাম'),
-      field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),
-      field(address,'ডেলিভারি ঠিকানা',lines:3),
-      const SizedBox(height:8),
-      FilledButton.icon(onPressed:_save,icon:const Icon(Icons.save_outlined),label:const Text('প্রোফাইল সংরক্ষণ করুন')),
-      const SizedBox(height:14),
-      const Text('এটি আপাতত এই ডিভাইসের ডেমো প্রোফাইল। অনলাইন লগইন ও সব ডিভাইসে একই অ্যাকাউন্ট ব্যবহারের জন্য নিরাপদ সার্ভার ও Firebase Auth সংযোগ এখনো প্রয়োজন।',style:TextStyle(color:Colors.black54,fontSize:12))
-    ])
-  );
-}
-).hasMatch(normalized)){
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
-    }
-    final prefs=await SharedPreferences.getInstance();
-    await prefs.setString('elyramart_customer_profile_v1',jsonEncode({'name':name.text.trim(),'phone':normalized,'address':address.text.trim(),'updatedAt':DateTime.now().toIso8601String()}));
-    if(!mounted)return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('ডেমো প্রোফাইল এই ফোনে সংরক্ষিত হয়েছে')));
-  }
-  @override Widget build(BuildContext context)=>Scaffold(
-    appBar:AppBar(title:const Text('গ্রাহক অ্যাকাউন্ট')),
-    body:loading?const Center(child:CircularProgressIndicator()):ListView(padding:const EdgeInsets.all(18),children:[
-      const CircleAvatar(radius:34,child:Icon(Icons.person_outline,size:36)),
-      const SizedBox(height:12),
-      const Text('আপনার প্রোফাইল',textAlign:TextAlign.center,style:TextStyle(fontSize:21,fontWeight:FontWeight.bold)),
-      const SizedBox(height:6),
-      const Text('নাম ও যোগাযোগের তথ্য সংরক্ষণ করুন।',textAlign:TextAlign.center),
-      const SizedBox(height:20),
-      field(name,'আপনার নাম'),
-      field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),
-      field(address,'ডেলিভারি ঠিকানা',lines:3),
-      const SizedBox(height:8),
-      FilledButton.icon(onPressed:_save,icon:const Icon(Icons.save_outlined),label:const Text('প্রোফাইল সংরক্ষণ করুন')),
-      const SizedBox(height:14),
-      const Text('এটি আপাতত এই ডিভাইসের ডেমো প্রোফাইল। অনলাইন লগইন ও সব ডিভাইসে একই অ্যাকাউন্ট ব্যবহারের জন্য নিরাপদ সার্ভার ও Firebase Auth সংযোগ এখনো প্রয়োজন।',style:TextStyle(color:Colors.black54,fontSize:12))
-    ])
-  );
 }
