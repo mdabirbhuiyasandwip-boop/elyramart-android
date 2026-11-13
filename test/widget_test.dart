@@ -16,11 +16,8 @@ void main() {
 
     expect(find.text('Elyramart'), findsOneWidget);
     expect(find.text('আপনার প্রয়োজন, এক জায়গায়'), findsOneWidget);
-    // Static ListView children are built eagerly; verify the catalog without
-    // scrolling the nested horizontal category list.
-    expect(find.text('জনপ্রিয় পণ্য'), findsOneWidget);
-    expect(find.text('Premium Face Wash'), findsOneWidget);
-    expect(find.text('বার্গার'), findsOneWidget);
+    expect(find.text('সেলার হোন'), findsOneWidget);
+    expect(find.text('টেকনিশিয়ান হোন'), findsOneWidget);
 
     await tester.tap(find.text('সার্ভিস').last);
     await tester.pumpAndSettle();
