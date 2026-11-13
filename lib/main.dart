@@ -2,13 +2,19 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
+
+class FirebaseRuntime { static bool initialized = false; }
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
     await Firebase.initializeApp();
+    FirebaseRuntime.initialized = true;
   }
   await AppLanguage.load();
   runApp(const ElyramartApp());
@@ -1041,7 +1047,227 @@ class _OwnerSettingsPageState extends State<OwnerSettingsPage> {
 
 class CustomerLoginPage extends StatefulWidget {
   const CustomerLoginPage({super.key});
-  @override State<CustomerLoginPage> createState()=>_CustomerLoginPageState();
+  @override State<CustomerLoginPage> createState() => _CustomerLoginPageState();
+}
+
+class _CustomerLoginPageState extends State<CustomerLoginPage> {
+  final name = TextEditingController();
+  final phone = TextEditingController();
+  final address = TextEditingController();
+  final email = TextEditingController();
+  final password = TextEditingController();
+  bool loading = true;
+  bool authBusy = false;
+  String authMessage = '';
+
+  @override void initState() { super.initState(); _load(); }
+  @override void dispose() {
+    name.dispose(); phone.dispose(); address.dispose();
+    email.dispose(); password.dispose(); super.dispose();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('elyramart_customer_profile_v1');
+    if (!mounted) return;
+    if (raw != null) {
+      try {
+        final data = Map<String, dynamic>.from(jsonDecode(raw) as Map);
+        name.text = data['name'] ?? '';
+        phone.text = data['phone'] ?? '';
+        address.text = data['address'] ?? '';
+      } catch (_) {}
+    }
+    setState(() => loading = false);
+  }
+
+  void _showAuthMessage(String message) {
+    if (!mounted) return;
+    setState(() { authMessage = message; authBusy = false; });
+  }
+
+  Future<void> _signIn() async {
+    if (!FirebaseRuntime.initialized) {
+      _showAuthMessage('Firebase সংযোগ প্রস্তুত নয়। ইন্টারনেট ও Firebase সেটআপ পরীক্ষা করুন।');
+      return;
+    }
+    if (email.text.trim().isEmpty || password.text.isEmpty) {
+      _showAuthMessage('ইমেইল ও পাসওয়ার্ড লিখুন।'); return;
+    }
+    setState(() { authBusy = true; authMessage = ''; });
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email.text.trim(), password: password.text,
+      );
+      await _syncUserProfile();
+      _showAuthMessage('সফলভাবে লগইন হয়েছে।');
+    } on FirebaseAuthException catch (e) {
+      _showAuthMessage(_authError(e.code));
+    } catch (_) {
+      _showAuthMessage('লগইন করা যায়নি। আবার চেষ্টা করুন।');
+    }
+  }
+
+  Future<void> _register() async {
+    if (!FirebaseRuntime.initialized) {
+      _showAuthMessage('Firebase সংযোগ প্রস্তুত নয়।'); return;
+    }
+    if (email.text.trim().isEmpty || password.text.length < 6) {
+      _showAuthMessage('সঠিক ইমেইল দিন এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড লিখুন।');
+      return;
+    }
+    setState(() { authBusy = true; authMessage = ''; });
+    try {
+      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email.text.trim(), password: password.text,
+      );
+      await credential.user?.sendEmailVerification();
+      await _syncUserProfile();
+      _showAuthMessage('অ্যাকাউন্ট তৈরি হয়েছে। ইমেইলে পাঠানো লিংক দিয়ে ঠিকানা যাচাই করুন।');
+    } on FirebaseAuthException catch (e) {
+      _showAuthMessage(_authError(e.code));
+    } catch (_) {
+      _showAuthMessage('রেজিস্ট্রেশন করা যায়নি। আবার চেষ্টা করুন।');
+    }
+  }
+
+  String _authError(String code) => switch (code) {
+    'email-already-in-use' => 'এই ইমেইলে আগে থেকেই অ্যাকাউন্ট আছে।',
+    'invalid-email' => 'ইমেইল ঠিকানাটি সঠিক নয়।',
+    'weak-password' => 'আরও শক্তিশালী পাসওয়ার্ড দিন।',
+    'user-not-found' || 'wrong-password' || 'invalid-credential' => 'ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।',
+    'network-request-failed' => 'ইন্টারনেট সংযোগ পরীক্ষা করুন।',
+    'too-many-requests' => 'অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।',
+    _ => 'অনুরোধটি সম্পন্ন হয়নি ($code)।',
+  };
+
+  Future<void> _syncUserProfile() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final ref = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final snap = await ref.get();
+    if (!snap.exists) {
+      await ref.set({
+        'name': name.text.trim(),
+        'phone': normalizeBangladeshPhone(phone.text) ?? '',
+        'email': user.email ?? email.text.trim(),
+        'role': 'customer',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } else {
+      await ref.set({
+        'name': name.text.trim(),
+        'phone': normalizeBangladeshPhone(phone.text) ?? '',
+        'address': address.text.trim(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+  }
+
+  Future<void> _claimOwner() async {
+    if (!FirebaseRuntime.initialized) {
+      _showAuthMessage('Firebase সংযোগ প্রস্তুত নয়।'); return;
+    }
+    setState(() { authBusy = true; authMessage = ''; });
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) { _showAuthMessage('প্রথমে মালিকের ইমেইল দিয়ে লগইন করুন।'); return; }
+      await user.reload();
+      final refreshed = FirebaseAuth.instance.currentUser;
+      if (refreshed == null || !refreshed.emailVerified ||
+          refreshed.email?.toLowerCase() != 'elyramartbd@gmail.com') {
+        _showAuthMessage('শুধু যাচাইকৃত মালিকের ইমেইল দিয়ে Owner Admin চালু করা যাবে।');
+        return;
+      }
+      await FirebaseFunctions.instance.httpsCallable('claimOwnerAdmin').call();
+      await refreshed.getIdToken(true);
+      await refreshed.reload();
+      _showAuthMessage('Owner Admin অনুমতি দেওয়া হয়েছে। প্রয়োজনে আবার লগইন করুন।');
+    } on FirebaseFunctionsException catch (e) {
+      _showAuthMessage(e.message ?? 'Owner Admin চালু করা যায়নি।');
+    } catch (_) {
+      _showAuthMessage('Owner Admin চালু করা যায়নি। Firebase Functions deploy হয়েছে কি না দেখুন।');
+    }
+  }
+
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+    _showAuthMessage('লগআউট হয়েছে।');
+  }
+
+  Future<void> _save() async {
+    if (name.text.trim().isEmpty || phone.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('নাম ও মোবাইল নম্বর লিখুন')));
+      return;
+    }
+    final normalized = normalizeBangladeshPhone(phone.text);
+    if (normalized == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));
+      return;
+    }
+    final profile = {
+      'name': name.text.trim(), 'phone': normalized,
+      'address': address.text.trim(), 'updatedAt': DateTime.now().toIso8601String(),
+    };
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('elyramart_customer_profile_v1', jsonEncode(profile));
+    if (FirebaseRuntime.initialized && FirebaseAuth.instance.currentUser != null) {
+      try { await _syncUserProfile(); }
+      catch (_) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ফোনে সংরক্ষিত হয়েছে, কিন্তু ক্লাউডে সিঙ্ক হয়নি।')));
+        return;
+      }
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('প্রোফাইল সংরক্ষণ হয়েছে')));
+  }
+
+  @override Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('গ্রাহক অ্যাকাউন্ট')),
+    body: loading ? const Center(child: CircularProgressIndicator()) :
+      ListView(padding: const EdgeInsets.all(18), children: [
+        const CircleAvatar(radius: 34, child: Icon(Icons.person_outline, size: 36)),
+        const SizedBox(height: 12),
+        const Text('আপনার প্রোফাইল', textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 6),
+        const Text('নাম ও যোগাযোগের তথ্য সংরক্ষণ করুন।', textAlign: TextAlign.center),
+        const SizedBox(height: 20),
+        field(name, 'আপনার নাম'),
+        field(phone, 'মোবাইল নম্বর', keyboard: TextInputType.phone),
+        field(address, 'ডেলিভারি ঠিকানা', lines: 3),
+        const SizedBox(height: 8),
+        FilledButton.icon(onPressed: _save, icon: const Icon(Icons.save_outlined),
+          label: const Text('প্রোফাইল সংরক্ষণ করুন')),
+        const SizedBox(height: 22),
+        const Divider(),
+        const Text('অনলাইন অ্যাকাউন্ট', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        field(email, 'ইমেইল', keyboard: TextInputType.emailAddress),
+        field(password, 'পাসওয়ার্ড', obscure: true),
+        FilledButton(onPressed: authBusy ? null : _signIn, child: const Text('লগইন')),
+        OutlinedButton(onPressed: authBusy ? null : _register, child: const Text('নতুন অ্যাকাউন্ট তৈরি')),
+        if (FirebaseRuntime.initialized) ...[
+          const SizedBox(height: 10),
+          OutlinedButton.icon(onPressed: authBusy ? null : _claimOwner,
+            icon: const Icon(Icons.admin_panel_settings_outlined),
+            label: const Text('Owner Admin যাচাই করুন')),
+          TextButton(onPressed: authBusy ? null : _signOut, child: const Text('লগআউট')),
+        ],
+        if (authBusy) const Center(child: Padding(
+          padding: EdgeInsets.all(8), child: CircularProgressIndicator())),
+        if (authMessage.isNotEmpty) Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(authMessage, style: const TextStyle(color: green))),
+        const SizedBox(height: 12),
+        const Text('ইমেইল যাচাই ছাড়া মালিকের Admin অনুমতি দেওয়া হবে না। সাধারণ নতুন অ্যাকাউন্ট শুধু Customer role পাবে।',
+          style: TextStyle(color: Colors.black54, fontSize: 12)),
+      ]),
+  );
 }
 class _CustomerLoginPageState extends State<CustomerLoginPage> {
   final name=TextEditingController();
