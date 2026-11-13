@@ -1,6 +1,6 @@
 # Elyramart backend setup (বাংলা)
 
-এই repository-তে Flutter Android client-এর প্রাথমিক UI আছে। Firebase project credentials এখনো যোগ করা হয়নি, তাই login, cloud order, seller approval, technician assignment এবং live payment এখনো চালু নয়।
+এই repository-তে Android Firebase client configuration (`google-services.json`) যোগ করা আছে। এটি client-side public configuration—এটি Firebase Console-এ Authentication, Firestore, Storage বা Functions নিজে থেকে চালু/deploy করে না।
 
 ## বর্তমান অ্যাপের Firebase সংযোগ
 
@@ -9,7 +9,7 @@ Android app startup-এ Firebase Core initialize হয়। `google-services.json
 ## Firebase project প্রস্তুত
 1. Firebase Console-এ নতুন project তৈরি করুন: https://console.firebase.google.com/
 2. Android app register করুন package name: `com.elyramartbd.elyramart`
-3. Authentication-এ Phone এবং Email/Password provider চালু করুন।
+3. Authentication-এ Email/Password provider চালু করুন। (Phone OTP UI এখনো অ্যাপে implement করা হয়নি; পরে আলাদা করে যোগ করতে হবে।)
 4. Firestore Database তৈরি করুন (production mode)।
 5. Storage চালু করুন।
 6. Firebase CLI দিয়ে repository root-এ:
@@ -28,7 +28,7 @@ Android app startup-এ Firebase Core initialize হয়। `google-services.json
 
 ## প্রথম Owner Admin claim (বিশ্বস্ত Cloud Function)
 
-এই repository-তে `functions/src/index.ts`-এ `claimOwnerAdmin` callable function যোগ করা হয়েছে। এটি কেবল Firebase Authentication-এ লগইন করা এবং email-verified অ্যাকাউন্টকে অনুমতি দেবে, যার ইমেইল Firebase Functions parameter `ELYRAMART_OWNER_EMAIL`-এর সঙ্গে হুবহু মেলে। Flutter client নিজে admin claim লিখতে পারবে না।
+এই repository-তে `functions/src/index.ts`-এ `claimOwnerAdmin` callable function যোগ করা হয়েছে, তবে এটি Firebase project-এ deploy না করা পর্যন্ত কাজ করবে না। এটি কেবল Firebase Authentication-এ লগইন করা এবং email-verified অ্যাকাউন্টকে অনুমতি দেবে, যার ইমেইল Firebase Functions parameter `ELYRAMART_OWNER_EMAIL`-এর সঙ্গে হুবহু মেলে। Flutter client নিজে admin claim লিখতে পারবে না।
 
 প্রস্তুতির ধাপ:
 1. Firebase Console → Authentication → Sign-in method থেকে Email/Password চালু করুন।
