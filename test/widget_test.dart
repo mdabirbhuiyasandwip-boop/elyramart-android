@@ -30,6 +30,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('টেকনিশিয়ান ও হোম সার্ভিস'), findsOneWidget);
     expect(find.text('ইলেকট্রিশিয়ান'), findsOneWidget);
+    expect(find.text('রেস্টুরেন্ট সার্ভিস'), findsOneWidget);
 
     await tester.tap(find.text('কার্ট').last);
     await tester.pumpAndSettle();
