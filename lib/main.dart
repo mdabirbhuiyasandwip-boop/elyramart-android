@@ -52,6 +52,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int tab=0;
   final cart=<Product>[];
+  List<Product> sellerProducts=[];
   String category='সব';
   String searchQuery='';
   final categories=['সব','ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি'];
@@ -59,14 +60,18 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadCart() async {
     final prefs=await SharedPreferences.getInstance();
     final saved=prefs.getStringList('elyramart_cart_v1')??[];
+    final sellerRaw=prefs.getStringList('elyramart_seller_products_v1')??[];
+    final loadedSeller=<Product>[];
+    for(final raw in sellerRaw){try{final m=Map<String,dynamic>.from(jsonDecode(raw) as Map);loadedSeller.add(Product(m['name']??'পণ্য',m['category']??'মুদিখানা','৳${m['price']??'0'}','🛍️','সেলার তালিকাভুক্ত পণ্য'));}catch(_){}}
     if(!mounted)return;
     setState((){
-      cart..clear()..addAll(saved.map((v)=>int.tryParse(v)).whereType<int>().where((i)=>i>=0&&i<products.length).map((i)=>products[i]));
+      sellerProducts=loadedSeller;
+      cart..clear()..addAll(saved.map((v){try{final m=Map<String,dynamic>.from(jsonDecode(v) as Map);return Product(m['name']??'',m['category']??'',m['price']??'',m['emoji']??'🛍️',m['detail']??'');}catch(_){final i=int.tryParse(v);return i!=null&&i>=0&&i<products.length?products[i]:null;}}).whereType<Product>());
     });
   }
   Future<void> _saveCart() async {
     final prefs=await SharedPreferences.getInstance();
-    await prefs.setStringList('elyramart_cart_v1',cart.map((p)=>products.indexOf(p).toString()).toList());
+    await prefs.setStringList('elyramart_cart_v1',cart.map((p)=>jsonEncode({'name':p.name,'category':p.category,'price':p.price,'emoji':p.emoji,'detail':p.detail})).toList());
   }
   void add(Product p) {
     setState(()=>cart.add(p)); _saveCart();
@@ -87,7 +92,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
   Widget home(){
-    final visibleProducts=products.where((p)=>(category=='সব'||p.category==category) && ('${p.name} ${p.category} ${p.detail}'.toLowerCase().contains(searchQuery.toLowerCase()))).toList();
+    final allProducts=<Product>[...products,...sellerProducts];
+    final visibleProducts=allProducts.where((p)=>(category=='সব'||p.category==category) && ('${p.name} ${p.category} ${p.detail}'.toLowerCase().contains(searchQuery.toLowerCase()))).toList();
     return ListView(padding:const EdgeInsets.fromLTRB(16,8,16,24),children:[
     Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF075C48),Color(0xFF10966D)]),borderRadius:BorderRadius.circular(22)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
       const Text('আপনার প্রয়োজন, এক জায়গায়',style:TextStyle(color:Colors.white,fontSize:21,fontWeight:FontWeight.bold)),
