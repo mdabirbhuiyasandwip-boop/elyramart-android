@@ -32,7 +32,7 @@ for density, px in [("mdpi", 48), ("hdpi", 72), ("xhdpi", 96), ("xxhdpi", 144), 
 values = android / "values"
 values.mkdir(parents=True, exist_ok=True)
 (values / "ic_launcher_background.xml").write_text(
-    '<?xml version="1.0" encoding="utf-8"?>\\n<resources><color name="ic_launcher_background">#087F5B</color></resources>\\n',
+    '<?xml version="1.0" encoding="utf-8"?>\n<resources><color name="ic_launcher_background">#087F5B</color></resources>\n',
     encoding="utf-8"
 )
 
