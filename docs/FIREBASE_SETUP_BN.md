@@ -14,6 +14,14 @@
    `firebase deploy --only firestore:rules,storage`
 8. FlutterFire CLI দিয়ে `flutterfire configure` চালিয়ে generated `lib/firebase_options.dart` তৈরি করতে হবে। এই generated file project-specific; কখনো অন্যের config ব্যবহার করবেন না।
 
+## নিরাপত্তা ও অনুমোদন নিয়ম
+
+- নতুন অ্যাকাউন্ট নিজে থেকে শুধু `customer` role পাবে। অ্যাপ থেকে নিজেকে seller, technician বা admin বানানো যাবে না।
+- সেলার আবেদন `sellerApplications`-এ pending হিসেবে জমা হবে। যাচাই শেষে বিশ্বস্ত Admin SDK/server থেকে সংশ্লিষ্ট `users/{uid}` ডকুমেন্টে `sellerApproved: true` সেট করতে হবে।
+- অনুমোদিত সেলারই `products`-এ pending পণ্য তৈরি/সম্পাদনা এবং `products/{sellerId}/...` Storage path-এ ছবি আপলোড করতে পারবে।
+- পণ্যের public status `active` কেবল admin/server অনুমোদনের পর হবে। Admin claim কখনো Flutter client থেকে সেট করা যাবে না।
+- Firestore/Storage rules পরিবর্তনের পর Emulator-এ customer, pending seller, approved seller ও admin—এই চারটি role দিয়ে read/write পরীক্ষা করে তারপর deploy করুন।
+
 ## Proposed collections
 - `users/{uid}`: customer/seller/technician profile; admin role must be custom claim, never client-editable.
 - `products/{productId}`: sellerId, title, category, price, stock, imageUrls, status.
