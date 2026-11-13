@@ -10,6 +10,7 @@ on:
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - 'google-services.json'
+      - 'codemagic.yaml'
       - 'tools/generate_brand_assets.py'
       - '.github/workflows/build-apk.yml'
 
