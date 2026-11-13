@@ -240,10 +240,12 @@ String? normalizeBangladeshPhone(String input) {
   const bn='০১২৩৪৫৬৭৮৯';
   var value=input.trim();
   for(var i=0;i<10;i++){value=value.replaceAll(bn[i], '$i');}
-  value=value.replaceAll(RegExp(r'[\\s\\-()]'), '');
+  value=value.replaceAll(RegExp(r'[\s\-()]'), '');
   if(value.startsWith('+880')){value='0'+value.substring(4);}
   else if(value.startsWith('8801')){value='0'+value.substring(3);}
-  return RegExp(r'^01[3-9]\\d{8},{int lines=1,TextInputType? keyboard})=>Padding(padding:const EdgeInsets.only(bottom:12),child:TextField(controller:c,maxLines:lines,keyboardType:keyboard,decoration:InputDecoration(labelText:label,border:OutlineInputBorder(borderRadius:BorderRadius.circular(12)),filled:true,fillColor:Colors.white)));
+  return RegExp(r'^01[3-9]\d{8}$').hasMatch(value)?value:null;
+}
+Widget field(TextEditingController c,String label,{int lines=1,TextInputType? keyboard})=>Padding(padding:const EdgeInsets.only(bottom:12),child:TextField(controller:c,maxLines:lines,keyboardType:keyboard,decoration:InputDecoration(labelText:label,border:OutlineInputBorder(borderRadius:BorderRadius.circular(12)),filled:true,fillColor:Colors.white)));
 
 class CartPage extends StatelessWidget {
   final List<Product> items;
