@@ -21,6 +21,35 @@ class ElyramartApp extends StatelessWidget {
   );
 }
 
+
+/// Elyramart's short brand mark: a clear, custom-drawn capital E.
+class ElyramartMark extends StatelessWidget {
+  final double size;
+  const ElyramartMark({super.key, this.size = 38});
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size, height: size,
+    decoration: BoxDecoration(color: green, borderRadius: BorderRadius.circular(size * .27)),
+    child: CustomPaint(painter: _ElyramartMarkPainter()),
+  );
+}
+
+class _ElyramartMarkPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = Paint()..color = Colors.white..strokeWidth = size.width * .13
+      ..strokeCap = StrokeCap.round..style = PaintingStyle.stroke;
+    final left = size.width * .29;
+    final right = size.width * .73;
+    canvas.drawLine(Offset(left, size.height * .27), Offset(left, size.height * .73), p);
+    canvas.drawLine(Offset(left, size.height * .29), Offset(right, size.height * .29), p);
+    canvas.drawLine(Offset(left, size.height * .50), Offset(size.width * .65, size.height * .50), p);
+    canvas.drawLine(Offset(left, size.height * .71), Offset(right, size.height * .71), p);
+  }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class Product {
   final String name, category, price, emoji, detail;
   const Product(this.name, this.category, this.price, this.emoji, this.detail);
@@ -82,7 +111,7 @@ class _HomePageState extends State<HomePage> {
   @override Widget build(BuildContext context) {
     final pages=[home(), const ServicesPage(), CartPage(items:cart,onRemove:removeFromCart,onOrderSaved:clearCartAfterOrder), const AccountPage()];
     return Scaffold(
-      appBar: AppBar(title: Row(children:[Container(width:36,height:36,decoration:BoxDecoration(color:green,borderRadius:BorderRadius.circular(11)),child:const Center(child:Text('E',style:TextStyle(color:Colors.white,fontSize:25,fontWeight:FontWeight.w900)))),const SizedBox(width:9),const Text('Elyramart',style:TextStyle(fontWeight:FontWeight.w800,letterSpacing:-.4))]), actions:[IconButton(onPressed:()=>setState(()=>tab=2),icon:Badge(label:Text('${cart.length}'),child:const Icon(Icons.shopping_bag_outlined)))],),
+      appBar: AppBar(title: Row(children:[const ElyramartMark(size:38),const SizedBox(width:9),const Text('Elyramart',style:TextStyle(fontWeight:FontWeight.w800,letterSpacing:-.4))]), actions:[IconButton(onPressed:()=>setState(()=>tab=2),icon:Badge(label:Text('${cart.length}'),child:const Icon(Icons.shopping_bag_outlined)))],),
       body: pages[tab],
       bottomNavigationBar: NavigationBar(selectedIndex:tab,onDestinationSelected:(v)=>setState(()=>tab=v),destinations:const [
         NavigationDestination(icon:Icon(Icons.home_outlined),selectedIcon:Icon(Icons.home),label:'হোম'),
