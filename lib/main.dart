@@ -224,6 +224,15 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
   @override void initState(){super.initState();_load();}
   @override void dispose(){shop.dispose();owner.dispose();phone.dispose();address.dispose();product.dispose();price.dispose();super.dispose();}
   Future<void> _load() async {final p=await SharedPreferences.getInstance();final raw=p.getString('elyramart_seller_profile_v1');final items=p.getStringList('elyramart_seller_products_v1')??[];final orderItems=p.getStringList('elyramart_local_orders_v1')??[];if(!mounted)return;setState((){if(raw!=null){final m=Map<String,dynamic>.from(jsonDecode(raw));shop.text=m['shop']??'';owner.text=m['owner']??'';phone.text=m['phone']??'';address.text=m['address']??'';registered=true;}mine=items.map((v)=>Map<String,dynamic>.from(jsonDecode(v))).toList().reversed.toList();orders=orderItems.map((v){try{return Map<String,dynamic>.from(jsonDecode(v));}catch(_){return <String,dynamic>{};}}).where((v)=>v.isNotEmpty).toList().reversed.toList();});}
+  Future<void> updateOrderStatus(Map<String,dynamic> order,String status) async {
+    final prefs=await SharedPreferences.getInstance();
+    final raw=prefs.getStringList('elyramart_local_orders_v1')??[];
+    final updated=<String>[];
+    for(final encoded in raw){try{final item=Map<String,dynamic>.from(jsonDecode(encoded));if(item['orderNumber']==order['orderNumber'])item['status']=status;updated.add(jsonEncode(item));}catch(_){updated.add(encoded);}}
+    await prefs.setStringList('elyramart_local_orders_v1',updated);
+    if(!mounted)return;
+    setState(()=>order['status']=status);
+  }
   Future<void> saveProfile() async {if([shop,owner,phone,address].any((x)=>x.text.trim().isEmpty)){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সব তথ্য পূরণ করুন')));return;}final p=await SharedPreferences.getInstance();await p.setString('elyramart_seller_profile_v1',jsonEncode({'shop':shop.text.trim(),'owner':owner.text.trim(),'phone':phone.text.trim(),'address':address.text.trim(),'status':'local_pending'}));if(!mounted)return;setState(()=>registered=true);ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সেলার তথ্য এই ফোনে সংরক্ষিত হয়েছে')));}
   Future<void> removeProduct(Map<String,dynamic> item) async {final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];final target=jsonEncode(item);raw.remove(target);await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.remove(item));}\n  Future<void> addProduct() async {if(!registered){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('আগে সেলার তথ্য সংরক্ষণ করুন')));return;}if(product.text.trim().isEmpty||price.text.trim().isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্যের নাম ও দাম দিন')));return;}final item={'name':product.text.trim(),'price':price.text.trim(),'category':category,'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'};final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];raw.add(jsonEncode(item));await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.insert(0,item));product.clear();price.clear();}
   @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('সেলার সেন্টার')),body:ListView(padding:const EdgeInsets.all(18),children:[
@@ -244,7 +253,15 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
       Text('গ্রাহক: '+(o['customerName']??'')+' • ফোন: '+(o['phone']??'')),
       Text('ঠিকানা: '+(o['address']??'')),
       Text('পণ্য: '+((o['items'] as List? ?? []).map((x)=>x['name']??'').join(', '))),
-      Text('মোট: ৳'+(o['totalAmount']??0).toString(),style:const TextStyle(fontWeight:FontWeight.bold,color:green))
+      Text('মোট: ৳'+(o['totalAmount']??0).toString(),style:const TextStyle(fontWeight:FontWeight.bold,color:green)),
+      const SizedBox(height:8),
+      DropdownButtonFormField<String>(value:['local_pending','confirmed','processing','completed','cancelled'].contains(o['status'])?o['status']:'local_pending',decoration:const InputDecoration(labelText:'অর্ডারের অবস্থা',border:OutlineInputBorder()),items:const [
+        DropdownMenuItem(value:'local_pending',child:Text('নতুন')),
+        DropdownMenuItem(value:'confirmed',child:Text('নিশ্চিত')),
+        DropdownMenuItem(value:'processing',child:Text('প্রস্তুত হচ্ছে')),
+        DropdownMenuItem(value:'completed',child:Text('সম্পন্ন')),
+        DropdownMenuItem(value:'cancelled',child:Text('বাতিল'))
+      ],onChanged:(v){if(v!=null)updateOrderStatus(o,v);})
     ])))),
     const SizedBox(height:12),const Text('গুরুত্বপূর্ণ: সেলার আবেদন, পণ্য ও অর্ডার শুধু এই ফোনে সংরক্ষিত। অন্য ফোনে অর্ডার পৌঁছাতে সার্ভার সংযোগ প্রয়োজন।',style:TextStyle(color:Colors.black54,fontSize:12))
   ]));
