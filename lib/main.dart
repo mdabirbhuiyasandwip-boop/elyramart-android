@@ -673,6 +673,16 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
       if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('অনুমোদন করা যায়নি: $error')));
     }
   }
+  Future<void> _assignTechnician(Map<String,dynamic> booking,String technicianUid) async {
+    final id=(booking['_docId']??'').toString();
+    if(id.isEmpty)return;
+    try{
+      await FirebaseFirestore.instance.collection('serviceBookings').doc(id).update({
+        'technicianId':technicianUid,'status':'confirmed','updatedAt':FieldValue.serverTimestamp(),
+      });
+      if(mounted){setState(()=>{booking['technicianId']=technicianUid,booking['status']='confirmed'});ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('টেকনিশিয়ান নির্ধারণ করা হয়েছে।')));}
+    }catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('টেকনিশিয়ান নির্ধারণ হয়নি: $error')));}
+  }
   Future<void> _changeCloudStatus(String collection,Map<String,dynamic> item,String status) async {
     final id=(item['_docId']??'').toString();
     if(id.isEmpty)return;
@@ -809,7 +819,14 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
                   title: Text(v['service'] ?? ''),
                   subtitle: Text('${v['name'] ?? ''} • ${v['phone'] ?? ''}\n${v['problem'] ?? ''}\nস্ট্যাটাস: ${_status(v)}'),
                   isThreeLine: true,
-                  trailing: _statusMenu('elyramart_service_requests_v1', 'createdAt', v),
+                  trailing: v['_docId']!=null
+                    ? PopupMenuButton<String>(
+                        tooltip:'টেকনিশিয়ান নির্ধারণ',
+                        onSelected:(uid)=>_assignTechnician(v,uid),
+                        itemBuilder:(_)=>technicianApps.where((t)=>t['status']=='approved').map((t)=>PopupMenuItem<String>(value:t['userId'].toString(),child:Text(t['name']??t['phone']??'Technician'))).toList(),
+                        icon:const Icon(Icons.person_add_alt_1),
+                      )
+                    : _statusMenu('elyramart_service_requests_v1', 'createdAt', v),
                 ),
               )),
             const SizedBox(height: 12),
@@ -832,7 +849,7 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
   final name=TextEditingController(),phone=TextEditingController(),address=TextEditingController(),skills=TextEditingController();
   List<Map<String,dynamic>> bookings=[];
   bool saved=false;
-  static const statuses={'local_pending':'নতুন অনুরোধ','confirmed':'কাজ গ্রহণ করেছি','processing':'কাজ চলছে','completed':'কাজ সম্পন্ন','cancelled':'বাতিল'};
+  static const statuses={'local_pending':'নতুন অনুরোধ','requested':'নতুন অনুরোধ','confirmed':'কাজ গ্রহণ করেছি','processing':'কাজ চলছে','completed':'কাজ সম্পন্ন','cancelled':'বাতিল'};
   @override void initState(){super.initState();_load();}
   @override void dispose(){name.dispose();phone.dispose();address.dispose();skills.dispose();super.dispose();}
   Future<void> _load() async {
@@ -841,6 +858,18 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
     final list=p.getStringList('elyramart_service_requests_v1')??[];
     final data=<Map<String,dynamic>>[];
     for(final v in list){try{data.add(Map<String,dynamic>.from(jsonDecode(v) as Map));}catch(_){}}
+    final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;
+    if(user!=null){
+      try{
+        final profile=await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        if(profile.data()?['technicianApproved']==true){
+          final assigned=await FirebaseFirestore.instance.collection('serviceBookings').where('technicianId',isEqualTo:user.uid).limit(100).get();
+          data
+            ..clear()
+            ..addAll(assigned.docs.map((d)=>{...d.data(),'_docId':d.id}));
+        }
+      }catch(error){debugPrint('Technician cloud load failed: $error');}
+    }
     if(!mounted)return;
     setState((){if(raw!=null){final m=Map<String,dynamic>.from(jsonDecode(raw));name.text=m['name']??'';phone.text=m['phone']??'';address.text=m['address']??'';skills.text=m['skills']??'';saved=true;}bookings=data.reversed.toList();});
   }
@@ -872,6 +901,15 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(user==null?'টেকনিশিয়ান তথ্য শুধু এই ফোনে রাখা হয়েছে। অনলাইনে আবেদনের জন্য লগইন করুন।':'টেকনিশিয়ান আবেদন অনলাইনে পাঠানো হয়েছে। অ্যাডমিন যাচাই করবেন।')));
   }
   Future<void> _status(Map<String,dynamic> item,String value) async {
+    if(item['_docId']!=null){
+      final user=FirebaseAuth.instance.currentUser;
+      if(user==null)return;
+      try{
+        await FirebaseFirestore.instance.collection('serviceBookings').doc(item['_docId']).update({'status':value=='local_pending'?'requested':value,'updatedAt':FieldValue.serverTimestamp()});
+        if(mounted)setState(()=>item['status']=value=='local_pending'?'requested':value);
+      }catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('কাজের অবস্থা আপডেট হয়নি: $error')));}
+      return;
+    }
     final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_service_requests_v1')??[];final updated=<String>[];
     for(final v in raw){try{final m=Map<String,dynamic>.from(jsonDecode(v) as Map);if(m['createdAt']==item['createdAt'])m['status']=value;updated.add(jsonEncode(m));}catch(_){updated.add(v);}}
     await p.setStringList('elyramart_service_requests_v1',updated);
