@@ -2,9 +2,21 @@ name: Deploy Elyramart Firebase backend
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'functions/**'
+      - 'firestore.rules'
+      - 'storage.rules'
+      - 'firebase.json'
+      - '.github/workflows/deploy-firebase.yml'
 
 permissions:
   contents: read
+
+concurrency:
+  group: elyramart-firebase-deploy
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -29,7 +41,7 @@ jobs:
           python3 -m json.tool "$RUNNER_TEMP/firebase-service-account.json" >/dev/null
       - name: Configure Firebase owner email
         run: |
-          printf '%s\n' 'ELYRAMART_OWNER_EMAIL=elyramartbd@gmail.com' > functions/.env.elyramart
+          printf '%s\\n' 'ELYRAMART_OWNER_EMAIL=elyramartbd@gmail.com' > functions/.env.elyramart
       - name: Install Firebase CLI and Functions dependencies
         run: |
           npm install --global firebase-tools
