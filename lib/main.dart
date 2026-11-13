@@ -301,7 +301,7 @@ String? normalizeBangladeshPhone(String input) {
   return RegExp(r'^01[3-9]\d{8}$').hasMatch(value)?value:null;
 }
 
-Widget field(TextEditingController c,String label,{int lines=1,TextInputType? keyboard})=>Padding(padding:const EdgeInsets.only(bottom:12),child:TextField(controller:c,maxLines:lines,keyboardType:keyboard,decoration:InputDecoration(labelText:label,border:OutlineInputBorder(borderRadius:BorderRadius.circular(12)),filled:true,fillColor:Colors.white)));
+Widget field(TextEditingController c,String label,{int lines=1,TextInputType? keyboard,bool obscure=false})=>Padding(padding:const EdgeInsets.only(bottom:12),child:TextField(controller:c,maxLines:lines,keyboardType:keyboard,obscureText:obscure,decoration:InputDecoration(labelText:label,border:OutlineInputBorder(borderRadius:BorderRadius.circular(12)),filled:true,fillColor:Colors.white)));
 
 class CartPage extends StatelessWidget {
   final List<Product> items;
@@ -1223,7 +1223,7 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
     }
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('প্রোফাইল সংরক্ষণ হয়েছে')));
+      const SnackBar(content: Text('ডেমো প্রোফাইল এই ফোনে সংরক্ষিত হয়েছে')));
   }
 
   @override Widget build(BuildContext context) => Scaffold(
