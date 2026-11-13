@@ -153,8 +153,8 @@ class _HomePageState extends State<HomePage> {
         )
       ))
     ]),
-    const SizedBox(height:22),section('জনপ্রিয় পণ্য','আরও'),
-    if(visibleProducts.isEmpty) const Padding(padding:EdgeInsets.all(18),child:Text('কোনো পণ্য পাওয়া যায়নি। অন্য শব্দ বা ক্যাটাগরি দিয়ে খুঁজুন।')) else Wrap(spacing:10,runSpacing:10,children:visibleProducts.map((p)=>SizedBox(width:(MediaQuery.of(context).size.width-42)/2,child:ProductCard(p:p,onAdd:()=>add(p)))).toList()),
+    const SizedBox(height:22),section('সেলারদের পণ্য',''),
+    if(visibleProducts.isEmpty) const Padding(padding:EdgeInsets.all(18),child:Text('এখনো কোনো পণ্য যোগ করা হয়নি। সেলাররা পণ্য যোগ করলে এখানে দেখা যাবে।')) else Wrap(spacing:10,runSpacing:10,children:visibleProducts.map((p)=>SizedBox(width:(MediaQuery.of(context).size.width-42)/2,child:ProductCard(p:p,onAdd:()=>add(p)))).toList()),
     const SizedBox(height:12),const Text('Elyramart — Your World, Your Choice',textAlign:TextAlign.center,style:TextStyle(color:Colors.black45,fontSize:12)),
   ]);
   }
