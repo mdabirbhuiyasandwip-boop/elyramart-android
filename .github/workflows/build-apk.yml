@@ -30,7 +30,7 @@ jobs:
         run: |
           test -f Elyramart_GitHub_Upload.zip
           unzip -q Elyramart_GitHub_Upload.zip -d extracted
-          APP_DIR="$(find extracted -name pubspec.yaml -printf '%h\\n' | head -n 1)"
+          APP_DIR="$(find extracted -name pubspec.yaml -printf '%h\n' | head -n 1)"
           test -n "$APP_DIR" || (echo "pubspec.yaml not found in source ZIP"; exit 1)
           echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
 
