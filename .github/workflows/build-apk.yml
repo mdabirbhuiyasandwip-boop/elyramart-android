@@ -41,13 +41,24 @@ jobs:
           mkdir -p android/app
           cp google-services.json android/app/google-services.json
           python3 - <<'PY'
-          p = "android/app/build.gradle"
-          s = open(p, encoding="utf-8").read()
-          needle = '    id "dev.flutter.flutter-gradle-plugin"'
-          if needle not in s:
-              raise SystemExit("Flutter Gradle plugin declaration not found")
-          s = s.replace(needle, needle + '\n    id "com.google.gms.google-services" version "4.4.2"', 1)
-          open(p, "w", encoding="utf-8").write(s)
+          from pathlib import Path
+          groovy = Path("android/app/build.gradle")
+          kotlin = Path("android/app/build.gradle.kts")
+          p = kotlin if kotlin.exists() else groovy
+          if not p.exists():
+              raise SystemExit("Android app Gradle file not found")
+          s = p.read_text(encoding="utf-8")
+          if p.suffix == ".kts":
+              needle = '    id("dev.flutter.flutter-gradle-plugin")'
+              plugin = '    id("com.google.gms.google-services") version "4.4.2"'
+          else:
+              needle = '    id "dev.flutter.flutter-gradle-plugin"'
+              plugin = '    id "com.google.gms.google-services" version "4.4.2"'
+          if plugin not in s:
+              if needle not in s:
+                  raise SystemExit("Flutter Gradle plugin declaration not found")
+              s = s.replace(needle, needle + "\\n" + plugin, 1)
+          p.write_text(s, encoding="utf-8")
           PY
       - name: Add Android network and location permissions
         run: |
