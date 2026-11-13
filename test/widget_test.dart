@@ -9,19 +9,33 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('Elyramart opens and primary navigation works', (tester) async {
+  testWidgets('Elyramart main pages and customer profile open', (tester) async {
     await tester.pumpWidget(const ElyramartApp());
     await tester.pumpAndSettle();
 
     expect(find.text('Elyramart'), findsOneWidget);
     expect(find.text('আপনার প্রয়োজন, এক জায়গায়'), findsOneWidget);
+    expect(find.text('জনপ্রিয় পণ্য'), findsOneWidget);
 
     await tester.tap(find.text('সার্ভিস').last);
     await tester.pumpAndSettle();
-    expect(find.text('সার্ভিস'), findsWidgets);
+    expect(find.text('টেকনিশিয়ান ও হোম সার্ভিস'), findsOneWidget);
+    expect(find.text('ইলেকট্রিশিয়ান'), findsOneWidget);
 
     await tester.tap(find.text('কার্ট').last);
     await tester.pumpAndSettle();
-    expect(find.text('আপনার কার্ট'), findsOneWidget);
+    expect(find.text('আপনার কার্ট এখনো খালি'), findsOneWidget);
+
+    await tester.tap(find.text('অ্যাকাউন্ট').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Elyramart অ্যাকাউন্ট'), findsOneWidget);
+    expect(find.text('সেলার অ্যাকাউন্ট'), findsOneWidget);
+    expect(find.text('অ্যাডমিন প্যানেল'), findsOneWidget);
+    expect(find.text('টেকনিশিয়ান সেন্টার'), findsOneWidget);
+
+    await tester.tap(find.text('লগইন / রেজিস্ট্রেশন'));
+    await tester.pumpAndSettle();
+    expect(find.text('আপনার প্রোফাইল'), findsOneWidget);
+    expect(find.text('প্রোফাইল সংরক্ষণ করুন'), findsOneWidget);
   });
 }
