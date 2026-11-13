@@ -550,7 +550,7 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
     normalized=normalized.replaceAll(RegExp(r'[\\s\\-()]'), '');
     if(normalized.startsWith('+880')){normalized='0'+normalized.substring(4);}
     else if(normalized.startsWith('8801')){normalized='0'+normalized.substring(3);}
-    if(!RegExp(r'^01[3-9]\d{8}.hasMatch(normalized)){
+    if(!RegExp(r'^01[3-9]\d{8}$').hasMatch(normalized)){
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
     }
     final prefs=await SharedPreferences.getInstance();
