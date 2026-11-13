@@ -10,14 +10,14 @@ The intended product targets Android, iOS and responsive Web from a shared Flutt
 
 The Android release APK and responsive Web build compile successfully. Static analysis and widget tests passed in the latest build.
 
-The current app is a **local-device prototype**, not a live marketplace:
-- Customer profile, cart, order history and service requests are stored on the current device.
+The current app is still a **pre-launch prototype**, not a live marketplace:
+- Customer profile, cart, order history and service requests are still stored on the current device. Firebase email/password sign-in and registration UI is now connected to Firebase Auth; authenticated customer profiles can be written to Firestore when the required Firebase providers and database are enabled.
 - Seller demo can create and manage products locally. The public product list starts empty; no sample products are included.
-- Seller, admin and technician screens demonstrate the intended workflows on the same device only.
+- Seller, admin and technician screens still demonstrate intended workflows locally. The owner-admin claim button calls the protected Cloud Function, but only works after the function is deployed and the verified owner email parameter is configured.
 - Home-services include technicians and restaurant-related services. Restaurant food/products are not preloaded.
 - The Elyramart brand mark uses the short E symbol.
 
-**Not live yet:** real phone/email authentication, shared cloud database, cross-device sync, seller/technician approval, remote order dispatch, payment gateway, notifications and production hosting.
+**Not live yet:** phone OTP, production-tested shared catalog/orders/bookings, seller/technician approval workflow, remote order dispatch, payment gateway, notifications and production hosting. Email/password auth and initial customer profile sync are implemented in the app but require Firebase Console setup and live-device testing.
 
 ## Build Android APK
 
