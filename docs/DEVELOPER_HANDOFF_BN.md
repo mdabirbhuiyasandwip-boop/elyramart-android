@@ -51,7 +51,7 @@ All money values should use integer BDT poisha or validated integer BDT; never t
 - Document every schema migration and operational setup step.
 
 ## Launch blockers
-1. Owner creates Firebase project and supplies only the generated app config through a secure setup process; never share private admin/service-account keys in chat or commit them.
+1. Verify the existing Firebase project and Android app config; register separate Web/iOS app configurations before enabling those platforms. Never share private admin/service-account keys in chat or commit them.
 2. Enable and test Authentication, Firestore, Storage, Cloud Functions and FCM.
 3. Implement cloud repositories and replace local-only order/product/booking flows.
 4. Implement server-side payment gateway integration after merchant account approval; never collect bKash/Nagad PIN or store card secrets.
