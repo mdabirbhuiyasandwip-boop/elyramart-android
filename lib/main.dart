@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geolocator/geolocator.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -866,6 +867,17 @@ class AppSettingsPage extends StatelessWidget {
               ]),
             ),
             const SizedBox(height: 18),
+            const SizedBox(height: 16),
+            Text(tx('লোকেশন সেটিংস','Location settings'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Card(color: Colors.white, child: ListTile(
+              leading: const Icon(Icons.my_location, color: green),
+              title: Text(tx('আমার লোকেশন','My location')),
+              subtitle: Text(tx('GPS অনুমতি ও বর্তমান অবস্থান','GPS permission and current position')),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const LocationSettingsPage())),
+            )),
             Text(tx('অ্যাপ সম্পর্কে','About the app'),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             Card(color: Colors.white, child: ListTile(
@@ -883,6 +895,93 @@ class AppSettingsPage extends StatelessWidget {
         ),
       );
     },
+  );
+}
+
+class LocationSettingsPage extends StatefulWidget {
+  const LocationSettingsPage({super.key});
+  @override State<LocationSettingsPage> createState() => _LocationSettingsPageState();
+}
+class _LocationSettingsPageState extends State<LocationSettingsPage> {
+  bool loading = false;
+  String message = '';
+  String? coordinates;
+
+  Future<void> _getLocation() async {
+    setState(() { loading = true; message = ''; });
+    try {
+      final enabled = await Geolocator.isLocationServiceEnabled();
+      if (!enabled) {
+        setState(() => message = tx('ফোনের GPS/Location বন্ধ আছে। নিচের বোতাম দিয়ে চালু করুন।','Phone location is off. Use the button below to turn it on.'));
+        await Geolocator.openLocationSettings();
+        return;
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        setState(() => message = tx('লোকেশন অনুমতি দেওয়া হয়নি। অ্যাপ সেটিংস থেকে অনুমতি দিন।','Location permission was not granted. Allow it in app settings.'));
+        if (permission == LocationPermission.deniedForever) {
+          await Geolocator.openAppSettings();
+        }
+        return;
+      }
+      final p = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      );
+      final value = '${p.latitude.toStringAsFixed(6)}, ${p.longitude.toStringAsFixed(6)}';
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('elyramart_last_location_v1', value);
+      if (mounted) setState(() {
+        coordinates = value;
+        message = tx('লোকেশন পাওয়া গেছে।','Location acquired.');
+      });
+    } catch (e) {
+      if (mounted) setState(() => message = tx('লোকেশন পাওয়া যায়নি। আবার চেষ্টা করুন।','Could not get location. Please try again.'));
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  @override void initState() {
+    super.initState();
+    SharedPreferences.getInstance().then((p) {
+      if (mounted) setState(() => coordinates = p.getString('elyramart_last_location_v1'));
+    });
+  }
+
+  @override Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(tx('লোকেশন','Location'))),
+    body: ListView(padding: const EdgeInsets.all(18), children: [
+      const Icon(Icons.location_on_outlined, size: 64, color: green),
+      Text(tx('আপনার অবস্থান ব্যবহার করুন','Use your location'),
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
+      const SizedBox(height: 8),
+      Text(tx('নিকটস্থ সার্ভিস ও ডেলিভারি ঠিকানা নির্ধারণে লোকেশন কাজে লাগবে। আপনার অনুমতি ছাড়া লোকেশন নেওয়া হবে না।','Location can help with nearby services and delivery. The app will only access it with your permission.')),
+      const SizedBox(height: 18),
+      FilledButton.icon(
+        onPressed: loading ? null : _getLocation,
+        icon: loading ? const SizedBox(width:18,height:18,child:CircularProgressIndicator(strokeWidth:2,color:Colors.white)) : const Icon(Icons.my_location),
+        label: Text(loading ? tx('অপেক্ষা করুন','Please wait') : tx('বর্তমান লোকেশন নিন','Get current location')),
+      ),
+      if (message.isNotEmpty) ...[
+        const SizedBox(height: 12), Text(message, style: const TextStyle(color: green)),
+      ],
+      if (coordinates != null) ...[
+        const SizedBox(height: 12),
+        Card(color: Colors.white, child: ListTile(
+          leading: const Icon(Icons.pin_drop, color: green),
+          title: Text(tx('সর্বশেষ সংরক্ষিত অবস্থান','Last saved location')),
+          subtitle: SelectableText(coordinates!),
+        )),
+      ],
+      const SizedBox(height: 12),
+      Text(tx('দ্রষ্টব্য: এই সংস্করণে GPS থেকে অক্ষাংশ/দ্রাঘিমাংশ নেওয়া ও এই ডিভাইসে রাখা হবে। মানচিত্র, ঠিকানার নাম, নিকটস্থ দোকান/টেকনিশিয়ান এবং সার্ভার সিঙ্ক পরবর্তী সংযোগের কাজ।','Note: This version reads GPS coordinates and stores them on this device. Maps, readable addresses, nearby shops/technicians and server sync still require further integration.'),
+        style: const TextStyle(fontSize: 12, color: Colors.black54)),
+    ]),
   );
 }
 
