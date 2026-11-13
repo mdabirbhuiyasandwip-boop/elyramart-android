@@ -273,6 +273,52 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
   ])));
   Widget _stat(String label,int value,IconData icon)=>Container(width:MediaQuery.of(context).size.width/3-20,padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),child:Column(children:[Icon(icon,color:green),const SizedBox(height:6),Text('$value',style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),Text(label,style:const TextStyle(fontSize:11))]));
 }
+class TechnicianPortalPage extends StatefulWidget {
+  const TechnicianPortalPage({super.key});
+  @override State<TechnicianPortalPage> createState()=>_TechnicianPortalPageState();
+}
+class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
+  final name=TextEditingController(),phone=TextEditingController(),address=TextEditingController(),skills=TextEditingController();
+  List<Map<String,dynamic>> bookings=[];
+  bool saved=false;
+  static const statuses={'local_pending':'নতুন অনুরোধ','confirmed':'কাজ গ্রহণ করেছি','processing':'কাজ চলছে','completed':'কাজ সম্পন্ন','cancelled':'বাতিল'};
+  @override void initState(){super.initState();_load();}
+  @override void dispose(){name.dispose();phone.dispose();address.dispose();skills.dispose();super.dispose();}
+  Future<void> _load() async {
+    final p=await SharedPreferences.getInstance();
+    final raw=p.getString('elyramart_technician_profile_v1');
+    final list=p.getStringList('elyramart_service_requests_v1')??[];
+    final data=<Map<String,dynamic>>[];
+    for(final v in list){try{data.add(Map<String,dynamic>.from(jsonDecode(v) as Map));}catch(_){}}
+    if(!mounted)return;
+    setState((){if(raw!=null){final m=Map<String,dynamic>.from(jsonDecode(raw));name.text=m['name']??'';phone.text=m['phone']??'';address.text=m['address']??'';skills.text=m['skills']??'';saved=true;}bookings=data.reversed.toList();});
+  }
+  Future<void> _saveProfile() async {
+    if(name.text.trim().isEmpty||phone.text.trim().isEmpty||skills.text.trim().isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('নাম, ফোন ও কাজের দক্ষতা লিখুন')));return;}
+    final p=await SharedPreferences.getInstance();
+    await p.setString('elyramart_technician_profile_v1',jsonEncode({'name':name.text.trim(),'phone':phone.text.trim(),'address':address.text.trim(),'skills':skills.text.trim()}));
+    if(!mounted)return;setState(()=>saved=true);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('টেকনিশিয়ান প্রোফাইল এই ফোনে সংরক্ষিত হয়েছে')));
+  }
+  Future<void> _status(Map<String,dynamic> item,String value) async {
+    final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_service_requests_v1')??[];final updated=<String>[];
+    for(final v in raw){try{final m=Map<String,dynamic>.from(jsonDecode(v) as Map);if(m['createdAt']==item['createdAt'])m['status']=value;updated.add(jsonEncode(m));}catch(_){updated.add(v);}}
+    await p.setStringList('elyramart_service_requests_v1',updated);
+    if(!mounted)return;setState(()=>item['status']=value);
+  }
+  @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('টেকনিশিয়ান সেন্টার')),body:RefreshIndicator(onRefresh:_load,child:ListView(padding:const EdgeInsets.all(16),children:[
+    const Text('আমার টেকনিশিয়ান প্রোফাইল',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
+    const SizedBox(height:8),
+    field(name,'আপনার নাম'),field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),field(address,'আপনার ঠিকানা / কাজের এলাকা',lines:2),field(skills,'কোন কাজ পারেন? যেমন: ইলেকট্রিক, এসি, প্লাম্বিং',lines:2),
+    FilledButton.icon(onPressed:_saveProfile,icon:const Icon(Icons.save),label:Text(saved?'প্রোফাইল আপডেট করুন':'প্রোফাইল সংরক্ষণ করুন')),
+    const SizedBox(height:20),const Divider(),
+    Row(children:[const Expanded(child:Text('সার্ভিস বুকিং অনুরোধ',style:TextStyle(fontSize:19,fontWeight:FontWeight.bold))),Text('${bookings.length}টি')]),
+    if(bookings.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('এখনো কোনো বুকিং নেই')))
+    else ...bookings.map((b)=>Card(color:Colors.white,child:ListTile(isThreeLine:true,leading:const Icon(Icons.handyman,color:green),title:Text(b['service']??'সার্ভিস'),subtitle:Text('${b['name']??''} • ${b['phone']??''}\\n${b['address']??''}\\nঅবস্থা: ${statuses[b['status']]??'নতুন অনুরোধ'}'),trailing:PopupMenuButton<String>(tooltip:'কাজের অবস্থা',onSelected:(v)=>_status(b,v),itemBuilder:(_)=>statuses.entries.map((e)=>PopupMenuItem(value:e.key,child:Text(e.value))).toList())))),
+    const SizedBox(height:12),const Text('সতর্কতা: এটি একই ফোনের ডেমো প্রোফাইল ও বুকিং তালিকা। অনলাইন টেকনিশিয়ান অ্যাকাউন্ট, যাচাই বা গ্রাহকের সঙ্গে সরাসরি সংযোগ এখনো চালু হয়নি।',style:TextStyle(color:Colors.black54,fontSize:12))
+  ])));
+}
+
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
   @override State<AccountPage> createState()=>_AccountPageState();
@@ -302,7 +348,9 @@ class _AccountPageState extends State<AccountPage> {
       Divider(height:1),
       ListTile(leading:Icon(Icons.storefront_outlined),title:Text('সেলার অ্যাকাউন্ট'),subtitle:Text('সেলার নিবন্ধন ও পণ্য ব্যবস্থাপনা'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const SellerPortalPage()))),
       const Divider(height:1),
-      ListTile(leading:const Icon(Icons.admin_panel_settings_outlined),title:const Text('অ্যাডমিন প্যানেল'),subtitle:const Text('অর্ডার ও বুকিংয়ের ডেমো তালিকা'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const AdminOverviewPage())))
+      ListTile(leading:const Icon(Icons.admin_panel_settings_outlined),title:const Text('অ্যাডমিন প্যানেল'),subtitle:const Text('অর্ডার ও বুকিংয়ের ডেমো তালিকা'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const AdminOverviewPage()))),
+      const Divider(height:1),
+      ListTile(leading:const Icon(Icons.engineering_outlined),title:const Text('টেকনিশিয়ান সেন্টার'),subtitle:const Text('প্রোফাইল ও সার্ভিস বুকিং দেখুন'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const TechnicianPortalPage())))
     ])),
     const SizedBox(height:18),
     Row(children:[const Expanded(child:Text('আমার অর্ডার',style:TextStyle(fontSize:18,fontWeight:FontWeight.bold))),Text(orders.length.toString()+'টি')]),
