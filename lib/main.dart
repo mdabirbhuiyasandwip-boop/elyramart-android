@@ -683,6 +683,14 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
       if(mounted){setState(() { booking['technicianId']=technicianUid; booking['status']='confirmed'; });ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('টেকনিশিয়ান নির্ধারণ করা হয়েছে।')));}
     }catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('টেকনিশিয়ান নির্ধারণ হয়নি: $error')));}
   }
+  Future<void> _publishProduct(Map<String,dynamic> product) async {
+    final id=(product['_docId']??'').toString();
+    if(id.isEmpty)return;
+    try{
+      await FirebaseFirestore.instance.collection('products').doc(id).update({'status':'active','updatedAt':FieldValue.serverTimestamp()});
+      if(mounted){setState(()=>product['status']='active');ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্য প্রকাশ করা হয়েছে।')));}
+    }catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('পণ্য প্রকাশ করা যায়নি: $error')));}
+  }
   Future<void> _changeCloudStatus(String collection,Map<String,dynamic> item,String status) async {
     final id=(item['_docId']??'').toString();
     if(id.isEmpty)return;
@@ -777,7 +785,10 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
                 child: ListTile(
                   leading: const Icon(Icons.inventory, color: green),
                   title: Text(v['name'] ?? v['title'] ?? ''),
-                  subtitle: Text('${v['category'] ?? v['categoryId'] ?? ''} • ${v['price'] ?? ''}'),
+                  subtitle: Text('${v['category'] ?? v['categoryId'] ?? ''} • ${v['price'] ?? ''} • ${v['status']??''}'),
+                  trailing:v['_docId']!=null&&v['status']=='pending'
+                    ?TextButton(onPressed:()=>_publishProduct(v),child:const Text('প্রকাশ'))
+                    :const Icon(Icons.inventory_2_outlined),
                 ),
               )),
             heading('অনলাইন সেলার আবেদন'),
