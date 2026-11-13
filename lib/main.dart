@@ -126,7 +126,8 @@ class _ElyramartMarkPainter extends CustomPainter {
 
 class Product {
   final String name, category, price, emoji, detail;
-  const Product(this.name, this.category, this.price, this.emoji, this.detail);
+  final String? sellerId;
+  const Product(this.name, this.category, this.price, this.emoji, this.detail,{this.sellerId});
 }
 const products = <Product>[];
 
@@ -167,7 +168,7 @@ class _HomePageState extends State<HomePage> {
           final data=doc.data();
           final title=(data['title']??'পণ্য').toString();
           final price=data['price'];
-          loadedSeller.add(Product(title,(data['categoryId']??'অন্যান্য').toString(),'৳${price is num?price.toStringAsFixed(0):price}','🛍️','Elyramart verified seller'));
+          loadedSeller.add(Product(title,(data['categoryId']??'অন্যান্য').toString(),'৳${price is num?price.toStringAsFixed(0):price}','🛍️','Elyramart verified seller',sellerId:data['sellerId']?.toString()));
         }
       }catch(error){debugPrint('Elyramart product sync failed: $error');}
     }
@@ -396,8 +397,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
       'customerName': name.text.trim(),
       'phone': normalizedPhone,
       'address': address.text.trim(),
-      'items': widget.items.map((p)=>{'name':p.name,'category':p.category,'price':p.price}).toList(),
-      'sellerIds': <String>[],
+      'items': widget.items.map((p)=>{'name':p.name,'category':p.category,'price':p.price,'sellerId':p.sellerId}).toList(),
+      'sellerIds': widget.items.map((p)=>p.sellerId).whereType<String>().toSet().toList(),
       'totalAmount': totalAmount,
       'createdAt': FieldValue.serverTimestamp(),
       'status': 'placed',
@@ -445,12 +446,12 @@ class SellerPortalPage extends StatefulWidget {
 }
 class _SellerPortalPageState extends State<SellerPortalPage> {
   final shop=TextEditingController(),owner=TextEditingController(),phone=TextEditingController(),address=TextEditingController();
-  final product=TextEditingController(),price=TextEditingController();
+  final product=TextEditingController(),price=TextEditingController(),stock=TextEditingController(text:'1');
   String category='মুদিখানা';
   List<Map<String,dynamic>> mine=[],orders=[];
   bool registered=false;
   @override void initState(){super.initState();_load();}
-  @override void dispose(){shop.dispose();owner.dispose();phone.dispose();address.dispose();product.dispose();price.dispose();super.dispose();}
+  @override void dispose(){shop.dispose();owner.dispose();phone.dispose();address.dispose();product.dispose();price.dispose();stock.dispose();super.dispose();}
   Future<void> _load() async {final p=await SharedPreferences.getInstance();final raw=p.getString('elyramart_seller_profile_v1');final items=p.getStringList('elyramart_seller_products_v1')??[];final orderItems=p.getStringList('elyramart_local_orders_v1')??[];if(!mounted)return;setState((){if(raw!=null){final m=Map<String,dynamic>.from(jsonDecode(raw));shop.text=m['shop']??'';owner.text=m['owner']??'';phone.text=m['phone']??'';address.text=m['address']??'';registered=true;}mine=items.map((v)=>Map<String,dynamic>.from(jsonDecode(v))).toList().reversed.toList();orders=orderItems.map((v){try{return Map<String,dynamic>.from(jsonDecode(v));}catch(_){return <String,dynamic>{};}}).where((v)=>v.isNotEmpty).toList().reversed.toList();});}
   Future<void> updateOrderStatus(Map<String,dynamic> order,String status) async {
     final prefs=await SharedPreferences.getInstance();
@@ -539,7 +540,7 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
         if(numericPrice==null||numericPrice<=0){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক পণ্যমূল্য লিখুন')));return;}
         await FirebaseFirestore.instance.collection('products').add({
           'sellerId':user.uid,'title':product.text.trim(),'categoryId':category,
-          'price':numericPrice,'stock':0,'imageUrls':<String>[],
+          'price':numericPrice,'stock':int.tryParse(stock.text.trim())??1,'imageUrls':<String>[],
           'status':'pending','createdAt':FieldValue.serverTimestamp(),'updatedAt':FieldValue.serverTimestamp(),
         });
         if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্য অনলাইনে জমা হয়েছে। অ্যাডমিন প্রকাশ করলে দেখা যাবে।')));
@@ -561,7 +562,7 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     field(shop,'দোকানের নাম'),field(owner,'মালিকের নাম'),field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),field(address,'দোকানের ঠিকানা',lines:2),
     FilledButton(onPressed:saveProfile,child:Text(registered?'সেলার তথ্য আপডেট করুন':'সেলার হিসেবে নিবন্ধন করুন')),
     const SizedBox(height:24),const Divider(),const Text('নতুন পণ্য যোগ করুন',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
-    field(product,'পণ্যের নাম'),field(price,'দাম (যেমন ৳২৫০)',keyboard:TextInputType.text),
+    field(product,'পণ্যের নাম'),field(price,'দাম (যেমন ৳২৫০)',keyboard:TextInputType.text),field(stock,'স্টক / পরিমাণ',keyboard:TextInputType.number),
     DropdownButtonFormField<String>(value:category,decoration:const InputDecoration(labelText:'ক্যাটাগরি',border:OutlineInputBorder()),items:const ['ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি','অন্যান্য'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)setState(()=>category=v);}),
     const SizedBox(height:12),FilledButton.icon(onPressed:addProduct,icon:const Icon(Icons.add),label:const Text('পণ্য সংরক্ষণ করুন')),
     const SizedBox(height:20),Text('আমার যোগ করা পণ্য (${mine.length})',style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold)),
