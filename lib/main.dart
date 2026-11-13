@@ -170,7 +170,8 @@ class _HomePageState extends State<HomePage> {
           final data=doc.data();
           final title=(data['title']??'পণ্য').toString();
           final price=data['price'];
-          loadedSeller.add(Product(title,(data['categoryId']??'অন্যান্য').toString(),'৳${price is num?price.toStringAsFixed(0):price}','🛍️','Elyramart verified seller',sellerId:data['sellerId']?.toString(),imageUrl:(data['imageUrls'] as List?)?.whereType<String>().firstOrNull));
+          final imageUrls=data['imageUrls'] as List? ?? [];
+          loadedSeller.add(Product(title,(data['categoryId']??'অন্যান্য').toString(),'৳${price is num?price.toStringAsFixed(0):price}','🛍️','Elyramart verified seller',sellerId:data['sellerId']?.toString(),imageUrl:imageUrls.isNotEmpty?imageUrls.first.toString():null));
         }
       }catch(error){debugPrint('Elyramart product sync failed: $error');}
     }
@@ -584,7 +585,7 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     }
     if(!mounted)return;
     setState(()=>mine.insert(0,{'name':product.text.trim(),'price':price.text.trim(),'category':category,'status':user==null?'local_pending':'pending'}));
-    product.clear();price.clear();
+    product.clear();price.clear();setState(()=>selectedImage=null);
   }
   @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('সেলার সেন্টার')),body:ListView(padding:const EdgeInsets.all(18),children:[
     const Text('দোকানের তথ্য',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
