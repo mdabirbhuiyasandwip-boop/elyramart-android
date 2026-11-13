@@ -189,6 +189,35 @@ class _CheckoutPageState extends State<CheckoutPage> {
     ])
   );
 }
+class SellerPortalPage extends StatefulWidget {
+  const SellerPortalPage({super.key});
+  @override State<SellerPortalPage> createState()=>_SellerPortalPageState();
+}
+class _SellerPortalPageState extends State<SellerPortalPage> {
+  final shop=TextEditingController(),owner=TextEditingController(),phone=TextEditingController(),address=TextEditingController();
+  final product=TextEditingController(),price=TextEditingController();
+  String category='মুদিখানা';
+  List<Map<String,dynamic>> mine=[];
+  bool registered=false;
+  @override void initState(){super.initState();_load();}
+  @override void dispose(){shop.dispose();owner.dispose();phone.dispose();address.dispose();product.dispose();price.dispose();super.dispose();}
+  Future<void> _load() async {final p=await SharedPreferences.getInstance();final raw=p.getString('elyramart_seller_profile_v1');final items=p.getStringList('elyramart_seller_products_v1')??[];if(!mounted)return;setState((){if(raw!=null){final m=Map<String,dynamic>.from(jsonDecode(raw));shop.text=m['shop']??'';owner.text=m['owner']??'';phone.text=m['phone']??'';address.text=m['address']??'';registered=true;}mine=items.map((v)=>Map<String,dynamic>.from(jsonDecode(v))).toList().reversed.toList();});}
+  Future<void> saveProfile() async {if([shop,owner,phone,address].any((x)=>x.text.trim().isEmpty)){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সব তথ্য পূরণ করুন')));return;}final p=await SharedPreferences.getInstance();await p.setString('elyramart_seller_profile_v1',jsonEncode({'shop':shop.text.trim(),'owner':owner.text.trim(),'phone':phone.text.trim(),'address':address.text.trim(),'status':'local_pending'}));if(!mounted)return;setState(()=>registered=true);ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সেলার তথ্য এই ফোনে সংরক্ষিত হয়েছে')));}
+  Future<void> addProduct() async {if(!registered){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('আগে সেলার তথ্য সংরক্ষণ করুন')));return;}if(product.text.trim().isEmpty||price.text.trim().isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্যের নাম ও দাম দিন')));return;}final item={'name':product.text.trim(),'price':price.text.trim(),'category':category,'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'};final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];raw.add(jsonEncode(item));await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.insert(0,item));product.clear();price.clear();}
+  @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('সেলার সেন্টার')),body:ListView(padding:const EdgeInsets.all(18),children:[
+    const Text('দোকানের তথ্য',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
+    field(shop,'দোকানের নাম'),field(owner,'মালিকের নাম'),field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),field(address,'দোকানের ঠিকানা',lines:2),
+    FilledButton(onPressed:saveProfile,child:Text(registered?'সেলার তথ্য আপডেট করুন':'সেলার হিসেবে নিবন্ধন করুন')),
+    const SizedBox(height:24),const Divider(),const Text('নতুন পণ্য যোগ করুন',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
+    field(product,'পণ্যের নাম'),field(price,'দাম (যেমন ৳২৫০)',keyboard:TextInputType.text),
+    DropdownButtonFormField<String>(value:category,decoration:const InputDecoration(labelText:'ক্যাটাগরি',border:OutlineInputBorder()),items:const ['ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি','অন্যান্য'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)setState(()=>category=v);}),
+    const SizedBox(height:12),FilledButton.icon(onPressed:addProduct,icon:const Icon(Icons.add),label:const Text('পণ্য সংরক্ষণ করুন')),
+    const SizedBox(height:20),Text('আমার যোগ করা পণ্য (${mine.length})',style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold)),
+    if(mine.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('এখনো কোনো পণ্য যোগ করা হয়নি')))
+    else ...mine.map((m)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.inventory_2,color:green),title:Text(m['name']??''),subtitle:Text('${m['category']??''} • ${m['price']??''}'),trailing:const Text('ফোনে সংরক্ষিত',style:TextStyle(fontSize:10,color:green)))),
+    const SizedBox(height:12),const Text('গুরুত্বপূর্ণ: সেলার আবেদন ও পণ্য শুধু এই ফোনে সংরক্ষিত। অ্যাডমিন অনুমোদন বা গ্রাহকের কাছে অনলাইনে দেখাতে সার্ভার সংযোগ প্রয়োজন।',style:TextStyle(color:Colors.black54,fontSize:12))
+  ]));
+}
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
   @override State<AccountPage> createState()=>_AccountPageState();
@@ -213,12 +242,12 @@ class _AccountPageState extends State<AccountPage> {
     const SizedBox(height:12),
     const Center(child:Text('Elyramart অ্যাকাউন্ট',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold))),
     const SizedBox(height:18),
-    const Card(color:Colors.white,child:Column(children:[
-      ListTile(leading:Icon(Icons.login),title:Text('লগইন / রেজিস্ট্রেশন'),subtitle:Text('অ্যাকাউন্ট সিস্টেম সংযোগ করা বাকি')),
+    Card(color:Colors.white,child:Column(children:[
+      const ListTile(leading:Icon(Icons.login),title:Text('লগইন / রেজিস্ট্রেশন'),subtitle:Text('অ্যাকাউন্ট সিস্টেম সংযোগ করা বাকি')),
       Divider(height:1),
-      ListTile(leading:Icon(Icons.storefront_outlined),title:Text('সেলার অ্যাকাউন্ট'),subtitle:Text('সেলার নিবন্ধন ও পণ্য ব্যবস্থাপনা')),
-      Divider(height:1),
-      ListTile(leading:Icon(Icons.admin_panel_settings_outlined),title:Text('অ্যাডমিন প্যানেল'),subtitle:Text('অনুমোদন ও অর্ডার ব্যবস্থাপনা'))
+      ListTile(leading:Icon(Icons.storefront_outlined),title:Text('সেলার অ্যাকাউন্ট'),subtitle:Text('সেলার নিবন্ধন ও পণ্য ব্যবস্থাপনা'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const SellerPortalPage()))),
+      const Divider(height:1),
+      const ListTile(leading:Icon(Icons.admin_panel_settings_outlined),title:Text('অ্যাডমিন প্যানেল'),subtitle:Text('অনুমোদন ও অর্ডার ব্যবস্থাপনা'))
     ])),
     const SizedBox(height:18),
     Row(children:[const Expanded(child:Text('আমার অর্ডার',style:TextStyle(fontSize:18,fontWeight:FontWeight.bold))),Text(orders.length.toString()+'টি')]),
