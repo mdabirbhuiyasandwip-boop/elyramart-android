@@ -1,0 +1,83 @@
+workflows:
+  elyramart-android:
+    name: Elyramart Android APK and AAB
+    max_build_duration: 120
+    instance_type: linux_x2
+    environment:
+      flutter: stable
+      java: 21
+    scripts:
+      - name: Verify Flutter source
+        script: |
+          test -s pubspec.yaml
+          test -s lib/main.dart
+      - name: Generate Android project files
+        script: |
+          flutter create --platforms=android --org com.elyramartbd --project-name elyramart .
+      - name: Configure Firebase for Android
+        script: |
+          test -s google-services.json
+          mkdir -p android/app
+          cp google-services.json android/app/google-services.json
+          python3 - <<'PY'
+          from pathlib import Path
+          groovy = Path("android/app/build.gradle")
+          kotlin = Path("android/app/build.gradle.kts")
+          p = kotlin if kotlin.exists() else groovy
+          if not p.exists():
+              raise SystemExit("Android app Gradle file not found")
+          s = p.read_text(encoding="utf-8")
+          if p.suffix == ".kts":
+              needle = '    id("dev.flutter.flutter-gradle-plugin")'
+              plugin = '    id("com.google.gms.google-services") version "4.4.2"'
+          else:
+              needle = '    id "dev.flutter.flutter-gradle-plugin"'
+              plugin = '    id "com.google.gms.google-services" version "4.4.2"'
+          if plugin not in s:
+              if needle not in s:
+                  raise SystemExit("Flutter Gradle plugin declaration not found")
+              s = s.replace(needle, needle + "\\n" + plugin, 1)
+          if "checkReleaseBuilds" not in s:
+              lint_block = ('\\nandroid {\\n    lint { checkReleaseBuilds = false }\\n}\\n'
+                            if p.suffix == ".kts"
+                            else '\\nandroid {\\n    lint { checkReleaseBuilds false }\\n}\\n')
+              s += lint_block
+          p.write_text(s, encoding="utf-8")
+          PY
+      - name: Add Android network and location permissions
+        script: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text(encoding="utf-8")
+          permissions = [
+              '    <uses-permission android:name="android.permission.INTERNET" />',
+              '    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />',
+              '    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />',
+          ]
+          missing = [line for line in permissions if line not in s]
+          if missing:
+              s = s.replace("<application", "\\n".join(missing) + "\\n    <application", 1)
+              p.write_text(s, encoding="utf-8")
+          PY
+      - name: Generate Elyramart E-only brand icons
+        script: |
+          python3 -m pip install pillow
+          python3 tools/generate_brand_assets.py
+      - name: Resolve Flutter packages
+        script: flutter pub get
+      - name: Analyze Dart source
+        script: |
+          flutter analyze --no-pub > /tmp/elyramart-analyze.log 2>&1 || true
+          cat /tmp/elyramart-analyze.log
+          if grep -Eq ' (error|warning) •' /tmp/elyramart-analyze.log; then exit 1; fi
+      - name: Run widget tests
+        script: flutter test
+      - name: Build release APK
+        script: flutter build apk --release
+      - name: Build Play Store Android App Bundle
+        script: flutter build appbundle --release
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
+      - build/app/outputs/bundle/release/*.aab
+      - /tmp/elyramart-analyze.log
