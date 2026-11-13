@@ -189,4 +189,46 @@ class _CheckoutPageState extends State<CheckoutPage> {
     ])
   );
 }
-class AccountPage extends StatelessWidget { const AccountPage({super.key}); @override Widget build(BuildContext c)=>ListView(padding:const EdgeInsets.all(18),children:[const CircleAvatar(radius:36,child:Icon(Icons.person,size:38)),const SizedBox(height:12),const Center(child:Text('Elyramart অ্যাকাউন্ট',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold))),const SizedBox(height:18),const Card(color:Colors.white,child:Column(children:[ListTile(leading:Icon(Icons.login),title:Text('লগইন / রেজিস্ট্রেশন'),subtitle:Text('অ্যাকাউন্ট সিস্টেম সংযোগ করা বাকি')),Divider(height:1),ListTile(leading:Icon(Icons.storefront_outlined),title:Text('সেলার অ্যাকাউন্ট'),subtitle:Text('সেলার নিবন্ধন ও পণ্য ব্যবস্থাপনা')),Divider(height:1),ListTile(leading:Icon(Icons.admin_panel_settings_outlined),title:Text('অ্যাডমিন প্যানেল'),subtitle:Text('অনুমোদন ও অর্ডার ব্যবস্থাপনা'))]))]); }
+class AccountPage extends StatefulWidget {
+  const AccountPage({super.key});
+  @override State<AccountPage> createState()=>_AccountPageState();
+}
+class _AccountPageState extends State<AccountPage> {
+  List<Map<String,dynamic>> orders=[];
+  List<Map<String,dynamic>> bookings=[];
+  @override void initState(){super.initState();_loadHistory();}
+  Future<void> _loadHistory() async {
+    final prefs=await SharedPreferences.getInstance();
+    List<Map<String,dynamic>> decode(String key){
+      return (prefs.getStringList(key)??[]).map((v){
+        try { return Map<String,dynamic>.from(jsonDecode(v) as Map); }
+        catch (_) { return <String,dynamic>{}; }
+      }).where((v)=>v.isNotEmpty).toList().reversed.toList();
+    }
+    if(!mounted)return;
+    setState((){orders=decode('elyramart_local_orders_v1');bookings=decode('elyramart_service_requests_v1');});
+  }
+  @override Widget build(BuildContext c)=>RefreshIndicator(onRefresh:_loadHistory,child:ListView(padding:const EdgeInsets.all(18),children:[
+    const CircleAvatar(radius:36,child:Icon(Icons.person,size:38)),
+    const SizedBox(height:12),
+    const Center(child:Text('Elyramart অ্যাকাউন্ট',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold))),
+    const SizedBox(height:18),
+    const Card(color:Colors.white,child:Column(children:[
+      ListTile(leading:Icon(Icons.login),title:Text('লগইন / রেজিস্ট্রেশন'),subtitle:Text('অ্যাকাউন্ট সিস্টেম সংযোগ করা বাকি')),
+      Divider(height:1),
+      ListTile(leading:Icon(Icons.storefront_outlined),title:Text('সেলার অ্যাকাউন্ট'),subtitle:Text('সেলার নিবন্ধন ও পণ্য ব্যবস্থাপনা')),
+      Divider(height:1),
+      ListTile(leading:Icon(Icons.admin_panel_settings_outlined),title:Text('অ্যাডমিন প্যানেল'),subtitle:Text('অনুমোদন ও অর্ডার ব্যবস্থাপনা'))
+    ])),
+    const SizedBox(height:18),
+    Row(children:[const Expanded(child:Text('আমার অর্ডার',style:TextStyle(fontSize:18,fontWeight:FontWeight.bold))),Text(orders.length.toString()+'টি')]),
+    if(orders.isEmpty) const Card(color:Colors.white,child:ListTile(leading:Icon(Icons.receipt_long),title:Text('এখনো কোনো অর্ডার নেই')))
+    else ...orders.map((o)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.receipt_long,color:green),title:Text(o['orderNumber']?.toString()??'অর্ডার'),subtitle:Text((o['customerName']?.toString()??'')+' • '+((o['items'] as List? ?? []).length.toString())+'টি পণ্য\\n'+(o['address']?.toString()??'')),isThreeLine:true,trailing:const Text('ফোনে সংরক্ষিত',style:TextStyle(fontSize:10,color:green))))),
+    const SizedBox(height:18),
+    Row(children:[const Expanded(child:Text('আমার সার্ভিস বুকিং',style:TextStyle(fontSize:18,fontWeight:FontWeight.bold))),Text(bookings.length.toString()+'টি')]),
+    if(bookings.isEmpty) const Card(color:Colors.white,child:ListTile(leading:Icon(Icons.handyman),title:Text('এখনো কোনো বুকিং নেই')))
+    else ...bookings.map((b)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.handyman,color:green),title:Text(b['service']?.toString()??'সার্ভিস'),subtitle:Text((b['name']?.toString()??'')+' • '+(b['phone']?.toString()??'')+'\\n'+(b['address']?.toString()??'')),isThreeLine:true,trailing:const Text('ফোনে সংরক্ষিত',style:TextStyle(fontSize:10,color:green))))),
+    const SizedBox(height:10),
+    const Text('নোট: এই অর্ডার ও বুকিং শুধু এই ফোনে সংরক্ষিত। অনলাইনে পাঠাতে সার্ভার সংযোগ প্রয়োজন।',style:TextStyle(color:Colors.black54,fontSize:12))
+  ])));
+}
