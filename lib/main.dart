@@ -133,6 +133,32 @@ class _HomePageState extends State<HomePage> {
     const SizedBox(height:22),section('ক্যাটাগরি', 'সব দেখুন'),
     SizedBox(height:42,child:ListView(scrollDirection:Axis.horizontal,children:categories.map((c)=>Padding(padding:const EdgeInsets.only(right:8),child:ChoiceChip(label:Text(c),selected:category==c,onSelected:(_)=>setState(()=>category=c),selectedColor:const Color(0xFFD6EFE5),labelStyle:TextStyle(color:category==c?green:ink,fontWeight:FontWeight.w600)))).toList())),
     const SizedBox(height:18),Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:const Color(0xFFE2F3EC),borderRadius:BorderRadius.circular(18)),child:Row(children:[const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('বাসায় টেকনিশিয়ান লাগবে?',style:TextStyle(fontSize:17,fontWeight:FontWeight.bold,color:ink)),SizedBox(height:4),Text('ইলেকট্রিশিয়ান, প্লাম্বারসহ বিভিন্ন সার্ভিস বুক করুন',style:TextStyle(color:ink))])),FilledButton(onPressed:()=>setState(()=>tab=1),style:FilledButton.styleFrom(backgroundColor:green),child:const Text('বুক করুন'))])),
+    const SizedBox(height:18),
+    Row(children:[
+      Expanded(child:InkWell(
+        borderRadius:BorderRadius.circular(14),
+        onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const SellerPortalPage())),
+        child:Container(padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),
+          child:const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            Icon(Icons.storefront_outlined,color:green,size:25),SizedBox(height:7),
+            Text('সেলার হোন',style:TextStyle(fontWeight:FontWeight.bold,color:ink)),
+            Text('দোকান ও পণ্য যোগ করুন',style:TextStyle(fontSize:11,color:Colors.black54))
+          ])
+        )
+      )),
+      const SizedBox(width:10),
+      Expanded(child:InkWell(
+        borderRadius:BorderRadius.circular(14),
+        onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const TechnicianPortalPage())),
+        child:Container(padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),
+          child:const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            Icon(Icons.engineering_outlined,color:green,size:25),SizedBox(height:7),
+            Text('টেকনিশিয়ান হোন',style:TextStyle(fontWeight:FontWeight.bold,color:ink)),
+            Text('দক্ষতা ও প্রোফাইল দিন',style:TextStyle(fontSize:11,color:Colors.black54))
+          ])
+        )
+      ))
+    ]),
     const SizedBox(height:22),section('জনপ্রিয় পণ্য','আরও'),
     if(visibleProducts.isEmpty) const Padding(padding:EdgeInsets.all(18),child:Text('কোনো পণ্য পাওয়া যায়নি। অন্য শব্দ বা ক্যাটাগরি দিয়ে খুঁজুন।')) else Wrap(spacing:10,runSpacing:10,children:visibleProducts.map((p)=>SizedBox(width:(MediaQuery.of(context).size.width-42)/2,child:ProductCard(p:p,onAdd:()=>add(p)))).toList()),
     const SizedBox(height:12),const Text('Elyramart — Your World, Your Choice',textAlign:TextAlign.center,style:TextStyle(color:Colors.black45,fontSize:12)),
