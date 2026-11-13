@@ -170,6 +170,16 @@ class CheckoutPage extends StatefulWidget {
 class _CheckoutPageState extends State<CheckoutPage> {
   final name=TextEditingController(),phone=TextEditingController(),address=TextEditingController();
   bool saving=false;
+  int get totalAmount {
+    const bn='০১২৩৪৫৬৭৮৯';
+    var total=0;
+    for(final item in widget.items){
+      var digits=item.price;
+      for(var i=0;i<10;i++){digits=digits.replaceAll(bn[i], '$i');}
+      total+=int.tryParse(digits.replaceAll(RegExp(r'[^0-9]'),''))??0;
+    }
+    return total;
+  }
   @override void dispose(){name.dispose();phone.dispose();address.dispose();super.dispose();}
   Future<void> saveOrder(BuildContext c) async {
     if(name.text.trim().isEmpty||phone.text.trim().isEmpty||address.text.trim().isEmpty){
@@ -179,19 +189,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final prefs=await SharedPreferences.getInstance();
     final orders=prefs.getStringList('elyramart_local_orders_v1')??[];
     final orderNumber='ELY-${DateTime.now().millisecondsSinceEpoch}';
-    orders.add(jsonEncode({'orderNumber':orderNumber,'customerName':name.text.trim(),'phone':phone.text.trim(),'address':address.text.trim(),'items':widget.items.map((p)=>{'name':p.name,'price':p.price}).toList(),'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'}));
+    orders.add(jsonEncode({'orderNumber':orderNumber,'customerName':name.text.trim(),'phone':phone.text.trim(),'address':address.text.trim(),'items':widget.items.map((p)=>{'name':p.name,'price':p.price}).toList(),'totalAmount':totalAmount,'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'}));
     await prefs.setStringList('elyramart_local_orders_v1',orders);
     widget.onOrderSaved();
     if(!mounted)return;
     setState(()=>saving=false);
-    showDialog(context:c,builder:(_)=>AlertDialog(title:const Text('অর্ডারের তথ্য সংরক্ষিত'),content:Text('অর্ডার নম্বর: $orderNumber\\nতথ্য এই ফোনে রাখা হয়েছে। সার্ভার সংযুক্ত না থাকায় দোকান বা ডেলিভারি টিম এখনো অর্ডারটি পায়নি।'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
+    showDialog(context:c,builder:(_)=>AlertDialog(title:const Text('অর্ডারের তথ্য সংরক্ষিত'),content:Text('অর্ডার নম্বর: $orderNumber\\nপণ্যের মোট: ৳$totalAmount\\nতথ্য এই ফোনে রাখা হয়েছে। সার্ভার সংযুক্ত না থাকায় দোকান বা ডেলিভারি টিম এখনো অর্ডারটি পায়নি।'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
   }
   @override Widget build(BuildContext c)=>Scaffold(
     appBar:AppBar(title:const Text('ডেলিভারি তথ্য')),
     body:ListView(padding:const EdgeInsets.all(18),children:[
       const Text('আপনার অর্ডার',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
       ...widget.items.map((p)=>ListTile(contentPadding:EdgeInsets.zero,title:Text(p.name),trailing:Text(p.price))),
-      const Divider(),field(name,'আপনার নাম'),field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),field(address,'সম্পূর্ণ ডেলিভারি ঠিকানা',lines:3),
+      const Divider(),
+      ListTile(contentPadding:EdgeInsets.zero,title:const Text('পণ্যের মোট',style:TextStyle(fontWeight:FontWeight.bold)),trailing:Text('৳$totalAmount',style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold,color:green))),
+      const SizedBox(height:8),field(name,'আপনার নাম'),field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),field(address,'সম্পূর্ণ ডেলিভারি ঠিকানা',lines:3),
       const SizedBox(height:8),
       Container(padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:const Color(0xFFFFF4D6),borderRadius:BorderRadius.circular(12)),child:const Text('ডেমো মোড: অর্ডারটি এই ফোনে সংরক্ষণ হবে। অনলাইন অর্ডার পাঠাতে সার্ভার সংযোগ প্রয়োজন।')),
       const SizedBox(height:12),
