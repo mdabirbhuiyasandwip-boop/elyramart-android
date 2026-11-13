@@ -42,7 +42,7 @@ jobs:
         run: flutter create --platforms=web --org com.elyramartbd --project-name elyramart --overwrite .
       - name: Generate Elyramart E-only brand icons
         run: |
-          python3 -m pip install --user pillow
+          python3 -m pip install pillow --break-system-packages
           python3 tools/generate_brand_assets.py
       - name: Resolve Flutter packages
         run: flutter pub get
