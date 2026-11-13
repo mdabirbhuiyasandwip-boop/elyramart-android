@@ -7,8 +7,8 @@
 Android app startup-এ Firebase Core initialize হয়। `google-services.json` Android app-এর config হিসেবে repository-তে আছে; APK workflow build-এর সময় এটি `android/app/`-এ কপি করে Google Services Gradle plugin যোগ করে। Customer account screen-এ Email/Password registration, login, email verification এবং customer profile-এর প্রাথমিক Firestore sync যুক্ত হয়েছে। Owner Admin button `claimOwnerAdmin` callable function ব্যবহার করে। এগুলো চালু করতে নিচের Console ও deploy ধাপ সম্পন্ন করতে হবে।
 
 ## Firebase project প্রস্তুত
-1. Firebase Console-এ নতুন project তৈরি করুন: https://console.firebase.google.com/
-2. Android app register করুন package name: `com.elyramartbd.elyramart`
+1. Firebase Console-এ আগে থেকে তৈরি `elyramart` project খুলুন: https://console.firebase.google.com/
+2. Project Settings → Your apps-এ Android app-এর package name `com.elyramartbd.elyramart` নিশ্চিত করুন; config ফাইলে এই package-ই নিবন্ধিত আছে।
 3. Authentication-এ Email/Password provider চালু করুন। (Phone OTP UI এখনো অ্যাপে implement করা হয়নি; পরে আলাদা করে যোগ করতে হবে।)
 4. Firestore Database তৈরি করুন (production mode)।
 5. Storage চালু করুন।
