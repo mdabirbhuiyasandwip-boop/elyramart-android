@@ -53,7 +53,7 @@ export const placeOrder = onCall(async (request) => {
     address?: unknown; paymentMethod?: unknown; items?: unknown;
   };
   if (typeof data.customerName !== "string" || !data.customerName.trim() ||
-      typeof data.phone !== "string" || !/^01[3-9]\\d{8}$/.test(data.phone) ||
+      typeof data.phone !== "string" || !/^01[3-9]\d{8}$/.test(data.phone) ||
       typeof data.address !== "string" || !data.address.trim() ||
       data.paymentMethod !== "cash_on_delivery" ||
       !Array.isArray(data.items) || data.items.length < 1 || data.items.length > 30) {
