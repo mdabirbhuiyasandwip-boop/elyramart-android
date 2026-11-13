@@ -1,0 +1,35 @@
+name: Check Elyramart Firebase Functions
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'functions/**'
+      - 'firebase.json'
+      - '.github/workflows/check-functions.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: elyramart-functions-check
+  cancel-in-progress: false
+
+jobs:
+  build-functions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        working-directory: functions
+        run: npm install
+      - name: Compile Firebase Functions
+        working-directory: functions
+        run: npm run build
