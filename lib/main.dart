@@ -613,7 +613,7 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
       }
     }
     if(!allowed){
-      if(mounted)setState(()=>{isAdmin=false,accessReady=true,accessMessage='Owner Admin হিসেবে যাচাইকৃত লগইন প্রয়োজন।'});
+      if(mounted)setState(() { isAdmin=false; accessReady=true; accessMessage='Owner Admin হিসেবে যাচাইকৃত লগইন প্রয়োজন।'; });
       return;
     }
     final p=await SharedPreferences.getInstance();
@@ -690,7 +690,7 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
     setState((){item['status']=status;});
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('স্ট্যাটাস: ${statusNames[status]??status}')));
   }
-  Widget _statusMenu(String key,String identity,Map<String,dynamic> item)=>PopupMenuButton<String>(tooltip:'স্ট্যাটাস পরিবর্তন',onSelected:(v)=>_changeStatus(key,identity,item,v),itemBuilder:(_)=>statusNames.entries.map((e)=>PopupMenuItem<String>(value:e.key,child:Text(e.value))).toList(),icon:const Icon(Icons.more_vert));
+  Widget _statusMenu(String key,String identity,Map<String,dynamic> item)=>PopupMenuButton<String>(tooltip:'স্ট্যাটাস পরিবর্তন',onSelected:(v)=>item['_docId']!=null?_changeCloudStatus(key=='elyramart_local_orders_v1'?'orders':'serviceBookings',item,v):_changeStatus(key,identity,item,v),itemBuilder:(_)=>statusNames.entries.map((e)=>PopupMenuItem<String>(value:e.key,child:Text(e.value))).toList(),icon:const Icon(Icons.more_vert));
   String _status(Map<String,dynamic> item)=>statusNames[item['status']]??'নতুন';
   Widget heading(String t)=>Padding(padding:const EdgeInsets.only(top:18,bottom:8),child:Text(t,style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold)));
   @override
@@ -765,8 +765,8 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
                 color: Colors.white,
                 child: ListTile(
                   leading: const Icon(Icons.inventory, color: green),
-                  title: Text(v['name'] ?? ''),
-                  subtitle: Text('${v['category'] ?? ''} • ${v['price'] ?? ''}'),
+                  title: Text(v['name'] ?? v['title'] ?? ''),
+                  subtitle: Text('${v['category'] ?? v['categoryId'] ?? ''} • ${v['price'] ?? ''}'),
                 ),
               )),
             heading('অনলাইন সেলার আবেদন'),
