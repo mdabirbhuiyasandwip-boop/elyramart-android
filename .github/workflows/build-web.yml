@@ -4,13 +4,20 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - 'lib/**'
+      - 'web/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'tools/**'
+      - '.github/workflows/build-web.yml'
 
 permissions:
   contents: read
 
 concurrency:
   group: elyramart-web-build
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-web:
