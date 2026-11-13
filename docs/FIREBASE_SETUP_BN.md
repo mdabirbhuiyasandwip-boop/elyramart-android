@@ -12,18 +12,17 @@ Android app startup-এ Firebase Core initialize হয়। `google-services.json
 3. Authentication-এ Email/Password provider চালু করুন। (Phone OTP UI এখনো অ্যাপে implement করা হয়নি; পরে আলাদা করে যোগ করতে হবে।)
 4. Firestore Database তৈরি করুন (production mode)।
 5. Storage চালু করুন।
-6. Firebase CLI দিয়ে repository root-এ:
-   `firebase init firestore storage`
-7. এই repository-র `firestore.rules` এবং `storage.rules` deploy করুন:
-   `firebase deploy --only firestore:rules,storage`
-8. Android native build-এ `google-services.json` থেকে Firebase options স্বয়ংক্রিয়ভাবে নেওয়া হয়। Web/iOS target চালু করার আগে FlutterFire CLI দিয়ে `flutterfire configure` চালিয়ে generated `lib/firebase_options.dart` তৈরি এবং `main.dart`-এ platform-aware initialization যোগ করতে হবে।
+6. Firestore database ও Storage bucket-এর billing/plan requirements দেখে নিন; Cloud Functions deploy করতে Blaze plan এবং প্রয়োজনীয় Google Cloud APIs লাগতে পারে।
+7. Repository Settings → Secrets and variables → Actions-এ `FIREBASE_SERVICE_ACCOUNT_JSON` নামে secret যোগ করুন। এতে Firebase project `elyramart`-এর deploy permission-সহ service-account JSON-এর সম্পূর্ণ contents রাখুন। JSON কখনো repository-তে commit করবেন না।
+8. GitHub Actions → **Deploy Elyramart Firebase backend** → Run workflow চালান। এটি Firestore Rules, Storage Rules ও `claimOwnerAdmin` Cloud Function deploy করবে; মালিকের email parameter workflow-তে সেট করা আছে।
+9. Android native build-এ `google-services.json` থেকে Firebase options স্বয়ংক্রিয়ভাবে নেওয়া হয়। Web/iOS target চালু করার আগে FlutterFire CLI দিয়ে `flutterfire configure` চালিয়ে generated `lib/firebase_options.dart` তৈরি এবং `main.dart`-এ platform-aware initialization যোগ করতে হবে।
 
 ## নিরাপত্তা ও অনুমোদন নিয়ম
 
 - নতুন অ্যাকাউন্ট নিজে থেকে শুধু `customer` role পাবে। অ্যাপ থেকে নিজেকে seller, technician বা admin বানানো যাবে না।
-- সেলার আবেদন `sellerApplications`-এ pending হিসেবে জমা হবে। যাচাই শেষে বিশ্বস্ত Admin SDK/server থেকে সংশ্লিষ্ট `users/{uid}` ডকুমেন্টে `sellerApproved: true` সেট করতে হবে।
+- লগইন করা ও email-verified সেলার আবেদন `sellerApplications`-এ pending হিসেবে জমা হয়। Owner Admin প্যানেল থেকে যাচাই করে অনুমোদন দিলে সংশ্লিষ্ট `users/{uid}` ডকুমেন্টে `sellerApproved: true` সেট হয়।
 - অনুমোদিত সেলারই `products`-এ pending পণ্য তৈরি/সম্পাদনা এবং `products/{sellerId}/...` Storage path-এ ছবি আপলোড করতে পারবে।
-- পণ্যের public status `active` কেবল admin/server অনুমোদনের পর হবে। Admin claim কখনো Flutter client থেকে সেট করা যাবে না।
+- পণ্যের public status `active` কেবল Owner Admin প্যানেল থেকে অনুমোদনের পর হবে। Admin claim কখনো Flutter client থেকে সেট করা যাবে না।
 - Firestore/Storage rules পরিবর্তনের পর Emulator-এ customer, pending seller, approved seller ও admin—এই চারটি role দিয়ে read/write পরীক্ষা করে তারপর deploy করুন।
 
 ## প্রথম Owner Admin claim (বিশ্বস্ত Cloud Function)
@@ -34,9 +33,7 @@ Android app startup-এ Firebase Core initialize হয়। `google-services.json
 1. Firebase Console → Authentication → Sign-in method থেকে Email/Password চালু করুন।
 2. মালিকের ইমেইল `elyramartbd@gmail.com` দিয়ে অ্যাকাউন্ট তৈরি করে verification email নিশ্চিত করুন।
 3. স্থানীয় নিরাপদ কম্পিউটারে Firebase CLI দিয়ে project select করুন: `firebase use --add`।
-4. Functions parameter সেট করুন: `firebase functions:params:set ELYRAMART_OWNER_EMAIL` এবং prompt-এ `elyramartbd@gmail.com` দিন।
-5. `cd functions && npm install && npm run build && cd ..`
-6. `firebase deploy --only functions,firestore:rules,storage`
+4. GitHub Actions → **Deploy Elyramart Firebase backend** → Run workflow চালালে workflow `ELYRAMART_OWNER_EMAIL=elyramartbd@gmail.com` parameter তৈরি করে এবং Functions/Rules deploy করে।
 7. অ্যাপ/পরবর্তী Auth UI থেকে লগইন করা মালিক `claimOwnerAdmin` function call করবেন। সফল হলে sign-out/sign-in বা ID token refresh করে নতুন admin claim নিতে হবে।
 
 নিরাপত্তা:
@@ -50,7 +47,7 @@ Android app startup-এ Firebase Core initialize হয়। `google-services.json
 - `products/{productId}`: sellerId, title, category, price, stock, imageUrls, status.
 - `orders/{orderId}`: customerId, sellerIds, items, deliveryAddress, totals, status.
 - `serviceBookings/{bookingId}`: customerId, category, problem, photoUrls, address, preferredAt, technicianId, status.
-- `sellerApplications/{id}` and `technicianApplications/{id}`: pending approval requests.
+- `sellerApplications/{id}` and `technicianApplications/{id}`: pending approval requests; Owner Admin approval updates the corresponding user approval flag.
 
 ## Important launch requirements
 - Admin custom claims must be set by a trusted server (Cloud Functions/Admin SDK), not by the mobile app.
