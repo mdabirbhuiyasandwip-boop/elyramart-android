@@ -8,9 +8,13 @@ Elyramart হবে একটি cross-platform marketplace ও home-service pla
 - Android release build workflow: `.github/workflows/build-apk.yml`
 - Android Firebase client config (`google-services.json`) repository-তে আছে; APK workflow সেটি Android build-এ বসায়।
 - Customer Email/Password authentication UI ও প্রাথমিক Firestore profile sync যুক্ত আছে; Firebase Console services enable/deploy ও real-device test ছাড়া live-ready বলা যাবে না।
-- Cart, checkout/order, seller/technician application, admin overview এবং service booking-এর গুরুত্বপূর্ণ অংশ এখনো local demo storage-এ; অন্য device-এ sync হয় না।
+- Customer checkout ও service booking: signed-in, email-verified customer হলে Firestore-এ যায়; লগইন ছাড়া demo তথ্য শুধু ফোনে থাকে।
+- Seller/technician application Firestore-এ pending হিসেবে জমা হয়; Owner Admin panel থেকে approval করা যায়।
+- Approved seller পণ্য pending হিসেবে জমা দিতে পারে; Owner Admin প্রকাশ করলে customer catalogue-এ আসে।
+- Seller নিজের পণ্য ও তার সঙ্গে যুক্ত অর্ডার দেখতে পারে; Admin technician approval ও booking assignment করতে পারে।
+- Customer নিজের cloud order ও booking history দেখতে পারে; cart seller ownership সহ local cache-এ থাকে।
 - Web build তৈরি হয়, কিন্তু Web Firebase app registration/config এবং hosting enablement ছাড়া Web-এ online login/data live নয়।
-- Payment gateway, push notifications, seller/technician approval UI ও production cloud order flow এখনো চালু নয়.
+- Payment gateway, push notifications, product image upload, delivery assignment/settlement এবং full production verification এখনো চালু নয়.
 - বর্তমান APK-কে production marketplace হিসেবে প্রকাশ করা যাবে না।
 
 ## Platform strategy
