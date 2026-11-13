@@ -637,6 +637,52 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
 }
 
 
+class AccountPage extends StatefulWidget {
+  const AccountPage({super.key});
+  @override State<AccountPage> createState()=>_AccountPageState();
+}
+class _AccountPageState extends State<AccountPage> {
+  List<Map<String,dynamic>> orders=[];
+  List<Map<String,dynamic>> bookings=[];
+  @override void initState(){super.initState();_loadHistory();}
+  Future<void> _loadHistory() async {
+    final prefs=await SharedPreferences.getInstance();
+    List<Map<String,dynamic>> decode(String key){
+      return (prefs.getStringList(key)??[]).map((v){
+        try { return Map<String,dynamic>.from(jsonDecode(v) as Map); }
+        catch (_) { return <String,dynamic>{}; }
+      }).where((v)=>v.isNotEmpty).toList().reversed.toList();
+    }
+    if(!mounted)return;
+    setState((){orders=decode('elyramart_local_orders_v1');bookings=decode('elyramart_service_requests_v1');});
+  }
+  @override Widget build(BuildContext c)=>RefreshIndicator(onRefresh:_loadHistory,child:ListView(padding:const EdgeInsets.all(18),children:[
+    const CircleAvatar(radius:36,child:Icon(Icons.person,size:38)),
+    const SizedBox(height:12),
+    const Center(child:Text('Elyramart অ্যাকাউন্ট',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold))),
+    const SizedBox(height:18),
+    Card(color:Colors.white,child:Column(children:[
+      ListTile(leading:const Icon(Icons.login),title:const Text('লগইন / রেজিস্ট্রেশন'),subtitle:const Text('ডেমো প্রোফাইল তৈরি ও তথ্য সংরক্ষণ'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const CustomerLoginPage()))),
+      Divider(height:1),
+      ListTile(leading:Icon(Icons.storefront_outlined),title:Text('সেলার অ্যাকাউন্ট'),subtitle:Text('সেলার নিবন্ধন ও পণ্য ব্যবস্থাপনা'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const SellerPortalPage()))),
+      const Divider(height:1),
+      ListTile(leading:const Icon(Icons.admin_panel_settings_outlined),title:const Text('অ্যাডমিন প্যানেল'),subtitle:const Text('অর্ডার ও বুকিংয়ের ডেমো তালিকা'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const AdminOverviewPage()))),
+      const Divider(height:1),
+      ListTile(leading:const Icon(Icons.engineering_outlined),title:const Text('টেকনিশিয়ান সেন্টার'),subtitle:const Text('প্রোফাইল ও সার্ভিস বুকিং দেখুন'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const TechnicianPortalPage())))
+    ])),
+    const SizedBox(height:18),
+    Row(children:[const Expanded(child:Text('আমার অর্ডার',style:TextStyle(fontSize:18,fontWeight:FontWeight.bold))),Text(orders.length.toString()+'টি')]),
+    if(orders.isEmpty) const Card(color:Colors.white,child:ListTile(leading:Icon(Icons.receipt_long),title:Text('এখনো কোনো অর্ডার নেই')))
+    else ...orders.map((o)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.receipt_long,color:green),title:Text(o['orderNumber']?.toString()??'অর্ডার'),subtitle:Text((o['customerName']?.toString()??'')+' • '+((o['items'] as List? ?? []).length.toString())+'টি পণ্য\\n'+(o['address']?.toString()??'')),isThreeLine:true,trailing:Column(mainAxisAlignment:MainAxisAlignment.center,children:[const Icon(Icons.local_shipping_outlined,color:green),Text(const {'local_pending':'নতুন','confirmed':'নিশ্চিত','processing':'প্রস্তুত হচ্ছে','completed':'সম্পন্ন','cancelled':'বাতিল'}[o['status']]??'নতুন',style:const TextStyle(fontSize:11,color:green))])))),
+    const SizedBox(height:18),
+    Row(children:[const Expanded(child:Text('আমার সার্ভিস বুকিং',style:TextStyle(fontSize:18,fontWeight:FontWeight.bold))),Text(bookings.length.toString()+'টি')]),
+    if(bookings.isEmpty) const Card(color:Colors.white,child:ListTile(leading:Icon(Icons.handyman),title:Text('এখনো কোনো বুকিং নেই')))
+    else ...bookings.map((b)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.handyman,color:green),title:Text(b['service']?.toString()??'সার্ভিস'),subtitle:Text((b['name']?.toString()??'')+' • '+(b['phone']?.toString()??'')+'\\n'+(b['address']?.toString()??'')),isThreeLine:true,trailing:Column(mainAxisAlignment:MainAxisAlignment.center,children:[const Icon(Icons.engineering_outlined,color:green),Text(const {'local_pending':'নতুন','confirmed':'গ্রহণ করা হয়েছে','processing':'কাজ চলছে','completed':'সম্পন্ন','cancelled':'বাতিল'}[b['status']]??'নতুন',style:const TextStyle(fontSize:10,color:green))])))),
+    const SizedBox(height:10),
+    const Text('নোট: এই অর্ডার ও বুকিং শুধু এই ফোনে সংরক্ষিত। অনলাইনে পাঠাতে সার্ভার সংযোগ প্রয়োজন।',style:TextStyle(color:Colors.black54,fontSize:12))
+  ])));
+}
+
 class CustomerLoginPage extends StatefulWidget {
   const CustomerLoginPage({super.key});
   @override State<CustomerLoginPage> createState()=>_CustomerLoginPageState();
