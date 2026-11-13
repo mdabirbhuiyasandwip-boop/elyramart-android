@@ -2,6 +2,10 @@
 
 এই repository-তে Flutter Android client-এর প্রাথমিক UI আছে। Firebase project credentials এখনো যোগ করা হয়নি, তাই login, cloud order, seller approval, technician assignment এবং live payment এখনো চালু নয়।
 
+## বর্তমান অ্যাপের Firebase সংযোগ
+
+Android app startup-এ Firebase Core initialize হয়। `google-services.json` Android app-এর config হিসেবে repository-তে আছে; APK workflow build-এর সময় এটি `android/app/`-এ কপি করে Google Services Gradle plugin যোগ করে। Customer account screen-এ Email/Password registration, login, email verification এবং customer profile-এর প্রাথমিক Firestore sync যুক্ত হয়েছে। Owner Admin button `claimOwnerAdmin` callable function ব্যবহার করে। এগুলো চালু করতে নিচের Console ও deploy ধাপ সম্পন্ন করতে হবে।
+
 ## Firebase project প্রস্তুত
 1. Firebase Console-এ নতুন project তৈরি করুন: https://console.firebase.google.com/
 2. Android app register করুন package name: `com.elyramartbd.elyramart`
@@ -36,7 +40,7 @@
 7. অ্যাপ/পরবর্তী Auth UI থেকে লগইন করা মালিক `claimOwnerAdmin` function call করবেন। সফল হলে sign-out/sign-in বা ID token refresh করে নতুন admin claim নিতে হবে।
 
 নিরাপত্তা:
-- Google/Firebase password, OTP, service-account JSON বা private key কাউকে দেবেন না এবং GitHub-এ commit করবেন না।
+- Google/Firebase password, OTP, service-account JSON বা private key কাউকে দেবেন না এবং GitHub-এ commit করবেন না। `google-services.json`-এর client API key অ্যাপের public configuration; Firebase/Google Cloud Console-এ Android app restriction ও প্রয়োজনীয় API restriction দিন।
 - মালিকের ইমেইল inbox-এর নিয়ন্ত্রণ ও email verification আবশ্যক। ওই ইমেইলের অ্যাক্সেস হারালে admin claim পুনরুদ্ধারে project owner-এর trusted server access লাগবে।
 - Function deploy না হওয়া পর্যন্ত admin claim তৈরি হবে না। এই commit একা live login চালু করে না।
 - App Check enforcement production launch-এর আগে configure ও enable করতে হবে; এখন callable function-এ App Check enforcement বন্ধ রাখা হয়েছে যাতে client integration না থাকা অবস্থায় owner bootstrap আটকে না যায়।
