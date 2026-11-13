@@ -243,10 +243,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
     const bn='০১২৩৪৫৬৭৮৯';
     var normalizedPhone=phone.text.trim();
     for(var i=0;i<10;i++){normalizedPhone=normalizedPhone.replaceAll(bn[i], '$i');}
-    normalizedPhone=normalizedPhone.replaceAll(RegExp(r'[\\s\\-()]'), '');
+    normalizedPhone=normalizedPhone.replaceAll(RegExp(r'[\s\-()]'), '');
     if(normalizedPhone.startsWith('+880')){normalizedPhone='0'+normalizedPhone.substring(4);}
     else if(normalizedPhone.startsWith('8801')){normalizedPhone='0'+normalizedPhone.substring(3);}
-    if(!RegExp(r'^01[3-9]\d{8}).hasMatch(normalizedPhone)){
+    if(!RegExp(r'^01[3-9]\d{8}$').hasMatch(normalizedPhone)){
       ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
     }
     setState(()=>saving=true);
@@ -1205,10 +1205,10 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
     const bn='০১২৩৪৫৬৭৮৯';
     var normalized=phone.text.trim();
     for(var i=0;i<10;i++){normalized=normalized.replaceAll(bn[i], '$i');}
-    normalized=normalized.replaceAll(RegExp(r'[\\s\\-()]'), '');
+    normalized=normalized.replaceAll(RegExp(r'[\s\-()]'), '');
     if(normalized.startsWith('+880')){normalized='0'+normalized.substring(4);}
     else if(normalized.startsWith('8801')){normalized='0'+normalized.substring(3);}
-    if(!RegExp(r'^01[3-9]\\d{8}$').hasMatch(normalized)){
+    if(!RegExp(r'^01[3-9]\d{8}$').hasMatch(normalized)){
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
     }
     final prefs=await SharedPreferences.getInstance();
