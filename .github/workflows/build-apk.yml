@@ -62,7 +62,7 @@ jobs:
           ]
           missing = [line for line in permissions if line not in s]
           if missing:
-              s = s.replace("<application", "\\n".join(missing) + "\\n    <application", 1)
+              s = s.replace("<application", "\n".join(missing) + "\n    <application", 1)
               p.write_text(s, encoding="utf-8")
           PY
       - name: Generate Elyramart E-only brand icons
