@@ -1385,6 +1385,13 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email.text.trim(), password: password.text,
       );
+      final signedIn=FirebaseAuth.instance.currentUser;
+      await signedIn?.reload();
+      final refreshed=FirebaseAuth.instance.currentUser;
+      if(refreshed!=null&&!refreshed.emailVerified){
+        _showAuthMessage('লগইন হয়েছে, তবে অর্ডার ও আবেদন পাঠানোর আগে ইমেইল যাচাই করুন। নিচের বাটনে আবার যাচাই লিংক পাঠাতে পারবেন।');
+        return;
+      }
       await _syncUserProfile();
       _showAuthMessage('সফলভাবে লগইন হয়েছে।');
     } on FirebaseAuthException catch (e) {
@@ -1477,6 +1484,15 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
     }
   }
 
+  Future<void> _resendVerification() async {
+    final user=FirebaseAuth.instance.currentUser;
+    if(user==null){_showAuthMessage('আগে লগইন করুন।');return;}
+    try{
+      await user.sendEmailVerification();
+      _showAuthMessage('নতুন যাচাই লিংক আপনার ইমেইলে পাঠানো হয়েছে।');
+    }catch(error){_showAuthMessage('যাচাই লিংক পাঠানো যায়নি: $error');}
+  }
+
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
     _showAuthMessage('লগআউট হয়েছে।');
@@ -1538,6 +1554,8 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
         field(password, 'পাসওয়ার্ড', obscure: true),
         FilledButton(onPressed: authBusy ? null : _signIn, child: const Text('লগইন')),
         OutlinedButton(onPressed: authBusy ? null : _register, child: const Text('নতুন অ্যাকাউন্ট তৈরি')),
+        if(FirebaseRuntime.initialized&&FirebaseAuth.instance.currentUser!=null&&!FirebaseAuth.instance.currentUser!.emailVerified)
+          TextButton(onPressed:authBusy?null:_resendVerification,child:const Text('ইমেইল যাচাই লিংক আবার পাঠান')),
         if (FirebaseRuntime.initialized) ...[
           const SizedBox(height: 10),
           OutlinedButton.icon(onPressed: authBusy ? null : _claimOwner,
