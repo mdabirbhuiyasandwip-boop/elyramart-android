@@ -463,7 +463,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     widget.onOrderSaved();
     if(!mounted)return;
     setState(()=>saving=false);
-    showDialog(context:c,builder:(_)=>AlertDialog(title:Text(cloudSaved?'অর্ডার অনলাইনে পাঠানো হয়েছে':'ডেমো অর্ডার সংরক্ষিত'),content:Text('অর্ডার নম্বর: $orderNumber\\nপণ্যের মোট: ৳$totalAmount\\n${cloudSaved?'অর্ডার সার্ভারে সংরক্ষিত হয়েছে।':'অর্ডার শুধু এই ফোনে রাখা হয়েছে। অনলাইনে পাঠাতে লগইন করুন এবং Firebase চালু থাকতে হবে।'}'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
+    showDialog(context:c,builder:(_)=>AlertDialog(title:Text(cloudSaved?'অর্ডার অনলাইনে পাঠানো হয়েছে':'ডেমো অর্ডার সংরক্ষিত'),content:Text('অর্ডার নম্বর: $orderNumber\\nপণ্যের মোট: ৳$totalAmount\\nডেলিভারি চার্জ: ৳$serverDeliveryFee\\nসর্বমোট: ৳${serverTotalAmount??(totalAmount+serverDeliveryFee)}\\n${cloudSaved?'অর্ডার সার্ভারে সংরক্ষিত হয়েছে।':'অর্ডার শুধু এই ফোনে রাখা হয়েছে। অনলাইনে পাঠাতে লগইন করুন এবং Firebase চালু থাকতে হবে।'}'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
   }
   @override Widget build(BuildContext c)=>Scaffold(
     appBar:AppBar(title:const Text('ডেলিভারি তথ্য')),
