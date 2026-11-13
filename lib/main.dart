@@ -191,7 +191,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
     normalizedPhone=normalizedPhone.replaceAll(RegExp(r'[\\s\\-()]'), '');
     if(normalizedPhone.startsWith('+880')){normalizedPhone='0'+normalizedPhone.substring(4);}
     else if(normalizedPhone.startsWith('8801')){normalizedPhone='0'+normalizedPhone.substring(3);}
-    if(!RegExp(r'^01[3-9]\\d{8}
+    if(!RegExp(r'^01[3-9]\\d{8}$').hasMatch(normalizedPhone)){
+      ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
+    }
+    setState(()=>saving=true);
     final prefs=await SharedPreferences.getInstance();
     final orders=prefs.getStringList('elyramart_local_orders_v1')??[];
     final orderNumber='ELY-${DateTime.now().millisecondsSinceEpoch}';
