@@ -280,12 +280,35 @@ class _BookingPageState extends State<BookingPage> {
     if(normalizedPhone==null){
       ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
     }
-    final prefs=await SharedPreferences.getInstance();
-    final requests=prefs.getStringList('elyramart_service_requests_v1')??[];
-    requests.add(jsonEncode({'service':widget.service,'name':name.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'problem':problem.text.trim(),'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'}));
-    await prefs.setStringList('elyramart_service_requests_v1',requests);
+    final user = FirebaseRuntime.initialized ? FirebaseAuth.instance.currentUser : null;
+    final booking = <String,dynamic>{
+      'service': widget.service,
+      'name': name.text.trim(),
+      'phone': normalizedPhone,
+      'address': address.text.trim(),
+      'problem': problem.text.trim(),
+      'status': 'requested',
+      'createdAt': FieldValue.serverTimestamp(),
+      'customerId': user?.uid,
+    };
+    var cloudSaved = false;
+    if (user != null) {
+      try {
+        await FirebaseFirestore.instance.collection('serviceBookings').add(booking);
+        cloudSaved = true;
+      } catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text('অনলাইনে বুকিং পাঠানো যায়নি: $error')));
+        return;
+      }
+    } else {
+      final prefs=await SharedPreferences.getInstance();
+      final requests=prefs.getStringList('elyramart_service_requests_v1')??[];
+      requests.add(jsonEncode({...booking,'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'}));
+      await prefs.setStringList('elyramart_service_requests_v1',requests);
+    }
     if(!mounted)return;
-    showDialog(context:c,builder:(_)=>AlertDialog(title:const Text('বুকিং তথ্য সংরক্ষিত'),content:Text('${widget.service} — ${name.text}\\nফোন: ${phone.text}\\nঠিকানা: ${address.text}\\n\\nতথ্য এই ফোনে সংরক্ষিত হয়েছে। সার্ভার সংযুক্ত না থাকায় এখনো টেকনিশিয়ানের কাছে পাঠানো হয়নি।'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
+    showDialog(context:c,builder:(_)=>AlertDialog(title:Text(cloudSaved?'অনলাইন বুকিং পাঠানো হয়েছে':'ডেমো বুকিং সংরক্ষিত'),content:Text(cloudSaved?'আপনার বুকিং সার্ভারে পাঠানো হয়েছে। অ্যাডমিন যাচাই করে টেকনিশিয়ান নির্ধারণ করবেন।':'এই ফোনে বুকিং রাখা হয়েছে। অনলাইনে পাঠাতে লগইন করুন এবং Firebase চালু থাকতে হবে।'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
   }
   @override Widget build(BuildContext c)=>Scaffold(
     appBar:AppBar(title:const Text('সার্ভিস বুকিং')),
@@ -354,15 +377,41 @@ class _CheckoutPageState extends State<CheckoutPage> {
       ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
     }
     setState(()=>saving=true);
-    final prefs=await SharedPreferences.getInstance();
-    final orders=prefs.getStringList('elyramart_local_orders_v1')??[];
+    final user = FirebaseRuntime.initialized ? FirebaseAuth.instance.currentUser : null;
     final orderNumber='ELY-${DateTime.now().millisecondsSinceEpoch}';
-    orders.add(jsonEncode({'orderNumber':orderNumber,'customerName':name.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'items':widget.items.map((p)=>{'name':p.name,'price':p.price}).toList(),'totalAmount':totalAmount,'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'}));
-    await prefs.setStringList('elyramart_local_orders_v1',orders);
+    final orderData=<String,dynamic>{
+      'orderNumber': orderNumber,
+      'customerId': user?.uid,
+      'customerName': name.text.trim(),
+      'phone': normalizedPhone,
+      'address': address.text.trim(),
+      'items': widget.items.map((p)=>{'name':p.name,'category':p.category,'price':p.price}).toList(),
+      'sellerIds': <String>[],
+      'totalAmount': totalAmount,
+      'createdAt': FieldValue.serverTimestamp(),
+      'status': 'placed',
+    };
+    var cloudSaved=false;
+    if(user!=null){
+      try{
+        await FirebaseFirestore.instance.collection('orders').add(orderData);
+        cloudSaved=true;
+      }catch(error){
+        if(!mounted)return;
+        setState(()=>saving=false);
+        ScaffoldMessenger.of(c).showSnackBar(SnackBar(content:Text('অনলাইনে অর্ডার পাঠানো যায়নি: $error')));
+        return;
+      }
+    }else{
+      final prefs=await SharedPreferences.getInstance();
+      final orders=prefs.getStringList('elyramart_local_orders_v1')??[];
+      orders.add(jsonEncode({...orderData,'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'}));
+      await prefs.setStringList('elyramart_local_orders_v1',orders);
+    }
     widget.onOrderSaved();
     if(!mounted)return;
     setState(()=>saving=false);
-    showDialog(context:c,builder:(_)=>AlertDialog(title:const Text('অর্ডারের তথ্য সংরক্ষিত'),content:Text('অর্ডার নম্বর: $orderNumber\\nপণ্যের মোট: ৳$totalAmount\\nতথ্য এই ফোনে রাখা হয়েছে। সার্ভার সংযুক্ত না থাকায় দোকান বা ডেলিভারি টিম এখনো অর্ডারটি পায়নি।'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
+    showDialog(context:c,builder:(_)=>AlertDialog(title:Text(cloudSaved?'অর্ডার অনলাইনে পাঠানো হয়েছে':'ডেমো অর্ডার সংরক্ষিত'),content:Text('অর্ডার নম্বর: $orderNumber\\nপণ্যের মোট: ৳$totalAmount\\n${cloudSaved?'অর্ডার সার্ভারে সংরক্ষিত হয়েছে।':'অর্ডার শুধু এই ফোনে রাখা হয়েছে। অনলাইনে পাঠাতে লগইন করুন এবং Firebase চালু থাকতে হবে।'}'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
   }
   @override Widget build(BuildContext c)=>Scaffold(
     appBar:AppBar(title:const Text('ডেলিভারি তথ্য')),
