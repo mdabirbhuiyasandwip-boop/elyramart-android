@@ -9,6 +9,8 @@ This document separates code that exists in the repository from services that st
 - Seller and technician applications with owner/admin approval flows.
 - Seller product submission and admin publication flow.
 - Server-side COD order callable that reads current product prices and stock, checks stock, decrements inventory in a Firestore transaction, and creates the order.
+- Delivery charge is added server-side (default ৳80; can be overridden by `settings/business.deliveryFee`). Admin can assign a rider name and Bangladesh mobile number to an online order.
+- Firebase Cloud Messaging token registration and server notification triggers for new orders, new service bookings, technician assignment, and booking status updates.
 - Customer order history, seller order visibility/status flow, and technician booking/assignment screens.
 - Firestore and Storage security rules are checked into the repository.
 - Android build workflow builds both APK and Play Store AAB and uploads them as workflow artifacts.
@@ -27,8 +29,8 @@ This document separates code that exists in the repository from services that st
 ## Features that are not implemented yet
 
 - bKash/Nagad/card gateway integration. At present the only enabled checkout method is Cash on Delivery. A real gateway needs an approved merchant account and API credentials.
-- Delivery rider assignment, delivery tracking, rider settlement, and delivery-fee calculation.
-- Push notifications (Firebase Cloud Messaging) for orders, seller updates, and technician bookings.
+- Rider self-service login/app, GPS delivery tracking, proof of delivery, and rider settlement are not implemented; current rider assignment is manual in the Owner Admin panel.
+- Push notification delivery still requires the backend Functions and Android app version with FCM to be deployed; notifications are not live until Firebase deployment succeeds.
 - Live production end-to-end tests using real customer, seller, admin, and technician accounts.
 - A publicly deployed production website/hosting setup.
 
