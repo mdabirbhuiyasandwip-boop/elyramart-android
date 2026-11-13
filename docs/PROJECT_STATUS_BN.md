@@ -15,7 +15,7 @@
 
 ## Cloud সংযোগের বর্তমান সীমা
 - Email/password Firebase Auth এবং customer profile sync-এর প্রাথমিক code আছে; Firebase Console provider/database configuration ও real-device test ছাড়া live-ready নয়।
-- Verified customer-এর checkout/service booking Firestore-এ পাঠানোর code আছে; seller/technician applications ও admin approval flow-ও আংশিক যুক্ত।
+- Verified customer-এর checkout/service booking Firestore-এ পাঠানোর code আছে; seller/technician applications ও admin approval flow-ও আংশিক যুক্ত। নতুন অর্ডারে বর্তমানে COD paymentMethod বাধ্যতামূলক করা হয়েছে।
 - Cart এখনো local cache-এ থাকে।
 - Product image upload, payment gateway, push notifications, delivery assignment/settlement এবং production-grade server-side order/payment validation এখনো সম্পূর্ণ নয়।
 - Firebase Cloud Functions deploy এবং owner-admin claim সফলভাবে live হয়েছে—এমন প্রমাণ এখনো নেই।
@@ -29,7 +29,7 @@ https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43489
 
 ## Play Store release-এর আগে বাধ্যতামূলক
 1. APK এবং AAB build সফল করে artifacts যাচাই।
-2. Firebase Auth, Firestore, Storage ও Functions project-এ configure/deploy এবং security rules test।
+2. GitHub Secret FIREBASE_SERVICE_ACCOUNT_JSON-এ Firebase project `elyramart`-এর Google Cloud service-account key JSON দিতে হবে; বর্তমান Secret-এ প্রয়োজনীয় `type`, `project_id`, `private_key`, `client_email`, `token_uri` নেই। এরপর Firebase Auth, Firestore, Storage ও Functions configure/deploy এবং security rules test।
 3. Cloud order/catalog/booking flows এবং server-side price/payment verification সম্পূর্ণ।
 4. Payment provider merchant approval ও server integration।
 5. Product image upload, FCM notifications, delivery assignment এবং operational settlement।
