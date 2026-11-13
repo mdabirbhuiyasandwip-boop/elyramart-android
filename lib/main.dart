@@ -679,6 +679,7 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
         db.collection('sellerApplications').limit(100).get(),
         db.collection('technicianApplications').limit(100).get(),
       ]);
+      final businessSettings=await db.collection('settings').doc('business').get();
       List<Map<String,dynamic>> mapped(QuerySnapshot<Map<String,dynamic>> snap)=>snap.docs.map((d)=>{...d.data(),'_docId':d.id}).toList();
       if(!mounted)return;
       setState((){
@@ -687,6 +688,7 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
         bookings=mapped(results[2]);
         sellerApps=mapped(results[3]);
         technicianApps=mapped(results[4]);
+        if(businessSettings.exists)ownerProfile=businessSettings.data();
       });
     }catch(error){
       if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('অনলাইন অ্যাডমিন তথ্য লোড হয়নি: $error')));
