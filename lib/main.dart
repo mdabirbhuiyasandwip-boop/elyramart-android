@@ -498,10 +498,14 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;
     if(user!=null){
       try{
-        await FirebaseFirestore.instance.collection('sellerApplications').add({
-          'userId':user.uid,'shopName':shop.text.trim(),'contact':normalizedPhone,
-          'address':address.text.trim(),'status':'pending','createdAt':FieldValue.serverTimestamp(),
-        });
+        final existing=await FirebaseFirestore.instance.collection('sellerApplications').where('userId',isEqualTo:user.uid).limit(20).get();
+        final hasPending=existing.docs.any((doc)=>doc.data()['status']=='pending');
+        if(!hasPending){
+          await FirebaseFirestore.instance.collection('sellerApplications').add({
+            'userId':user.uid,'shopName':shop.text.trim(),'contact':normalizedPhone,
+            'address':address.text.trim(),'status':'pending','createdAt':FieldValue.serverTimestamp(),
+          });
+        }
       }catch(error){
         if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('সেলার আবেদন অনলাইনে পাঠানো যায়নি: $error')));
         return;
@@ -982,11 +986,15 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
     final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;
     if(user!=null){
       try{
-        await FirebaseFirestore.instance.collection('technicianApplications').add({
-          'userId':user.uid,'name':name.text.trim(),'phone':normalizedPhone,
-          'address':address.text.trim(),'skills':skills.text.trim(),
-          'status':'pending','createdAt':FieldValue.serverTimestamp(),
-        });
+        final existing=await FirebaseFirestore.instance.collection('technicianApplications').where('userId',isEqualTo:user.uid).limit(20).get();
+        final hasPending=existing.docs.any((doc)=>doc.data()['status']=='pending');
+        if(!hasPending){
+          await FirebaseFirestore.instance.collection('technicianApplications').add({
+            'userId':user.uid,'name':name.text.trim(),'phone':normalizedPhone,
+            'address':address.text.trim(),'skills':skills.text.trim(),
+            'status':'pending','createdAt':FieldValue.serverTimestamp(),
+          });
+        }
       }catch(error){
         if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('টেকনিশিয়ান আবেদন পাঠানো যায়নি: $error')));
         return;
