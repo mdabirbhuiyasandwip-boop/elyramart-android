@@ -680,7 +680,7 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
       await FirebaseFirestore.instance.collection('serviceBookings').doc(id).update({
         'technicianId':technicianUid,'status':'confirmed','updatedAt':FieldValue.serverTimestamp(),
       });
-      if(mounted){setState(()=>{booking['technicianId']=technicianUid,booking['status']='confirmed'});ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('টেকনিশিয়ান নির্ধারণ করা হয়েছে।')));}
+      if(mounted){setState(() { booking['technicianId']=technicianUid; booking['status']='confirmed'; });ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('টেকনিশিয়ান নির্ধারণ করা হয়েছে।')));}
     }catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('টেকনিশিয়ান নির্ধারণ হয়নি: $error')));}
   }
   Future<void> _changeCloudStatus(String collection,Map<String,dynamic> item,String status) async {
@@ -701,7 +701,7 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
     setState((){item['status']=status;});
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('স্ট্যাটাস: ${statusNames[status]??status}')));
   }
-  Widget _statusMenu(String key,String identity,Map<String,dynamic> item)=>PopupMenuButton<String>(tooltip:'স্ট্যাটাস পরিবর্তন',onSelected:(v)=>item['_docId']!=null?_changeCloudStatus(key=='elyramart_local_orders_v1'?'orders':'serviceBookings',item,v):_changeStatus(key,identity,item,v),itemBuilder:(_)=>statusNames.entries.map((e)=>PopupMenuItem<String>(value:e.key,child:Text(e.value))).toList(),icon:const Icon(Icons.more_vert));
+  Widget _statusMenu(String key,String identity,Map<String,dynamic> item)=>PopupMenuButton<String>(tooltip:'স্ট্যাটাস পরিবর্তন',onSelected:(v)=>item['_docId']!=null?_changeCloudStatus(key=='elyramart_local_orders_v1'?'orders':'serviceBookings',item,v):_changeStatus(key,identity,item,v),itemBuilder:(_){final cloud=item['_docId']!=null;final entries=statusNames.entries.where((e)=>!cloud|| (key=='elyramart_local_orders_v1'?['placed','confirmed','processing','completed','cancelled'].contains(e.key):['requested','confirmed','processing','completed','cancelled'].contains(e.key)));return entries.map((e)=>PopupMenuItem<String>(value:e.key,child:Text(e.value))).toList();},icon:const Icon(Icons.more_vert));
   String _status(Map<String,dynamic> item)=>statusNames[item['status']]??'নতুন';
   Widget heading(String t)=>Padding(padding:const EdgeInsets.only(top:18,bottom:8),child:Text(t,style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold)));
   @override
