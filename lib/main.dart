@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -111,7 +112,31 @@ class ProductCard extends StatelessWidget { final Product p; final VoidCallback 
 class ServicesPage extends StatelessWidget { const ServicesPage({super.key}); @override Widget build(BuildContext context)=>ListView(padding:const EdgeInsets.all(16),children:[const Text('টেকনিশিয়ান ও হোম সার্ভিস',style:TextStyle(fontSize:21,fontWeight:FontWeight.bold,color:ink)),const SizedBox(height:6),const Text('আপনার সমস্যার জন্য প্রয়োজনীয় সার্ভিস নির্বাচন করুন। বুকিংয়ের তথ্য দিয়ে অনুরোধ পাঠান।'),const SizedBox(height:16),...services.map((s)=>Card(color:Colors.white,elevation:0,child:ListTile(leading:CircleAvatar(backgroundColor:const Color(0xFFE2F3EC),child:Icon(s.$2,color:green)),title:Text(s.$1,style:const TextStyle(fontWeight:FontWeight.bold)),subtitle:Text(s.$3),trailing:const Icon(Icons.arrow_forward_ios,size:16),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>BookingPage(service:s.$1)))))]); }
 
 class BookingPage extends StatefulWidget { final String service; const BookingPage({super.key,required this.service}); @override State<BookingPage> createState()=>_BookingPageState(); }
-class _BookingPageState extends State<BookingPage> { final name=TextEditingController(),phone=TextEditingController(),address=TextEditingController(),problem=TextEditingController(); @override void dispose(){name.dispose();phone.dispose();address.dispose();problem.dispose();super.dispose();} @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('সার্ভিস বুকিং')),body:ListView(padding:const EdgeInsets.all(18),children:[Text(widget.service,style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),const SizedBox(height:16),field(name,'আপনার নাম'),field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),field(address,'সম্পূর্ণ ঠিকানা',lines:2),field(problem,'সমস্যার বিবরণ',lines:3),const SizedBox(height:14),FilledButton(onPressed:(){if([name,phone,address].any((x)=>x.text.trim().isEmpty)){ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('নাম, ফোন ও ঠিকানা পূরণ করুন')));return;}showDialog(context:c,builder:(_)=>AlertDialog(title:const Text('বুকিং অনুরোধ তৈরি হয়েছে'),content:Text('${widget.service} — ${name.text}\nফোন: ${phone.text}\nঠিকানা: ${address.text}\n\nএটি ডেমো অনুরোধ। সার্ভার সংযুক্ত না থাকায় এখনো কোনো টেকনিশিয়ানের কাছে পাঠানো হয়নি।'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));},child:const Text('বুকিং অনুরোধ তৈরি করুন'))])); }
+class _BookingPageState extends State<BookingPage> {
+  final name=TextEditingController(),phone=TextEditingController(),address=TextEditingController(),problem=TextEditingController();
+  @override void dispose(){name.dispose();phone.dispose();address.dispose();problem.dispose();super.dispose();}
+  Future<void> saveRequest(BuildContext c) async {
+    if([name,phone,address].any((x)=>x.text.trim().isEmpty)){
+      ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('নাম, ফোন ও ঠিকানা পূরণ করুন')));return;
+    }
+    final prefs=await SharedPreferences.getInstance();
+    final requests=prefs.getStringList('elyramart_service_requests_v1')??[];
+    requests.add(jsonEncode({'service':widget.service,'name':name.text.trim(),'phone':phone.text.trim(),'address':address.text.trim(),'problem':problem.text.trim(),'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'}));
+    await prefs.setStringList('elyramart_service_requests_v1',requests);
+    if(!mounted)return;
+    showDialog(context:c,builder:(_)=>AlertDialog(title:const Text('বুকিং তথ্য সংরক্ষিত'),content:Text('${widget.service} — ${name.text}\\nফোন: ${phone.text}\\nঠিকানা: ${address.text}\\n\\nতথ্য এই ফোনে সংরক্ষিত হয়েছে। সার্ভার সংযুক্ত না থাকায় এখনো টেকনিশিয়ানের কাছে পাঠানো হয়নি।'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
+  }
+  @override Widget build(BuildContext c)=>Scaffold(
+    appBar:AppBar(title:const Text('সার্ভিস বুকিং')),
+    body:ListView(padding:const EdgeInsets.all(18),children:[
+      Text(widget.service,style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
+      const SizedBox(height:16),field(name,'আপনার নাম'),field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),
+      field(address,'সম্পূর্ণ ঠিকানা',lines:2),field(problem,'সমস্যার বিবরণ',lines:3),
+      const SizedBox(height:14),
+      FilledButton(onPressed:()=>saveRequest(c),child:const Text('বুকিং তথ্য সংরক্ষণ করুন'))
+    ])
+  );
+}
 Widget field(TextEditingController c,String label,{int lines=1,TextInputType? keyboard})=>Padding(padding:const EdgeInsets.only(bottom:12),child:TextField(controller:c,maxLines:lines,keyboardType:keyboard,decoration:InputDecoration(labelText:label,border:OutlineInputBorder(borderRadius:BorderRadius.circular(12)),filled:true,fillColor:Colors.white)));
 
 class CartPage extends StatelessWidget {
