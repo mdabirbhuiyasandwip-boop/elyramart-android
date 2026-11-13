@@ -6,6 +6,13 @@ import 'package:elyramart/main.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('Bangladesh phone normalization accepts local and international formats', () {
+    expect(normalizeBangladeshPhone('01712345678'), '01712345678');
+    expect(normalizeBangladeshPhone('+8801712345678'), '01712345678');
+    expect(normalizeBangladeshPhone('০১৭১২৩৪৫৬৭৮'), '01712345678');
+    expect(normalizeBangladeshPhone('01212345678'), isNull);
+  });
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
