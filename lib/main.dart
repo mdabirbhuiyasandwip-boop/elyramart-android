@@ -453,24 +453,90 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
   Widget _statusMenu(String key,String identity,Map<String,dynamic> item)=>PopupMenuButton<String>(tooltip:'স্ট্যাটাস পরিবর্তন',onSelected:(v)=>_changeStatus(key,identity,item,v),itemBuilder:(_)=>statusNames.entries.map((e)=>PopupMenuItem<String>(value:e.key,child:Text(e.value))).toList(),icon:const Icon(Icons.more_vert));
   String _status(Map<String,dynamic> item)=>statusNames[item['status']]??'নতুন';
   Widget heading(String t)=>Padding(padding:const EdgeInsets.only(top:18,bottom:8),child:Text(t,style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold)));
-  @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('অ্যাডমিন ওভারভিউ')),body:RefreshIndicator(onRefresh:_load,child:ListView(padding:const EdgeInsets.all(16),children:[
-    const Text('এই ডিভাইসের ডেমো ডেটা',style:TextStyle(color:Colors.deepOrange,fontWeight:FontWeight.w600)),
-    const SizedBox(height:12),
-    Wrap(spacing:8,runSpacing:8,children:[_stat('অর্ডার',orders.length,Icons.receipt_long),_stat('সেলার পণ্য',products.length,Icons.inventory_2),_stat('সার্ভিস বুকিং',bookings.length,Icons.handyman)]),
-    heading('সেলার আবেদন'),
-    if(seller==null) const Card(color:Colors.white,child:ListTile(title:Text('কোনো সেলার তথ্য নেই')))
-    else Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.store,color:green),title:Text(seller!['shop']??''),subtitle:Text('${seller!['owner']??''} • ${seller!['phone']??''}\\n${seller!['address']??''}'),isThreeLine:true,trailing:const Text('লোকাল',style:TextStyle(color:Colors.deepOrange)))),
-    heading('সেলার পণ্য'),
-    if(products.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('কোনো পণ্য নেই')))
-    else ...products.map((v)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.inventory,color:green),title:Text(v['name']??''),subtitle:Text('${v['category']??''} • ${v['price']??''}')))),
-    heading('সাম্প্রতিক অর্ডার'),
-    if(orders.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('কোনো অর্ডার নেই')))
-    else ...orders.take(10).map((v)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.receipt,color:green),title:Text(v['orderNumber']??''),subtitle:Text('${v['customerName']??''} • ${v['phone']??''}\\n${v['address']??''}\\nস্ট্যাটাস: ${_status(v)}'),isThreeLine:true,trailing:_statusMenu('elyramart_local_orders_v1','orderNumber',v)))),
-    heading('সার্ভিস বুকিং'),
-    if(bookings.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('কোনো বুকিং নেই')))
-    else ...bookings.take(10).map((v)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.handyman,color:green),title:Text(v['service']??''),subtitle:Text('${v['name']??''} • ${v['phone']??''}\\n${v['problem']??''}\\nস্ট্যাটাস: ${_status(v)}'),isThreeLine:true,trailing:_statusMenu('elyramart_service_requests_v1','createdAt',v)))),
-    const SizedBox(height:12),const Text('সতর্কতা: এই স্ক্রিন শুধু একই ফোনে থাকা ডেমো তথ্য দেখায়। স্ট্যাটাস পরিবর্তনও শুধু এই ফোনে সংরক্ষিত হয়; গ্রাহক, দোকান বা টেকনিশিয়ান অনলাইনে আপডেট পায় না.',style:TextStyle(color:Colors.black54,fontSize:12))
-   ])));
+  @override
+  Widget build(BuildContext c) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('অ্যাডমিন ওভারভিউ')),
+      body: RefreshIndicator(
+        onRefresh: _load,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: <Widget>[
+            const Text('এই ডিভাইসের ডেমো ডেটা', style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _stat('অর্ডার', orders.length, Icons.receipt_long),
+                _stat('সেলার পণ্য', products.length, Icons.inventory_2),
+                _stat('সার্ভিস বুকিং', bookings.length, Icons.handyman),
+              ],
+            ),
+            heading('সেলার আবেদন'),
+            if (seller == null)
+              const Card(color: Colors.white, child: ListTile(title: Text('কোনো সেলার তথ্য নেই')))
+            else
+              Card(
+                color: Colors.white,
+                child: ListTile(
+                  leading: const Icon(Icons.store, color: green),
+                  title: Text(seller!['shop'] ?? ''),
+                  subtitle: Text('${seller!['owner'] ?? ''} • ${seller!['phone'] ?? ''}\n${seller!['address'] ?? ''}'),
+                  isThreeLine: true,
+                  trailing: const Text('লোকাল', style: TextStyle(color: Colors.deepOrange)),
+                ),
+              ),
+            heading('সেলার পণ্য'),
+            if (products.isEmpty)
+              const Card(color: Colors.white, child: ListTile(title: Text('কোনো পণ্য নেই')))
+            else
+              ...products.map((v) => Card(
+                color: Colors.white,
+                child: ListTile(
+                  leading: const Icon(Icons.inventory, color: green),
+                  title: Text(v['name'] ?? ''),
+                  subtitle: Text('${v['category'] ?? ''} • ${v['price'] ?? ''}'),
+                ),
+              )),
+            heading('সাম্প্রতিক অর্ডার'),
+            if (orders.isEmpty)
+              const Card(color: Colors.white, child: ListTile(title: Text('কোনো অর্ডার নেই')))
+            else
+              ...orders.take(10).map((v) => Card(
+                color: Colors.white,
+                child: ListTile(
+                  leading: const Icon(Icons.receipt, color: green),
+                  title: Text(v['orderNumber'] ?? ''),
+                  subtitle: Text('${v['customerName'] ?? ''} • ${v['phone'] ?? ''}\n${v['address'] ?? ''}\nস্ট্যাটাস: ${_status(v)}'),
+                  isThreeLine: true,
+                  trailing: _statusMenu('elyramart_local_orders_v1', 'orderNumber', v),
+                ),
+              )),
+            heading('সার্ভিস বুকিং'),
+            if (bookings.isEmpty)
+              const Card(color: Colors.white, child: ListTile(title: Text('কোনো বুকিং নেই')))
+            else
+              ...bookings.take(10).map((v) => Card(
+                color: Colors.white,
+                child: ListTile(
+                  leading: const Icon(Icons.handyman, color: green),
+                  title: Text(v['service'] ?? ''),
+                  subtitle: Text('${v['name'] ?? ''} • ${v['phone'] ?? ''}\n${v['problem'] ?? ''}\nস্ট্যাটাস: ${_status(v)}'),
+                  isThreeLine: true,
+                  trailing: _statusMenu('elyramart_service_requests_v1', 'createdAt', v),
+                ),
+              )),
+            const SizedBox(height: 12),
+            const Text(
+              'সতর্কতা: এই স্ক্রিন শুধু একই ফোনে থাকা ডেমো তথ্য দেখায়। স্ট্যাটাস পরিবর্তনও শুধু এই ফোনে সংরক্ষিত হয়; গ্রাহক, দোকান বা টেকনিশিয়ান অনলাইনে আপডেট পায়।',
+              style: TextStyle(color: Colors.black54, fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   Widget _stat(String label,int value,IconData icon)=>Container(width:MediaQuery.of(context).size.width/3-20,padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),child:Column(children:[Icon(icon,color:green),const SizedBox(height:6),Text('$value',style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),Text(label,style:const TextStyle(fontSize:11))]));
 }
 class TechnicianPortalPage extends StatefulWidget {
@@ -513,63 +579,61 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
     await p.setStringList('elyramart_service_requests_v1',updated);
     if(!mounted)return;setState(()=>item['status']=value);
   }
-  @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('টেকনিশিয়ান সেন্টার')),body:RefreshIndicator(onRefresh:_load,child:ListView(padding:const EdgeInsets.all(16),children:[
-    const Text('আমার টেকনিশিয়ান প্রোফাইল',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
-    const SizedBox(height:8),
-    field(name,'আপনার নাম'),field(phone,'মোবাইল নম্বর',keyboard:TextInputType.phone),field(address,'আপনার ঠিকানা / কাজের এলাকা',lines:2),field(skills,'কোন কাজ পারেন? যেমন: ইলেকট্রিক, এসি, প্লাম্বিং',lines:2),
-    FilledButton.icon(onPressed:_saveProfile,icon:const Icon(Icons.save),label:Text(saved?'প্রোফাইল আপডেট করুন':'প্রোফাইল সংরক্ষণ করুন')),
-    const SizedBox(height:20),const Divider(),
-    Row(children:[const Expanded(child:Text('সার্ভিস বুকিং অনুরোধ',style:TextStyle(fontSize:19,fontWeight:FontWeight.bold))),Text('${bookings.length}টি')]),
-    if(bookings.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('এখনো কোনো বুকিং নেই')))
-    else ...bookings.map((b)=>Card(color:Colors.white,child:ListTile(isThreeLine:true,leading:const Icon(Icons.handyman,color:green),title:Text(b['service']??'সার্ভিস'),subtitle:Text('${b['name']??''} • ${b['phone']??''}\\n${b['address']??''}\\nঅবস্থা: ${statuses[b['status']]??'নতুন অনুরোধ'}'),trailing:PopupMenuButton<String>(tooltip:'কাজের অবস্থা',onSelected:(v)=>_status(b,v),itemBuilder:(_)=>statuses.entries.map((e)=>PopupMenuItem(value:e.key,child:Text(e.value))).toList())))),
-    const SizedBox(height:12),const Text('সতর্কতা: এটি একই ফোনের ডেমো প্রোফাইল ও বুকিং তালিকা। অনলাইন টেকনিশিয়ান অ্যাকাউন্ট, যাচাই বা গ্রাহকের সঙ্গে সরাসরি সংযোগ এখনো চালু হয়নি।',style:TextStyle(color:Colors.black54,fontSize:12))
-  ])));
-}
-
-class AccountPage extends StatefulWidget {
-  const AccountPage({super.key});
-  @override State<AccountPage> createState()=>_AccountPageState();
-}
-class _AccountPageState extends State<AccountPage> {
-  List<Map<String,dynamic>> orders=[];
-  List<Map<String,dynamic>> bookings=[];
-  @override void initState(){super.initState();_loadHistory();}
-  Future<void> _loadHistory() async {
-    final prefs=await SharedPreferences.getInstance();
-    List<Map<String,dynamic>> decode(String key){
-      return (prefs.getStringList(key)??[]).map((v){
-        try { return Map<String,dynamic>.from(jsonDecode(v) as Map); }
-        catch (_) { return <String,dynamic>{}; }
-      }).where((v)=>v.isNotEmpty).toList().reversed.toList();
-    }
-    if(!mounted)return;
-    setState((){orders=decode('elyramart_local_orders_v1');bookings=decode('elyramart_service_requests_v1');});
+  @override
+  Widget build(BuildContext c) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('টেকনিশিয়ান সেন্টার')),
+      body: RefreshIndicator(
+        onRefresh: _load,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: <Widget>[
+            const Text('আমার টেকনিশিয়ান প্রোফাইল', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            field(name, 'আপনার নাম'),
+            field(phone, 'মোবাইল নম্বর', keyboard: TextInputType.phone),
+            field(address, 'আপনার ঠিকানা / কাজের এলাকা', lines: 2),
+            field(skills, 'কোন কাজ পারেন? যেমন: ইলেকট্রিক, এসি, প্লাম্বিং', lines: 2),
+            FilledButton.icon(
+              onPressed: _saveProfile,
+              icon: const Icon(Icons.save),
+              label: Text(saved ? 'প্রোফাইল আপডেট করুন' : 'প্রোফাইল সংরক্ষণ করুন'),
+            ),
+            const SizedBox(height: 20),
+            const Divider(),
+            Row(
+              children: [
+                const Expanded(child: Text('সার্ভিস বুকিং অনুরোধ', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold))),
+                Text('${bookings.length}টি'),
+              ],
+            ),
+            if (bookings.isEmpty)
+              const Card(color: Colors.white, child: ListTile(title: Text('এখনো কোনো বুকিং নেই')))
+            else
+              ...bookings.map((b) => Card(
+                color: Colors.white,
+                child: ListTile(
+                  isThreeLine: true,
+                  leading: const Icon(Icons.handyman, color: green),
+                  title: Text(b['service'] ?? 'সার্ভিস'),
+                  subtitle: Text('${b['name'] ?? ''} • ${b['phone'] ?? ''}\n${b['address'] ?? ''}\nঅবস্থা: ${statuses[b['status']] ?? 'নতুন অনুরোধ'}'),
+                  trailing: PopupMenuButton<String>(
+                    tooltip: 'কাজের অবস্থা',
+                    onSelected: (v) => _status(b, v),
+                    itemBuilder: (_) => statuses.entries.map((e) => PopupMenuItem(value: e.key, child: Text(e.value))).toList(),
+                  ),
+                ),
+              )),
+            const SizedBox(height: 12),
+            const Text(
+              'সতর্কতা: এটি একই ফোনের ডেমো প্রোফাইল ও বুকিং তালিকা। অনলাইন টেকনিশিয়ান অ্যাকাউন্ট, যাচাই বা গ্রাহকের সঙ্গে সরাসরি সংযোগ এখনো চালু হয়নি।',
+              style: TextStyle(color: Colors.black54, fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
   }
-  @override Widget build(BuildContext c)=>RefreshIndicator(onRefresh:_loadHistory,child:ListView(padding:const EdgeInsets.all(18),children:[
-    const CircleAvatar(radius:36,child:Icon(Icons.person,size:38)),
-    const SizedBox(height:12),
-    const Center(child:Text('Elyramart অ্যাকাউন্ট',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold))),
-    const SizedBox(height:18),
-    Card(color:Colors.white,child:Column(children:[
-      ListTile(leading:const Icon(Icons.login),title:const Text('লগইন / রেজিস্ট্রেশন'),subtitle:const Text('ডেমো প্রোফাইল তৈরি ও তথ্য সংরক্ষণ'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const CustomerLoginPage()))),
-      Divider(height:1),
-      ListTile(leading:Icon(Icons.storefront_outlined),title:Text('সেলার অ্যাকাউন্ট'),subtitle:Text('সেলার নিবন্ধন ও পণ্য ব্যবস্থাপনা'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const SellerPortalPage()))),
-      const Divider(height:1),
-      ListTile(leading:const Icon(Icons.admin_panel_settings_outlined),title:const Text('অ্যাডমিন প্যানেল'),subtitle:const Text('অর্ডার ও বুকিংয়ের ডেমো তালিকা'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const AdminOverviewPage()))),
-      const Divider(height:1),
-      ListTile(leading:const Icon(Icons.engineering_outlined),title:const Text('টেকনিশিয়ান সেন্টার'),subtitle:const Text('প্রোফাইল ও সার্ভিস বুকিং দেখুন'),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const TechnicianPortalPage())))
-    ])),
-    const SizedBox(height:18),
-    Row(children:[const Expanded(child:Text('আমার অর্ডার',style:TextStyle(fontSize:18,fontWeight:FontWeight.bold))),Text(orders.length.toString()+'টি')]),
-    if(orders.isEmpty) const Card(color:Colors.white,child:ListTile(leading:Icon(Icons.receipt_long),title:Text('এখনো কোনো অর্ডার নেই')))
-    else ...orders.map((o)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.receipt_long,color:green),title:Text(o['orderNumber']?.toString()??'অর্ডার'),subtitle:Text((o['customerName']?.toString()??'')+' • '+((o['items'] as List? ?? []).length.toString())+'টি পণ্য\\n'+(o['address']?.toString()??'')),isThreeLine:true,trailing:Column(mainAxisAlignment:MainAxisAlignment.center,children:[const Icon(Icons.local_shipping_outlined,color:green),Text(const {'local_pending':'নতুন','confirmed':'নিশ্চিত','processing':'প্রস্তুত হচ্ছে','completed':'সম্পন্ন','cancelled':'বাতিল'}[o['status']]??'নতুন',style:const TextStyle(fontSize:11,color:green))])))),
-    const SizedBox(height:18),
-    Row(children:[const Expanded(child:Text('আমার সার্ভিস বুকিং',style:TextStyle(fontSize:18,fontWeight:FontWeight.bold))),Text(bookings.length.toString()+'টি')]),
-    if(bookings.isEmpty) const Card(color:Colors.white,child:ListTile(leading:Icon(Icons.handyman),title:Text('এখনো কোনো বুকিং নেই')))
-    else ...bookings.map((b)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.handyman,color:green),title:Text(b['service']?.toString()??'সার্ভিস'),subtitle:Text((b['name']?.toString()??'')+' • '+(b['phone']?.toString()??'')+'\\n'+(b['address']?.toString()??'')),isThreeLine:true,trailing:Column(mainAxisAlignment:MainAxisAlignment.center,children:[const Icon(Icons.engineering_outlined,color:green),Text(const {'local_pending':'নতুন','confirmed':'গ্রহণ করা হয়েছে','processing':'কাজ চলছে','completed':'সম্পন্ন','cancelled':'বাতিল'}[b['status']]??'নতুন',style:const TextStyle(fontSize:10,color:green))])))),
-    const SizedBox(height:10),
-    const Text('নোট: এই অর্ডার ও বুকিং শুধু এই ফোনে সংরক্ষিত। অনলাইনে পাঠাতে সার্ভার সংযোগ প্রয়োজন।',style:TextStyle(color:Colors.black54,fontSize:12))
-  ]));
 }
 
 
