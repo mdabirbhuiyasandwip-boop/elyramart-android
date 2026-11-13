@@ -506,7 +506,7 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
   Future<void> removeProduct(Map<String,dynamic> item) async {if(item['_docId']!=null){try{await FirebaseFirestore.instance.collection('products').doc(item['_docId']).delete();if(mounted)setState(()=>mine.remove(item));}catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('পণ্য মুছতে সমস্যা: $error')));}return;}final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];final target=jsonEncode(item);raw.remove(target);await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.remove(item));}
   Future<void> editProduct(Map<String,dynamic> item) async {
     final nameController=TextEditingController(text:item['name']??'');
-    final priceController=TextEditingController(text:item['price']??'');
+    final priceController=TextEditingController(text:(item['price']??'').toString());
     final result=await showDialog<bool>(context:context,builder:(dialogContext)=>AlertDialog(
       title:const Text('পণ্যের তথ্য পরিবর্তন'),
       content:Column(mainAxisSize:MainAxisSize.min,children:[
@@ -558,6 +558,8 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
   Future<void> addProduct() async {
     if(!registered){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('আগে সেলার তথ্য সংরক্ষণ করুন')));return;}
     if(product.text.trim().isEmpty||price.text.trim().isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্যের নাম ও দাম দিন')));return;}
+    final parsedStock=int.tryParse(stock.text.trim());
+    if(parsedStock==null||parsedStock<0){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('স্টক ০ বা তার বেশি পূর্ণসংখ্যা হতে হবে')));return;}
     final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;
     if(user!=null){
       try{
@@ -574,13 +576,14 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
         final imageUrls=<String>[];
         if(selectedImage!=null){
           final bytes=await selectedImage!.readAsBytes();
+          if(bytes.length>=5*1024*1024){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('ছবির সাইজ ৫ MB-এর কম হতে হবে')));return;}
           final imageRef=FirebaseStorage.instance.ref().child('products/${user.uid}/${DateTime.now().millisecondsSinceEpoch}.jpg');
-          await imageRef.putData(bytes,SettableMetadata(contentType:selectedImage!.mimeType??'image/jpeg'));
+          await imageRef.putData(bytes,SettableMetadata(contentType:(selectedImage!.mimeType?.startsWith('image/')??false)?selectedImage!.mimeType!:'image/jpeg'));
           imageUrls.add(await imageRef.getDownloadURL());
         }
         await FirebaseFirestore.instance.collection('products').add({
           'sellerId':user.uid,'title':product.text.trim(),'categoryId':category,
-          'price':numericPrice,'stock':int.tryParse(stock.text.trim())??1,'imageUrls':imageUrls,
+          'price':numericPrice,'stock':parsedStock,'imageUrls':imageUrls,
           'status':'pending','createdAt':FieldValue.serverTimestamp(),'updatedAt':FieldValue.serverTimestamp(),
         });
         if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্য অনলাইনে জমা হয়েছে। অ্যাডমিন প্রকাশ করলে দেখা যাবে।')));
