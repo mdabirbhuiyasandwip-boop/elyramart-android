@@ -72,8 +72,6 @@ const products = <Product>[
   Product('ক্যাপ','ফ্যাশন','৳১৮০','🧢','দৈনন্দিন ব্যবহার'),
   Product('পিভিসি এলবো','স্যানিটারি','৳৩৫','🔧','পাইপ ফিটিংস'),
   Product('পানির কল','স্যানিটারি','৳৩২০','🚰','বাথরুম ও রান্নাঘর'),
-  Product('বার্গার','রেস্টুরেন্ট','৳১৮০','🍔','রেস্টুরেন্ট খাবার'),
-  Product('পিজ্জা','রেস্টুরেন্ট','৳৪৫০','🍕','রেস্টুরেন্ট খাবার'),
 ];
 
 const services = <(String, IconData, String)>[
@@ -85,6 +83,7 @@ const services = <(String, IconData, String)>[
   ('মোবাইল সার্ভিসিং',Icons.phone_android,'মোবাইল মেরামত'),
   ('আইপিএস / জেনারেটর',Icons.battery_charging_full,'ব্যাকআপ ও পাওয়ার সমস্যা'),
   ('টিভি ও অন্যান্য',Icons.tv,'ইলেকট্রনিক্স মেরামত'),
+  ('রেস্টুরেন্ট সার্ভিস',Icons.restaurant,'ক্যাটারিং, খাবার আয়োজন ও সংশ্লিষ্ট সেবা'),
 ];
 
 class HomePage extends StatefulWidget {
@@ -97,7 +96,7 @@ class _HomePageState extends State<HomePage> {
   List<Product> sellerProducts=[];
   String category='সব';
   String searchQuery='';
-  final categories=['সব','ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি','রেস্টুরেন্ট'];
+  final categories=['সব','ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি'];
   @override void initState(){super.initState();_loadCart();}
   Future<void> _loadCart() async {
     final prefs=await SharedPreferences.getInstance();
