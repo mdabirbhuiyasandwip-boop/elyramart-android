@@ -998,6 +998,11 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
     setState(()=>saved=true);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(user==null?'টেকনিশিয়ান তথ্য শুধু এই ফোনে রাখা হয়েছে। অনলাইনে আবেদনের জন্য লগইন করুন।':'টেকনিশিয়ান আবেদন অনলাইনে পাঠানো হয়েছে। অ্যাডমিন যাচাই করবেন।')));
   }
+  List<String> _technicianNextStatuses(String current) => switch(current) {
+    'confirmed' => ['processing','cancelled'],
+    'processing' => ['completed','cancelled'],
+    _ => <String>[],
+  };
   Future<void> _status(Map<String,dynamic> item,String value) async {
     if(item['_docId']!=null){
       final user=FirebaseAuth.instance.currentUser;
@@ -1054,7 +1059,7 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
                   trailing: PopupMenuButton<String>(
                     tooltip: 'কাজের অবস্থা',
                     onSelected: (v) => _status(b, v),
-                    itemBuilder: (_) => statuses.entries.map((e) => PopupMenuItem(value: e.key, child: Text(e.value))).toList(),
+                    itemBuilder: (_) => statuses.entries.where((e)=>b['_docId']==null||_technicianNextStatuses((b['status']??'').toString()).contains(e.key)).map((e) => PopupMenuItem(value: e.key, child: Text(e.value))).toList(),
                   ),
                 ),
               )),
