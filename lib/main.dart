@@ -753,7 +753,37 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
     setState((){item['status']=status;});
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('স্ট্যাটাস: ${statusNames[status]??status}')));
   }
-  Widget _statusMenu(String key,String identity,Map<String,dynamic> item)=>PopupMenuButton<String>(tooltip:'স্ট্যাটাস পরিবর্তন',onSelected:(v)=>item['_docId']!=null?_changeCloudStatus(key=='elyramart_local_orders_v1'?'orders':'serviceBookings',item,v):_changeStatus(key,identity,item,v),itemBuilder:(_){final cloud=item['_docId']!=null;final entries=statusNames.entries.where((e)=>!cloud|| (key=='elyramart_local_orders_v1'?['placed','confirmed','processing','completed','cancelled'].contains(e.key):['requested','confirmed','processing','completed','cancelled'].contains(e.key)));return entries.map((e)=>PopupMenuItem<String>(value:e.key,child:Text(e.value))).toList();},icon:const Icon(Icons.more_vert));
+  List<String> _nextStatuses(String current,bool booking) {
+    if (booking) {
+      return switch (current) {
+        'requested' => ['confirmed','cancelled'],
+        'confirmed' => ['processing','cancelled'],
+        'processing' => ['completed','cancelled'],
+        _ => <String>[],
+      };
+    }
+    return switch (current) {
+      'placed' => ['confirmed','cancelled'],
+      'confirmed' => ['processing','cancelled'],
+      'processing' => ['completed','cancelled'],
+      _ => <String>[],
+    };
+  }
+  Widget _statusMenu(String key,String identity,Map<String,dynamic> item)=>PopupMenuButton<String>(
+    tooltip:'স্ট্যাটাস পরিবর্তন',
+    onSelected:(v)=>item['_docId']!=null
+      ?_changeCloudStatus(key=='elyramart_local_orders_v1'?'orders':'serviceBookings',item,v)
+      :_changeStatus(key,identity,item,v),
+    itemBuilder:(_){
+      final booking=key!='elyramart_local_orders_v1';
+      final cloud=item['_docId']!=null;
+      final allowed=cloud
+        ?_nextStatuses((item['status']??'').toString(),booking)
+        :statusNames.keys.toList();
+      return statusNames.entries.where((e)=>allowed.contains(e.key))
+        .map((e)=>PopupMenuItem<String>(value:e.key,child:Text(e.value))).toList();
+    },
+    icon:const Icon(Icons.more_vert));
   String _status(Map<String,dynamic> item)=>statusNames[item['status']]??'নতুন';
   Widget heading(String t)=>Padding(padding:const EdgeInsets.only(top:18,bottom:8),child:Text(t,style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold)));
   @override
