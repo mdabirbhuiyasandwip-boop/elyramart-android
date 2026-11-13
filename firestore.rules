@@ -111,6 +111,11 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+
+    match /settings/{settingId} {
+      allow read, write: if isAdmin();
+    }
+
     match /technicianApplications/{applicationId} {
       allow create: if verifiedUser()
         && request.resource.data.userId == request.auth.uid
