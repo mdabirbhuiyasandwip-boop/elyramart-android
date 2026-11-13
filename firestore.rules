@@ -63,9 +63,10 @@ service cloud.firestore {
         && request.resource.data.sellerIds is list
         && request.resource.data.totalAmount is number
         && request.resource.data.totalAmount >= 0
+        && request.resource.data.paymentMethod == 'cash_on_delivery'
         && request.resource.data.keys().hasOnly([
           'orderNumber','customerId','customerName','phone','address',
-          'items','sellerIds','totalAmount','createdAt','status'
+          'items','sellerIds','totalAmount','paymentMethod','createdAt','status'
         ]);
       allow read: if isAdmin()
         || (signedIn() && (resource.data.customerId == request.auth.uid
