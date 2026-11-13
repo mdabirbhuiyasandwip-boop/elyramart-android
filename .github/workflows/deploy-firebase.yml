@@ -1,0 +1,42 @@
+name: Deploy Elyramart Firebase backend
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify deployment credential
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]; then
+            echo "Missing repository secret FIREBASE_SERVICE_ACCOUNT_JSON."
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-service-account.json"
+          python3 -m json.tool "$RUNNER_TEMP/firebase-service-account.json" >/dev/null
+      - name: Configure Firebase owner email
+        run: |
+          printf '%s\n' 'ELYRAMART_OWNER_EMAIL=elyramartbd@gmail.com' > functions/.env.elyramart
+      - name: Install Firebase CLI and Functions dependencies
+        run: |
+          npm install --global firebase-tools
+          cd functions
+          npm install
+          npm run build
+      - name: Deploy Firestore, Storage rules and Cloud Functions
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase deploy --only firestore:rules,storage,functions --project elyramart --non-interactive
