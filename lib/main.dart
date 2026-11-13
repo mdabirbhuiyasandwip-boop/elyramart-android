@@ -425,7 +425,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
     var cloudSaved=false;
     if(user!=null){
       try{
-        await FirebaseFirestore.instance.collection('orders').add(orderData);
+        final callable=FirebaseFunctions.instance.httpsCallable('placeOrder');
+        final response=await callable.call(<String,dynamic>{
+          'orderNumber':orderNumber,
+          'customerName':name.text.trim(),
+          'phone':normalizedPhone,
+          'address':address.text.trim(),
+          'paymentMethod':paymentMethod,
+          'items':widget.items.map((p)=>{'productId':p.productId}).toList(),
+        });
+        final result=Map<String,dynamic>.from(response.data as Map);
+        orderData['totalAmount']=result['totalAmount'];
+        orderData['orderNumber']=result['orderNumber']??orderNumber;
         cloudSaved=true;
       }catch(error){
         if(!mounted)return;
