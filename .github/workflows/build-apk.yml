@@ -15,86 +15,32 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-
-      - name: Verify and inspect source archive
-        shell: bash
+      - name: Verify Flutter source
         run: |
-          set -euo pipefail
-          test -s Elyramart_GitHub_Upload.zip
-          unzip -t Elyramart_GitHub_Upload.zip
-          unzip -q Elyramart_GitHub_Upload.zip -d extracted
-          echo "===== SOURCE FILES ====="
-          find extracted -maxdepth 4 -type f | sort | head -250
-          APP_DIR="$(find extracted -name pubspec.yaml -printf '%h\n' | head -n 1)"
-          if [ -z "$APP_DIR" ]; then
-            echo "ERROR: Flutter pubspec.yaml was not found in the uploaded ZIP."
-            exit 1
-          fi
-          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
-          echo "Flutter project found at: $APP_DIR"
-          test -d "$APP_DIR/lib" || (echo "ERROR: lib folder is missing"; exit 1)
-
+          test -s pubspec.yaml
+          test -s lib/main.dart
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-
       - name: Generate Android project files
-        run: |
-          cd "$APP_DIR"
-          flutter create --platforms=android --org com.elyramartbd --project-name elyramart --overwrite .
-
+        run: flutter create --platforms=android --org com.elyramartbd --project-name elyramart --overwrite .
       - name: Resolve Flutter packages
-        run: |
-          cd "$APP_DIR"
-          flutter pub get
-
-      - name: Check Dart source
-        continue-on-error: true
-        run: |
-          cd "$APP_DIR"
-          flutter analyze --no-pub
-
+        run: flutter pub get
+      - name: Analyze Dart source
+        run: flutter analyze --no-pub
       - name: Build release APK
-        id: release
-        continue-on-error: true
-        run: |
-          cd "$APP_DIR"
-          flutter build apk --release
-
-      - name: Build debug APK if release build fails
-        if: steps.release.outcome != 'success'
-        run: |
-          cd "$APP_DIR"
-          flutter build apk --debug
-
-      - name: Select APK output
-        id: apk
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -f "$APP_DIR/build/app/outputs/flutter-apk/app-release.apk" ]; then
-            echo "path=$APP_DIR/build/app/outputs/flutter-apk/app-release.apk" >> "$GITHUB_OUTPUT"
-            echo "variant=release" >> "$GITHUB_OUTPUT"
-          elif [ -f "$APP_DIR/build/app/outputs/flutter-apk/app-debug.apk" ]; then
-            echo "path=$APP_DIR/build/app/outputs/flutter-apk/app-debug.apk" >> "$GITHUB_OUTPUT"
-            echo "variant=debug" >> "$GITHUB_OUTPUT"
-          else
-            echo "ERROR: No APK was generated."
-            exit 1
-          fi
-
+        run: flutter build apk --release
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Elyramart-APK-${{ steps.apk.outputs.variant }}
-          path: ${{ steps.apk.outputs.path }}
+          name: Elyramart-APK-release
+          path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 14
