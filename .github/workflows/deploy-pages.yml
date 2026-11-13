@@ -44,6 +44,7 @@ jobs:
         run: |
           python3 -m pip install pillow --break-system-packages
           python3 tools/generate_brand_assets.py
+          python3 tools/configure_web_pwa.py
       - name: Resolve Flutter packages
         run: flutter pub get
       - name: Analyze Dart source
