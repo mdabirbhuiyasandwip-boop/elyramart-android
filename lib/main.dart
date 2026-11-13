@@ -217,7 +217,9 @@ class _BookingPageState extends State<BookingPage> {
       ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('নাম, ফোন ও ঠিকানা পূরণ করুন')));return;
     }
     final normalizedPhone=normalizeBangladeshPhone(phone.text);
-    if(normalizedPhone==null){ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;}
+    if(normalizedPhone==null){
+      ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
+    }
     final prefs=await SharedPreferences.getInstance();
     final requests=prefs.getStringList('elyramart_service_requests_v1')??[];
     requests.add(jsonEncode({'service':widget.service,'name':name.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'problem':problem.text.trim(),'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'}));
@@ -245,6 +247,7 @@ String? normalizeBangladeshPhone(String input) {
   else if(value.startsWith('8801')){value='0'+value.substring(3);}
   return RegExp(r'^01[3-9]\d{8}$').hasMatch(value)?value:null;
 }
+
 Widget field(TextEditingController c,String label,{int lines=1,TextInputType? keyboard})=>Padding(padding:const EdgeInsets.only(bottom:12),child:TextField(controller:c,maxLines:lines,keyboardType:keyboard,decoration:InputDecoration(labelText:label,border:OutlineInputBorder(borderRadius:BorderRadius.circular(12)),filled:true,fillColor:Colors.white)));
 
 class CartPage extends StatelessWidget {
@@ -286,13 +289,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
     if(name.text.trim().isEmpty||phone.text.trim().isEmpty||address.text.trim().isEmpty){
       ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('নাম, ফোন ও ঠিকানা পূরণ করুন')));return;
     }
-    const bn='০১২৩৪৫৬৭৮৯';
-    var normalizedPhone=phone.text.trim();
-    for(var i=0;i<10;i++){normalizedPhone=normalizedPhone.replaceAll(bn[i], '$i');}
-    normalizedPhone=normalizedPhone.replaceAll(RegExp(r'[\s\-()]'), '');
-    if(normalizedPhone.startsWith('+880')){normalizedPhone='0'+normalizedPhone.substring(4);}
-    else if(normalizedPhone.startsWith('8801')){normalizedPhone='0'+normalizedPhone.substring(3);}
-    if(!RegExp(r'^01[3-9]\d{8}$').hasMatch(normalizedPhone)){
+    final normalizedPhone=normalizeBangladeshPhone(phone.text);
+    if(normalizedPhone==null){
       ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
     }
     setState(()=>saving=true);
@@ -343,7 +341,20 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     if(!mounted)return;
     setState(()=>order['status']=status);
   }
-  Future<void> saveProfile() async {if([shop,owner,phone,address].any((x)=>x.text.trim().isEmpty)){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সব তথ্য পূরণ করুন')));return;}final normalizedPhone=normalizeBangladeshPhone(phone.text);if(normalizedPhone==null){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;}final p=await SharedPreferences.getInstance();await p.setString('elyramart_seller_profile_v1',jsonEncode({'shop':shop.text.trim(),'owner':owner.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'status':'local_pending'}));if(!mounted)return;setState(()=>registered=true);ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সেলার তথ্য এই ফোনে সংরক্ষিত হয়েছে')));}
+  Future<void> saveProfile() async {
+    if([shop,owner,phone,address].any((x)=>x.text.trim().isEmpty)){
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সব তথ্য পূরণ করুন')));return;
+    }
+    final normalizedPhone=normalizeBangladeshPhone(phone.text);
+    if(normalizedPhone==null){
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
+    }
+    final p=await SharedPreferences.getInstance();
+    await p.setString('elyramart_seller_profile_v1',jsonEncode({'shop':shop.text.trim(),'owner':owner.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'status':'local_pending'}));
+    if(!mounted)return;
+    setState(()=>registered=true);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সেলার তথ্য এই ফোনে সংরক্ষিত হয়েছে')));
+  }
   Future<void> removeProduct(Map<String,dynamic> item) async {final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];final target=jsonEncode(item);raw.remove(target);await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.remove(item));}
   Future<void> editProduct(Map<String,dynamic> item) async {
     final nameController=TextEditingController(text:item['name']??'');
@@ -459,7 +470,7 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
     if(bookings.isEmpty) const Card(color:Colors.white,child:ListTile(title:Text('কোনো বুকিং নেই')))
     else ...bookings.take(10).map((v)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.handyman,color:green),title:Text(v['service']??''),subtitle:Text('${v['name']??''} • ${v['phone']??''}\\n${v['problem']??''}\\nস্ট্যাটাস: ${_status(v)}'),isThreeLine:true,trailing:_statusMenu('elyramart_service_requests_v1','createdAt',v)))),
     const SizedBox(height:12),const Text('সতর্কতা: এই স্ক্রিন শুধু একই ফোনে থাকা ডেমো তথ্য দেখায়। স্ট্যাটাস পরিবর্তনও শুধু এই ফোনে সংরক্ষিত হয়; গ্রাহক, দোকান বা টেকনিশিয়ান অনলাইনে আপডেট পায় না.',style:TextStyle(color:Colors.black54,fontSize:12))
-   ])));
+  ]));
   Widget _stat(String label,int value,IconData icon)=>Container(width:MediaQuery.of(context).size.width/3-20,padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),child:Column(children:[Icon(icon,color:green),const SizedBox(height:6),Text('$value',style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),Text(label,style:const TextStyle(fontSize:11))]));
 }
 class TechnicianPortalPage extends StatefulWidget {
@@ -483,12 +494,17 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
     setState((){if(raw!=null){final m=Map<String,dynamic>.from(jsonDecode(raw));name.text=m['name']??'';phone.text=m['phone']??'';address.text=m['address']??'';skills.text=m['skills']??'';saved=true;}bookings=data.reversed.toList();});
   }
   Future<void> _saveProfile() async {
-    if(name.text.trim().isEmpty||phone.text.trim().isEmpty||skills.text.trim().isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('নাম, ফোন ও কাজের দক্ষতা লিখুন')));return;}
+    if(name.text.trim().isEmpty||phone.text.trim().isEmpty||skills.text.trim().isEmpty){
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('নাম, ফোন ও কাজের দক্ষতা লিখুন')));return;
+    }
     final normalizedPhone=normalizeBangladeshPhone(phone.text);
-    if(normalizedPhone==null){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;}
+    if(normalizedPhone==null){
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
+    }
     final p=await SharedPreferences.getInstance();
     await p.setString('elyramart_technician_profile_v1',jsonEncode({'name':name.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'skills':skills.text.trim()}));
-    if(!mounted)return;setState(()=>saved=true);
+    if(!mounted)return;
+    setState(()=>saved=true);
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('টেকনিশিয়ান প্রোফাইল এই ফোনে সংরক্ষিত হয়েছে')));
   }
   Future<void> _status(Map<String,dynamic> item,String value) async {
@@ -553,7 +569,7 @@ class _AccountPageState extends State<AccountPage> {
     else ...bookings.map((b)=>Card(color:Colors.white,child:ListTile(leading:const Icon(Icons.handyman,color:green),title:Text(b['service']?.toString()??'সার্ভিস'),subtitle:Text((b['name']?.toString()??'')+' • '+(b['phone']?.toString()??'')+'\\n'+(b['address']?.toString()??'')),isThreeLine:true,trailing:Column(mainAxisAlignment:MainAxisAlignment.center,children:[const Icon(Icons.engineering_outlined,color:green),Text(const {'local_pending':'নতুন','confirmed':'গ্রহণ করা হয়েছে','processing':'কাজ চলছে','completed':'সম্পন্ন','cancelled':'বাতিল'}[b['status']]??'নতুন',style:const TextStyle(fontSize:10,color:green))])))),
     const SizedBox(height:10),
     const Text('নোট: এই অর্ডার ও বুকিং শুধু এই ফোনে সংরক্ষিত। অনলাইনে পাঠাতে সার্ভার সংযোগ প্রয়োজন।',style:TextStyle(color:Colors.black54,fontSize:12))
-  ]));
+  ])));
 }
 
 
@@ -579,13 +595,8 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
     if(name.text.trim().isEmpty||phone.text.trim().isEmpty){
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('নাম ও মোবাইল নম্বর লিখুন')));return;
     }
-    const bn='০১২৩৪৫৬৭৮৯';
-    var normalized=phone.text.trim();
-    for(var i=0;i<10;i++){normalized=normalized.replaceAll(bn[i], '$i');}
-    normalized=normalized.replaceAll(RegExp(r'[\s\-()]'), '');
-    if(normalized.startsWith('+880')){normalized='0'+normalized.substring(4);}
-    else if(normalized.startsWith('8801')){normalized='0'+normalized.substring(3);}
-    if(!RegExp(r'^01[3-9]\d{8}$').hasMatch(normalized)){
+    final normalized=normalizeBangladeshPhone(phone.text);
+    if(normalized==null){
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
     }
     final prefs=await SharedPreferences.getInstance();
@@ -612,6 +623,3 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
     ])
   );
 }
-).hasMatch(value)?value:null;
-}
-Widget field(TextEditingController c,String label,{int lines=1,TextInputType? keyboard})=>Padding(padding:const EdgeInsets.only(bottom:12),child:TextField(controller:c,maxLines:lines,keyboardType:keyboard,decoration:InputDecoration(labelText:label,border:OutlineInputBorder(borderRadius:BorderRadius.circular(12)),filled:true,fillColor:Colors.white)));
