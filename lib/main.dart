@@ -78,8 +78,9 @@ class _HomePageState extends State<HomePage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('${p.name} কার্টে যোগ হয়েছে'),duration:const Duration(seconds:1)));
   }
   void removeFromCart(Product p){setState(()=>cart.remove(p));_saveCart();}
+  void clearCartAfterOrder(){setState(cart.clear);_saveCart();}
   @override Widget build(BuildContext context) {
-    final pages=[home(), const ServicesPage(), CartPage(items:cart,onRemove:removeFromCart), const AccountPage()];
+    final pages=[home(), const ServicesPage(), CartPage(items:cart,onRemove:removeFromCart,onOrderSaved:clearCartAfterOrder), const AccountPage()];
     return Scaffold(
       appBar: AppBar(title: Row(children:[Container(width:36,height:36,decoration:BoxDecoration(color:green,borderRadius:BorderRadius.circular(11)),child:const Center(child:Text('E',style:TextStyle(color:Colors.white,fontSize:25,fontWeight:FontWeight.w900)))),const SizedBox(width:9),const Text('Elyramart',style:TextStyle(fontWeight:FontWeight.w800,letterSpacing:-.4))]), actions:[IconButton(onPressed:()=>setState(()=>tab=2),icon:Badge(label:Text('${cart.length}'),child:const Icon(Icons.shopping_bag_outlined)))],),
       body: pages[tab],
@@ -148,20 +149,22 @@ Widget field(TextEditingController c,String label,{int lines=1,TextInputType? ke
 class CartPage extends StatelessWidget {
   final List<Product> items;
   final ValueChanged<Product> onRemove;
-  const CartPage({super.key,required this.items,required this.onRemove});
+  final VoidCallback onOrderSaved;
+  const CartPage({super.key,required this.items,required this.onRemove,required this.onOrderSaved});
   @override Widget build(BuildContext c)=>items.isEmpty
     ?const Center(child:Column(mainAxisSize:MainAxisSize.min,children:[Icon(Icons.shopping_bag_outlined,size:60,color:Colors.black26),SizedBox(height:10),Text('আপনার কার্ট এখনো খালি')]))
     :ListView(padding:const EdgeInsets.all(16),children:[
       Text('কার্টে ${items.length}টি পণ্য',style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
       ...items.map((p)=>Card(color:Colors.white,child:ListTile(title:Text(p.name),subtitle:Text(p.price),trailing:IconButton(onPressed:()=>onRemove(p),icon:const Icon(Icons.delete_outline,color:Colors.red))))),
       const SizedBox(height:12),
-      FilledButton(onPressed:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>CheckoutPage(items:items))),child:const Text('অর্ডার তথ্য দিন'))
+      FilledButton(onPressed:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>CheckoutPage(items:items,onOrderSaved:onOrderSaved))),child:const Text('অর্ডার তথ্য দিন'))
     ]);
 }
 
 class CheckoutPage extends StatefulWidget {
   final List<Product> items;
-  const CheckoutPage({super.key,required this.items});
+  final VoidCallback onOrderSaved;
+  const CheckoutPage({super.key,required this.items,required this.onOrderSaved});
   @override State<CheckoutPage> createState()=>_CheckoutPageState();
 }
 class _CheckoutPageState extends State<CheckoutPage> {
@@ -178,6 +181,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final orderNumber='ELY-${DateTime.now().millisecondsSinceEpoch}';
     orders.add(jsonEncode({'orderNumber':orderNumber,'customerName':name.text.trim(),'phone':phone.text.trim(),'address':address.text.trim(),'items':widget.items.map((p)=>{'name':p.name,'price':p.price}).toList(),'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'}));
     await prefs.setStringList('elyramart_local_orders_v1',orders);
+    widget.onOrderSaved();
     if(!mounted)return;
     setState(()=>saving=false);
     showDialog(context:c,builder:(_)=>AlertDialog(title:const Text('অর্ডারের তথ্য সংরক্ষিত'),content:Text('অর্ডার নম্বর: $orderNumber\\nতথ্য এই ফোনে রাখা হয়েছে। সার্ভার সংযুক্ত না থাকায় দোকান বা ডেলিভারি টিম এখনো অর্ডারটি পায়নি।'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
