@@ -4,6 +4,13 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - 'lib/**'
+      - 'web/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'tools/**'
+      - '.github/workflows/deploy-pages.yml'
 
 permissions:
   contents: read
@@ -12,7 +19,7 @@ permissions:
 
 concurrency:
   group: elyramart-pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
