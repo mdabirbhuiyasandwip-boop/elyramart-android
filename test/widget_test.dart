@@ -33,10 +33,11 @@ void main() {
         body: ProductCard(p: product, onAdd: () => added = true, isFavorite: false, onToggleFavorite: () {}),
       ),
     ));
-    final addButton = tester.widget<IconButton>(find.byIcon(Icons.add_rounded));
+    final addButtonFinder = find.ancestor(of: find.byIcon(Icons.add_rounded), matching: find.byType(IconButton)).first;
+    final addButton = tester.widget<IconButton>(addButtonFinder);
     expect(addButton.onPressed, isNull);
     expect(find.text('স্টক শেষ'), findsOneWidget);
-    await tester.tap(find.byType(IconButton));
+    await tester.tap(addButtonFinder);
     expect(added, isFalse);
   });
 
