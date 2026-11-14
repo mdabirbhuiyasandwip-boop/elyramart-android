@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -296,6 +298,14 @@ class _HomePageState extends State<HomePage> {
       trailing:FilledButton(onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage())),style:FilledButton.styleFrom(backgroundColor:green),child:Text(tx('দেখুন','Explore'))),
       onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage())),
     )),
+    const SizedBox(height:10),
+    Card(color:Colors.white,elevation:0,child:ListTile(
+      leading:CircleAvatar(backgroundColor:const Color(0xFFE2F3EC),child:Icon(Icons.local_hospital_outlined,color:green)),
+      title:Text(tx('হাসপাতাল ও মেয়েদের পার্লার','Hospitals & beauty parlours'),style:const TextStyle(fontWeight:FontWeight.bold)),
+      subtitle:Text(tx('বাংলাদেশের জেলা ও উপজেলা ধরে খুঁজুন; পাওয়া গেলে সরাসরি ফোন করুন।','Find services by district and upazila, then call directly.')),
+      trailing:const Icon(Icons.arrow_forward_ios,size:16),
+      onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const DailyLifeDirectoryPage())),
+    )),
     const SizedBox(height:22),section(tx('সেলারদের পণ্য','Seller products'),''),
     if(visibleProducts.isEmpty) Padding(padding:EdgeInsets.all(18),child:Text(tx('এখনো কোনো পণ্য যোগ করা হয়নি। সেলাররা পণ্য যোগ করলে এখানে দেখা যাবে。','No products yet. Products will appear here when sellers add them.'))) else Wrap(spacing:10,runSpacing:10,children:visibleProducts.map((p)=>SizedBox(width:(MediaQuery.of(context).size.width-42)/2,child:ProductCard(p:p,onAdd:()=>add(p)))).toList()),
     const SizedBox(height:12),const Text('Elyramart — Your World, Your Choice',textAlign:TextAlign.center,style:TextStyle(color:Colors.black45,fontSize:12)),
@@ -317,7 +327,6 @@ class RentalMarketplacePage extends StatefulWidget {
 class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
   bool loading = true;
   String filter = 'সব';
-  String listingFilter = 'সব';
   List<Map<String, dynamic>> listings = [];
 
   @override
@@ -359,7 +368,7 @@ class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
   Widget build(BuildContext context) {
     final visible = listings.where((item) =>
       (filter == 'সব' || item['propertyType'] == filter) &&
-      (listingFilter == 'সব' || item['listingType'] == listingFilter)
+      item['listingType'] == 'offer'
     ).toList();
     return Scaffold(
       appBar: AppBar(title: Text(tx('বাসা ও অফিস ভাড়া', 'House & office rentals'))),
@@ -396,12 +405,6 @@ class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
               selectedColor: const Color(0xFFD6EFE5),
             ),
           ).toList()),
-          const SizedBox(height: 8),
-          Wrap(spacing: 8, children: [
-            ChoiceChip(label: const Text('সব বিজ্ঞাপন'), selected: listingFilter == 'সব', onSelected: (_) => setState(() => listingFilter = 'সব')),
-            ChoiceChip(label: const Text('ভাড়া দেবেন'), selected: listingFilter == 'offer', onSelected: (_) => setState(() => listingFilter = 'offer')),
-            ChoiceChip(label: const Text('ভাড়া প্রয়োজন'), selected: listingFilter == 'wanted', onSelected: (_) => setState(() => listingFilter = 'wanted')),
-          ]),
           const SizedBox(height: 12),
           if (!FirebaseRuntime.initialized)
             Card(color: Colors.white, child: Padding(
@@ -598,6 +601,117 @@ class _RentalPostPageState extends State<RentalPostPage> {
       ),
     ]),
   );
+}
+
+
+class DailyLifeDirectoryPage extends StatefulWidget {
+  const DailyLifeDirectoryPage({super.key});
+  @override State<DailyLifeDirectoryPage> createState()=>_DailyLifeDirectoryPageState();
+}
+class _DailyLifeDirectoryPageState extends State<DailyLifeDirectoryPage> {
+  String category='hospital', divisionId='', districtId='', upazilaId='', query='';
+  bool loading=true, locationsLoading=true;
+  List<Map<String,dynamic>> divisions=[], districts=[], upazilas=[], entries=[];
+  @override void initState(){super.initState();_loadLocations();_loadEntries();}
+  Future<void> _loadLocations() async {
+    try {
+      final raw=await rootBundle.loadString('assets/data/bangladesh_locations.json');
+      final data=Map<String,dynamic>.from(jsonDecode(raw) as Map);
+      if(!mounted)return;
+      setState((){
+        divisions=List<Map<String,dynamic>>.from((data['divisions'] as List).map((x)=>Map<String,dynamic>.from(x)));
+        districts=List<Map<String,dynamic>>.from((data['districts'] as List).map((x)=>Map<String,dynamic>.from(x)));
+        upazilas=List<Map<String,dynamic>>.from((data['upazilas'] as List).map((x)=>Map<String,dynamic>.from(x)));
+        locationsLoading=false;
+      });
+    } catch(error){debugPrint('Bangladesh locations load failed: $error');if(mounted)setState(()=>locationsLoading=false);}
+  }
+  Future<void> _loadEntries() async {
+    if(!FirebaseRuntime.initialized){if(mounted)setState(()=>loading=false);return;}
+    try {
+      final snap=await FirebaseFirestore.instance.collection('directoryListings').where('status',isEqualTo:'active').limit(500).get();
+      final rows=snap.docs.map((d)=><String,dynamic>{...d.data(),'_docId':d.id}).toList();
+      rows.sort((a,b)=>(a['name']??'').toString().compareTo((b['name']??'').toString()));
+      if(mounted)setState(()=>entries=rows);
+    } catch(error){debugPrint('Directory listings load failed: $error');}
+    if(mounted)setState(()=>loading=false);
+  }
+  Future<void> _openPhone(String value) async {
+    final phone=value.replaceAll(RegExp(r'[^0-9+]'),'');
+    if(phone.isEmpty)return;
+    final uri=Uri(scheme:'tel',path:phone);
+    if(!await launchUrl(uri) && mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('ফোন অ্যাপ খোলা যায়নি।')));
+  }
+  Future<void> _openMaps(String address) async {
+    final uri=Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}');
+    await launchUrl(uri,mode:LaunchMode.externalApplication);
+  }
+  @override Widget build(BuildContext context) {
+    final allowedDistricts=districts.where((d)=>divisionId.isEmpty||d['parentId']==divisionId).toList();
+    final allowedUpazilas=upazilas.where((u)=>districtId.isEmpty||u['parentId']==districtId).toList();
+    final visible=entries.where((e){
+      final text='${e['name']??''} ${e['address']??''} ${e['districtBn']??''} ${e['upazilaBn']??''} ${e['phone']??''}'.toLowerCase();
+      return e['category']==category &&
+        (divisionId.isEmpty||e['divisionId']==divisionId) &&
+        (districtId.isEmpty||e['districtId']==districtId) &&
+        (upazilaId.isEmpty||e['upazilaId']==upazilaId) &&
+        text.contains(query.toLowerCase());
+    }).toList();
+    return Scaffold(
+      appBar:AppBar(title:Text(tx('দৈনন্দিন প্রয়োজনীয় সেবা','Everyday services'))),
+      body:ListView(padding:const EdgeInsets.all(16),children:[
+        Wrap(spacing:8,children:[
+          ChoiceChip(label:const Text('হাসপাতাল'),selected:category=='hospital',onSelected:(_){setState(()=>category='hospital');}),
+          ChoiceChip(label:const Text('মেয়েদের পার্লার'),selected:category=='beauty_parlour',onSelected:(_){setState(()=>category='beauty_parlour');}),
+        ]),
+        const SizedBox(height:12),
+        TextField(onChanged:(v)=>setState(()=>query=v),decoration:const InputDecoration(prefixIcon:Icon(Icons.search),labelText:'নাম, ঠিকানা বা এলাকা লিখুন',border:OutlineInputBorder())),
+        const SizedBox(height:10),
+        if(locationsLoading) const LinearProgressIndicator(),
+        DropdownButtonFormField<String>(
+          value:divisionId.isEmpty?null:divisionId,
+          decoration:const InputDecoration(labelText:'বিভাগ',border:OutlineInputBorder()),
+          items:divisions.map((d)=>DropdownMenuItem(value:d['id'].toString(),child:Text('${d['bn']} (${d['en']})'))).toList(),
+          onChanged:(v){setState((){divisionId=v??'';districtId='';upazilaId='';});},
+        ),
+        const SizedBox(height:8),
+        DropdownButtonFormField<String>(
+          value:districtId.isEmpty?null:districtId,
+          decoration:const InputDecoration(labelText:'জেলা',border:OutlineInputBorder()),
+          items:allowedDistricts.map((d)=>DropdownMenuItem(value:d['id'].toString(),child:Text('${d['bn']} (${d['en']})'))).toList(),
+          onChanged:(v){setState((){districtId=v??'';upazilaId='';});},
+        ),
+        const SizedBox(height:8),
+        DropdownButtonFormField<String>(
+          value:upazilaId.isEmpty?null:upazilaId,
+          decoration:const InputDecoration(labelText:'উপজেলা',border:OutlineInputBorder()),
+          items:allowedUpazilas.map((u)=>DropdownMenuItem(value:u['id'].toString(),child:Text('${u['bn']} (${u['en']})'))).toList(),
+          onChanged:(v){setState(()=>upazilaId=v??'');},
+        ),
+        const SizedBox(height:14),
+        if(loading) const Center(child:CircularProgressIndicator()),
+        if(!loading&&visible.isEmpty) Padding(padding:const EdgeInsets.symmetric(vertical:18),child:Column(children:[
+          const Icon(Icons.location_searching_outlined,size:38,color:green),
+          const SizedBox(height:8),
+          Text(category=='hospital'?'এই এলাকায় এখনো Elyramart-এর যাচাইকৃত হাসপাতাল তালিকা যোগ হয়নি।':'এই এলাকায় এখনো যাচাইকৃত পার্লার তালিকা যোগ হয়নি।',textAlign:TextAlign.center),
+          if(category=='hospital') ...[
+            const SizedBox(height:8),
+            OutlinedButton.icon(onPressed:()=>launchUrl(Uri.parse('https://hris.mohfw.gov.bd/public/facility-registry/'),mode:LaunchMode.externalApplication),icon:const Icon(Icons.open_in_new),label:const Text('সরকারি DGHS হাসপাতাল/স্বাস্থ্যকেন্দ্র তালিকা দেখুন')),
+          ]
+        ])),
+        ...visible.map((e)=>Card(color:Colors.white,elevation:0,child:ListTile(
+          leading:CircleAvatar(backgroundColor:const Color(0xFFE2F3EC),child:Icon(category=='hospital'?Icons.local_hospital:Icons.face_retouching_natural,color:green)),
+          title:Text((e['name']??'').toString(),style:const TextStyle(fontWeight:FontWeight.bold)),
+          subtitle:Text('${e['address']??''}\n${e['upazilaBn']??''}, ${e['districtBn']??''}\n${e['phone']??'ফোন দেওয়া নেই'}'),
+          isThreeLine:true,
+          trailing:IconButton(onPressed:()=>_openPhone((e['phone']??'').toString()),icon:const Icon(Icons.call,color:green)),
+          onTap:()=>_openMaps((e['address']??'').toString()),
+        ))),
+        const SizedBox(height:10),
+        const Text('তথ্যসূত্র: বাংলাদেশের বিভাগ, জেলা ও উপজেলা তালিকা Open Admin Data (CC BY 4.0)। হাসপাতালের সরকারি রেজিস্ট্রি DGHS। পার্লারের তালিকা ব্যবসা-প্রতিষ্ঠান থেকে যাচাই করে যোগ করতে হবে।',style:TextStyle(fontSize:11,color:Colors.black54)),
+      ]),
+    );
+  }
 }
 
 class ServicesPage extends StatelessWidget {
