@@ -1932,6 +1932,7 @@ class AccountPage extends StatefulWidget {
 class _AccountPageState extends State<AccountPage> {
   List<Map<String,dynamic>> orders = [];
   List<Map<String,dynamic>> bookings = [];
+  bool _isOwnerAdmin = false;
 
   @override
   void initState() {
@@ -1951,6 +1952,15 @@ class _AccountPageState extends State<AccountPage> {
       }).where((item) => item.isNotEmpty).toList().reversed.toList();
     }
     final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;
+    var ownerAdmin = false;
+    if (user != null && user.emailVerified) {
+      try {
+        final token = await user.getIdTokenResult();
+        ownerAdmin = token.claims?['admin'] == true;
+      } catch (error) {
+        debugPrint('Owner admin claim check failed: $error');
+      }
+    }
     // Guest/demo history belongs only to the signed-out device session.
     // Never mix it into a signed-in customer's account history.
     var loadedOrders=user==null?decode('elyramart_local_orders_v1'):<Map<String,dynamic>>[];
@@ -1967,6 +1977,7 @@ class _AccountPageState extends State<AccountPage> {
     setState(() {
       orders = loadedOrders;
       bookings = loadedBookings;
+      _isOwnerAdmin = ownerAdmin;
     });
   }
 
@@ -2001,21 +2012,23 @@ class _AccountPageState extends State<AccountPage> {
             subtitle: Text(tx('সেলার নিবন্ধন ও পণ্য ব্যবস্থাপনা','Seller registration and product management')),
             onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => const SellerPortalPage())),
           ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.admin_panel_settings_outlined),
-            title: Text(tx('অ্যাডমিন প্যানেল','Admin panel')),
-            subtitle: Text(tx('অর্ডার ও বুকিংয়ের ডেমো তালিকা','Demo orders and bookings')),
-            onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => const AdminOverviewPage())),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.verified_user_outlined),
-            title: Text(tx('কোম্পানির মালিক / Owner Settings','Company owner / Owner settings')),
-            subtitle: Text(tx('কোম্পানির নাম, মালিকের নম্বর ও যোগাযোগের তথ্য','Company name, owner phone and contact details')),
-            onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => const OwnerSettingsPage())),
-          ),
-          const Divider(height: 1),
+          if (_isOwnerAdmin) ...[
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.admin_panel_settings_outlined),
+              title: Text(tx('অ্যাডমিন প্যানেল','Admin panel')),
+              subtitle: Text(tx('ব্যক্তিগত Owner Admin নিয়ন্ত্রণ','Private Owner Admin controls')),
+              onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => const AdminOverviewPage())),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.verified_user_outlined),
+              title: Text(tx('কোম্পানির মালিক / Owner Settings','Company owner / Owner settings')),
+              subtitle: Text(tx('কোম্পানির নাম, মালিকের নম্বর ও যোগাযোগের তথ্য','Company name, owner phone and contact details')),
+              onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => const OwnerSettingsPage())),
+            ),
+            const Divider(height: 1),
+          ],
           ListTile(
             leading: const Icon(Icons.engineering_outlined),
             title: Text(tx('টেকনিশিয়ান সেন্টার','Technician centre')),
