@@ -1036,20 +1036,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final user = FirebaseRuntime.initialized ? FirebaseAuth.instance.currentUser : null;
     final orderNumber='ELY-${DateTime.now().millisecondsSinceEpoch}';
     var confirmedOrderNumber=orderNumber;
-    final orderData=<String,dynamic>{
-      'orderNumber': orderNumber,
-      'customerId': user?.uid,
-      'customerName': name.text.trim(),
-      'phone': normalizedPhone,
-      'address': address.text.trim(),
-      'items': widget.items.map((p)=>{'productId':p.productId,'name':p.name,'category':p.category,'price':p.price,'sellerId':p.sellerId}).toList(),
-      'sellerIds': widget.items.map((p)=>p.sellerId).whereType<String>().toSet().toList(),
-      'totalAmount': totalAmount,
-      'paymentMethod': paymentMethod,
-      'createdAt': FieldValue.serverTimestamp(),
-      'status': 'placed',
-    };
-    var cloudSaved=false;
     if(user!=null){
       try{
         final callable=FirebaseFunctions.instance.httpsCallable('placeOrder');
@@ -1067,13 +1053,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
         }
         serverDeliveryFee=(result['deliveryFee'] as num?)?.toInt()??80;
         serverTotalAmount=(result['totalAmount'] as num?)?.toInt();
-        orderData['deliveryFee']=serverDeliveryFee;
-        orderData['subtotal']=result['subtotal']??totalAmount;
-        orderData['totalAmount']=serverTotalAmount??(totalAmount+serverDeliveryFee);
         confirmedOrderNumber=(result['orderNumber'] as String?)?.trim().isNotEmpty==true
             ? (result['orderNumber'] as String).trim() : orderNumber;
-        orderData['orderNumber']=confirmedOrderNumber;
-        cloudSaved=true;
       }catch(error){
         if(!mounted)return;
         setState(()=>saving=false);
