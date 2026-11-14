@@ -1712,6 +1712,9 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
       final signedIn=FirebaseAuth.instance.currentUser;
       await signedIn?.reload();
       final refreshed=FirebaseAuth.instance.currentUser;
+      name.clear();
+      phone.clear();
+      address.clear();
       if(refreshed!=null&&!refreshed.emailVerified){
         _showAuthMessage('লগইন হয়েছে, তবে অর্ডার ও আবেদন পাঠানোর আগে ইমেইল যাচাই করুন। নিচের বাটনে আবার যাচাই লিংক পাঠাতে পারবেন।');
         return;
