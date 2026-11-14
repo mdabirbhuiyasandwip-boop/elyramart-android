@@ -1716,7 +1716,7 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
         _showAuthMessage('লগইন হয়েছে, তবে অর্ডার ও আবেদন পাঠানোর আগে ইমেইল যাচাই করুন। নিচের বাটনে আবার যাচাই লিংক পাঠাতে পারবেন।');
         return;
       }
-      await _syncUserProfile();
+      await _loadCloudProfile();
       _showAuthMessage('সফলভাবে লগইন হয়েছে।');
     } on FirebaseAuthException catch (e) {
       _showAuthMessage(_authError(e.code));
@@ -1757,6 +1757,31 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
     'too-many-requests' => 'অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।',
     _ => 'অনুরোধটি সম্পন্ন হয়নি ($code)।',
   };
+
+  Future<void> _loadCloudProfile() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final ref = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final snap = await ref.get();
+    if (snap.exists) {
+      final data = snap.data() ?? <String,dynamic>{};
+      name.text = data['name'] ?? '';
+      phone.text = data['phone'] ?? '';
+      address.text = data['address'] ?? '';
+    } else {
+      await ref.set({
+        'name': '',
+        'phone': '',
+        'email': user.email ?? '',
+        'address': '',
+        'role': 'customer',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      name.clear();
+      phone.clear();
+      address.clear();
+    }
+  }
 
   Future<void> _syncUserProfile() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -1836,6 +1861,10 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
 
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
+    name.clear();
+    phone.clear();
+    address.clear();
+    password.clear();
     _showAuthMessage('লগআউট হয়েছে।');
   }
 
