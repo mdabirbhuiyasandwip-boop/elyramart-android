@@ -1590,7 +1590,7 @@ class AdminOverviewPage extends StatefulWidget {
 }
 class _AdminOverviewPageState extends State<AdminOverviewPage> {
   Map<String,dynamic>? seller,technician,ownerProfile;
-  List<Map<String,dynamic>> products=[],orders=[],bookings=[],sellerApps=[],technicianApps=[];
+  List<Map<String,dynamic>> products=[],orders=[],bookings=[],sellerApps=[],technicianApps=[],supportTickets=[];
   bool accessReady=false,isAdmin=false;
   String accessMessage='অ্যাডমিন অনুমতি যাচাই হচ্ছে...';
   static const Map<String,String> statusNames={'local_pending':'নতুন','placed':'নতুন','requested':'নতুন','confirmed':'নিশ্চিত','processing':'প্রস্তুত হচ্ছে','completed':'সম্পন্ন','cancelled':'বাতিল'};
@@ -1650,9 +1650,51 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
         technicianApps=mapped(results[4]);
         if(businessSettings.exists)ownerProfile=businessSettings.data();
       });
+      try {
+        final tickets = await db.collection('supportTickets').limit(100).get();
+        final mappedTickets = tickets.docs.map((d)=>{...d.data(),'_docId':d.id}).toList();
+        mappedTickets.sort((a,b) {
+          final av=a['createdAt'],bv=b['createdAt'];
+          final ad=av is Timestamp?av.toDate():DateTime(2000);
+          final bd=bv is Timestamp?bv.toDate():DateTime(2000);
+          return bd.compareTo(ad);
+        });
+        if(mounted)setState(()=>supportTickets=mappedTickets);
+      } catch(error) {
+        debugPrint('Support tickets admin load failed: $error');
+      }
     }catch(error){
       if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('অনলাইন অ্যাডমিন তথ্য লোড হয়নি: $error')));
     }
+  }
+  Future<void> _replySupportTicket(Map<String,dynamic> ticket) async {
+    final id=(ticket['_docId']??'').toString();
+    if(id.isEmpty)return;
+    final controller=TextEditingController(text:(ticket['adminReply']??'').toString());
+    final accepted=await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
+      title:const Text('সহায়তা অনুরোধের উত্তর'),
+      content:TextField(controller:controller,minLines:3,maxLines:6,maxLength:1000,decoration:const InputDecoration(labelText:'অ্যাডমিনের উত্তর')),
+      actions:[
+        TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('বাতিল')),
+        FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('উত্তর সংরক্ষণ')),
+      ],
+    ));
+    if(accepted!=true){controller.dispose();return;}
+    try{
+      await FirebaseFirestore.instance.collection('supportTickets').doc(id).update({
+        'adminReply':controller.text.trim(),'updatedAt':FieldValue.serverTimestamp(),
+      });
+      if(mounted){setState(()=>ticket['adminReply']=controller.text.trim());ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('উত্তর সংরক্ষিত হয়েছে।')));}
+    }catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('উত্তর সংরক্ষণ হয়নি: $error')));}
+    controller.dispose();
+  }
+  Future<void> _changeSupportStatus(Map<String,dynamic> ticket,String status) async {
+    final id=(ticket['_docId']??'').toString();
+    if(id.isEmpty)return;
+    try{
+      await FirebaseFirestore.instance.collection('supportTickets').doc(id).update({'status':status,'updatedAt':FieldValue.serverTimestamp()});
+      if(mounted)setState(()=>ticket['status']=status);
+    }catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('টিকিটের অবস্থা বদলানো যায়নি: $error')));}
   }
   Future<void> _approveApplication(String collection,Map<String,dynamic> item,String approvalField) async {
     final uid=(item['userId']??'').toString();
@@ -1898,6 +1940,36 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
                         icon:const Icon(Icons.person_add_alt_1),
                       )
                     : _statusMenu('elyramart_service_requests_v1', 'createdAt', v),
+                ),
+              )),
+            heading('গ্রাহক সাহায্য ও অভিযোগ'),
+            if(supportTickets.isEmpty)
+              const Card(color:Colors.white,child:ListTile(title:Text('কোনো সহায়তা টিকিট নেই')))
+            else
+              ...supportTickets.take(30).map((ticket)=>Card(
+                color:Colors.white,
+                child:ListTile(
+                  leading:const Icon(Icons.support_agent,color:green),
+                  title:Text((ticket['subject']??'সহায়তা অনুরোধ').toString()),
+                  subtitle:Text('গ্রাহক: ${ticket['userId']??''}\\nধরন: ${ticket['category']??''}\\n${ticket['message']??''}\\nউত্তর: ${ticket['adminReply']??'এখনো উত্তর দেওয়া হয়নি'}',maxLines:5,overflow:TextOverflow.ellipsis),
+                  isThreeLine:true,
+                  trailing:PopupMenuButton<String>(
+                    onSelected:(v){
+                      if(v=='reply'){_replySupportTicket(ticket);}
+                      else{_changeSupportStatus(ticket,v);}
+                    },
+                    itemBuilder:(_)=>const [
+                      PopupMenuItem(value:'reply',child:Text('উত্তর লিখুন')),
+                      PopupMenuItem(value:'in_progress',child:Text('চলমান করুন')),
+                      PopupMenuItem(value:'resolved',child:Text('সমাধান হয়েছে')),
+                      PopupMenuItem(value:'closed',child:Text('বন্ধ করুন')),
+                      PopupMenuItem(value:'open',child:Text('আবার খুলুন')),
+                    ],
+                    child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[
+                      const Icon(Icons.more_vert),
+                      Text((ticket['status']??'open').toString(),style:const TextStyle(fontSize:9)),
+                    ]),
+                  ),
                 ),
               )),
             const SizedBox(height: 12),
