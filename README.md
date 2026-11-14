@@ -8,12 +8,11 @@ Shared Flutter codebase for Android and responsive Web. iOS needs macOS/Xcode an
 
 ## Verified build status (14 November 2026)
 
-- **Android APK/AAB:** Latest fully verified build [43565797120](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43565797120) succeeded. Both artifacts are present: `Elyramart-APK-release` and `Elyramart-Play-Store-AAB`. A newer rebuild [43566534555](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566534555) is in progress after adding optional upload-key signing support.
-- **Web:** Latest build [43566515356](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566515356) succeeded and produced `Elyramart-Web-release` (about 14.3 MB).
-- **GitHub Pages:** Deploy [43566515428](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566515428) failed at **Configure GitHub Pages**; repository owner must set Settings → Pages → Source = GitHub Actions.
-- **Firebase Hosting:** Deploy [43566515366](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566515366) stopped at configuration validation because required Firebase secrets are missing.
-- **Firebase backend:** Deploy [43566429137](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566429137) stopped at credential validation; `FIREBASE_SERVICE_ACCOUNT_JSON` must contain a Google Cloud service-account key JSON, not Android `google-services.json`.
-- **Firebase Functions:** TypeScript compile check [43566429172](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566429172) succeeded.
+- **Android APK/AAB:** Build [43567716158](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43567716158) succeeded and produced `Elyramart-APK-release` (26.7 MB) and `Elyramart-Play-Store-AAB` (56.2 MB). CI log confirms upload-signing secrets were absent, so the AAB is **unsigned and not ready for Play Console upload**.
+- **Web:** Build [43567716156](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43567716156) succeeded and produced `Elyramart-Web-release` (14.3 MB).
+- **GitHub Pages:** Workflow [43567976719](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43567976719) built successfully, but Pages publish steps were skipped because `ENABLE_GITHUB_PAGES_DEPLOY` is not `true`. No public website URL is verified yet.
+- **Firebase backend:** Firestore Rules deployment [43570891759](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43570891759) succeeded. Cloud Functions and Storage deployment were intentionally skipped to avoid enabling paid Blaze billing.
+- **Firebase Functions:** TypeScript build succeeded in the same backend workflow; callable functions are not deployed/live.
 
 A successful build is not proof of full live functionality, real-device QA or Play Store publication. See [the Bengali owner setup guide](docs/OWNER_ACTIONS_BN.md), [the detailed launch checklist](docs/LAUNCH_CHECKLIST_BN.md), and [the file audit](docs/FILE_AUDIT_BN.md).
 
