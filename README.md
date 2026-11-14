@@ -42,6 +42,8 @@ These capabilities require Firebase Console setup, successful backend deployment
 - [বাংলা Project Status and Verified Blockers](docs/PROJECT_STATUS_BN.md)
 - [Production Readiness Checklist](docs/PRODUCTION_READINESS.md)
 - [বাংলা End-to-end Launch Checklist](docs/LAUNCH_CHECKLIST_BN.md)
+- [Privacy Policy draft (বাংলা)](docs/PRIVACY_POLICY_DRAFT_BN.md)
+- [Terms draft (বাংলা)](docs/TERMS_DRAFT_BN.md)
 
 ## Security
 
