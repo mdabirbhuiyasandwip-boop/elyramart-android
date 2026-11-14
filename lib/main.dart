@@ -538,7 +538,57 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
   bool registered=false;
   @override void initState(){super.initState();_load();}
   @override void dispose(){shop.dispose();owner.dispose();phone.dispose();address.dispose();product.dispose();price.dispose();stock.dispose();super.dispose();}
-  Future<void> _load() async {final p=await SharedPreferences.getInstance();final raw=p.getString('elyramart_seller_profile_v1');final items=p.getStringList('elyramart_seller_products_v1')??[];final orderItems=p.getStringList('elyramart_local_orders_v1')??[];final loadedProducts=items.map((v)=>Map<String,dynamic>.from(jsonDecode(v))).toList().reversed.toList();final loadedOrders=orderItems.map((v){try{return Map<String,dynamic>.from(jsonDecode(v));}catch(_){return <String,dynamic>{};}}).where((v)=>v.isNotEmpty).toList().reversed.toList();final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;if(user!=null){try{final cloudProducts=await FirebaseFirestore.instance.collection('products').where('sellerId',isEqualTo:user.uid).limit(100).get();loadedProducts.insertAll(0,cloudProducts.docs.map((d)=>{...d.data(),'_docId':d.id,'name':d.data()['title']??''}));final cloudOrders=await FirebaseFirestore.instance.collection('orders').where('sellerIds',arrayContains:user.uid).limit(100).get();loadedOrders.insertAll(0,cloudOrders.docs.map((d)=>{...d.data(),'_docId':d.id}));}catch(error){debugPrint('Seller cloud load failed: $error');}}if(!mounted)return;setState((){if(raw!=null){final m=Map<String,dynamic>.from(jsonDecode(raw));shop.text=m['shop']??'';owner.text=m['owner']??'';phone.text=m['phone']??'';address.text=m['address']??'';registered=true;}mine=loadedProducts;orders=loadedOrders;});}
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final user = FirebaseRuntime.initialized ? FirebaseAuth.instance.currentUser : null;
+    // Local seller data is demo-only. Never mix it into another signed-in account.
+    final raw = user == null ? prefs.getString('elyramart_seller_profile_v1') : null;
+    final items = user == null ? (prefs.getStringList('elyramart_seller_products_v1') ?? <String>[]) : <String>[];
+    final orderItems = user == null ? (prefs.getStringList('elyramart_local_orders_v1') ?? <String>[]) : <String>[];
+    final loadedProducts = items.map((v) { try { return Map<String,dynamic>.from(jsonDecode(v)); } catch (_) { return <String,dynamic>{}; } }).where((v)=>v.isNotEmpty).toList().reversed.toList();
+    final loadedOrders = orderItems.map((v) { try { return Map<String,dynamic>.from(jsonDecode(v)); } catch (_) { return <String,dynamic>{}; } }).where((v)=>v.isNotEmpty).toList().reversed.toList();
+    var cloudApproved = false;
+    Map<String,dynamic>? cloudApplication;
+    Map<String,dynamic>? cloudUser;
+    if (user != null) {
+      try {
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        cloudUser = userDoc.data();
+        cloudApproved = cloudUser?['sellerApproved'] == true;
+        final applications = await FirebaseFirestore.instance.collection('sellerApplications').where('userId',isEqualTo:user.uid).limit(20).get();
+        for (final doc in applications.docs) {
+          if (['pending','approved'].contains(doc.data()['status'])) {
+            cloudApplication = doc.data();
+            break;
+          }
+        }
+        final cloudProducts = await FirebaseFirestore.instance.collection('products').where('sellerId',isEqualTo:user.uid).limit(100).get();
+        loadedProducts.insertAll(0,cloudProducts.docs.map((d)=>{...d.data(),'_docId':d.id,'name':d.data()['title']??''}));
+        final cloudOrders = await FirebaseFirestore.instance.collection('orders').where('sellerIds',arrayContains:user.uid).limit(100).get();
+        loadedOrders.insertAll(0,cloudOrders.docs.map((d)=>{...d.data(),'_docId':d.id}));
+      } catch (error) {
+        debugPrint('Seller cloud load failed: $error');
+      }
+    }
+    if (!mounted) return;
+    setState(() {
+      if (raw != null) {
+        final m = Map<String,dynamic>.from(jsonDecode(raw));
+        shop.text = m['shop'] ?? '';
+        owner.text = m['owner'] ?? '';
+        phone.text = m['phone'] ?? '';
+        address.text = m['address'] ?? '';
+      } else if (cloudApplication != null) {
+        shop.text = cloudApplication!['shopName'] ?? '';
+        owner.text = cloudUser?['name'] ?? '';
+        phone.text = cloudApplication!['contact'] ?? cloudUser?['phone'] ?? '';
+        address.text = cloudApplication!['address'] ?? cloudUser?['address'] ?? '';
+      }
+      registered = raw != null || cloudApplication != null || cloudApproved;
+      mine = loadedProducts;
+      orders = loadedOrders;
+    });
+  }
   List<String> _sellerOrderNextStatuses(String current) => switch(current) {
     'placed' => ['confirmed','cancelled'],
     'confirmed' => ['processing','cancelled'],
@@ -567,8 +617,8 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     if(user!=null){
       try{
         final existing=await FirebaseFirestore.instance.collection('sellerApplications').where('userId',isEqualTo:user.uid).limit(20).get();
-        final hasPending=existing.docs.any((doc)=>doc.data()['status']=='pending');
-        if(!hasPending){
+        final hasActiveApplication=existing.docs.any((doc)=>['pending','approved'].contains(doc.data()['status']));
+        if(!hasActiveApplication){
           await FirebaseFirestore.instance.collection('sellerApplications').add({
             'userId':user.uid,'shopName':shop.text.trim(),'contact':normalizedPhone,
             'address':address.text.trim(),'status':'pending','createdAt':FieldValue.serverTimestamp(),
@@ -580,7 +630,7 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
       }
     }
     final p=await SharedPreferences.getInstance();
-    await p.setString('elyramart_seller_profile_v1',jsonEncode({'shop':shop.text.trim(),'owner':owner.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'status':user==null?'local_pending':'pending'}));
+    await p.setString('elyramart_seller_profile_v1',jsonEncode({'shop':shop.text.trim(),'owner':owner.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'userId':user?.uid,'status':user==null?'local_pending':'pending'}));
     if(!mounted)return;
     setState(()=>registered=true);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(user==null?'সেলার তথ্য শুধু এই ফোনে রাখা হয়েছে। অনলাইন আবেদনের জন্য লগইন করুন।':'সেলার আবেদন অনলাইনে পাঠানো হয়েছে। অ্যাডমিন অনুমোদনের পর পণ্য যোগ করতে পারবেন।')));
@@ -1061,25 +1111,53 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
   @override void initState(){super.initState();_load();}
   @override void dispose(){name.dispose();phone.dispose();address.dispose();skills.dispose();super.dispose();}
   Future<void> _load() async {
-    final p=await SharedPreferences.getInstance();
-    final raw=p.getString('elyramart_technician_profile_v1');
-    final list=p.getStringList('elyramart_service_requests_v1')??[];
-    final data=<Map<String,dynamic>>[];
-    for(final v in list){try{data.add(Map<String,dynamic>.from(jsonDecode(v) as Map));}catch(_){}}
-    final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;
-    if(user!=null){
-      try{
-        final profile=await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-        if(profile.data()?['technicianApproved']==true){
-          final assigned=await FirebaseFirestore.instance.collection('serviceBookings').where('technicianId',isEqualTo:user.uid).limit(100).get();
-          data
-            ..clear()
-            ..addAll(assigned.docs.map((d)=>{...d.data(),'_docId':d.id}));
-        }
-      }catch(error){debugPrint('Technician cloud load failed: $error');}
+    final prefs = await SharedPreferences.getInstance();
+    final user = FirebaseRuntime.initialized ? FirebaseAuth.instance.currentUser : null;
+    // Local technician records are demo-only; signed-in users load their own cloud application.
+    final raw = user == null ? prefs.getString('elyramart_technician_profile_v1') : null;
+    final list = user == null ? (prefs.getStringList('elyramart_service_requests_v1') ?? <String>[]) : <String>[];
+    final data = <Map<String,dynamic>>[];
+    for (final value in list) {
+      try { data.add(Map<String,dynamic>.from(jsonDecode(value) as Map)); } catch (_) {}
     }
-    if(!mounted)return;
-    setState((){if(raw!=null){final m=Map<String,dynamic>.from(jsonDecode(raw));name.text=m['name']??'';phone.text=m['phone']??'';address.text=m['address']??'';skills.text=m['skills']??'';saved=true;}bookings=data.reversed.toList();});
+    var cloudApproved = false;
+    Map<String,dynamic>? cloudApplication;
+    if (user != null) {
+      try {
+        final profile = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        cloudApproved = profile.data()?['technicianApproved'] == true;
+        final applications = await FirebaseFirestore.instance.collection('technicianApplications').where('userId',isEqualTo:user.uid).limit(20).get();
+        for (final doc in applications.docs) {
+          if (['pending','approved'].contains(doc.data()['status'])) {
+            cloudApplication = doc.data();
+            break;
+          }
+        }
+        if (cloudApproved) {
+          final assigned = await FirebaseFirestore.instance.collection('serviceBookings').where('technicianId',isEqualTo:user.uid).limit(100).get();
+          data.addAll(assigned.docs.map((d)=>{...d.data(),'_docId':d.id}));
+        }
+      } catch (error) {
+        debugPrint('Technician cloud load failed: $error');
+      }
+    }
+    if (!mounted) return;
+    setState(() {
+      if (raw != null) {
+        final m = Map<String,dynamic>.from(jsonDecode(raw));
+        name.text = m['name'] ?? '';
+        phone.text = m['phone'] ?? '';
+        address.text = m['address'] ?? '';
+        skills.text = m['skills'] ?? '';
+      } else if (cloudApplication != null) {
+        name.text = cloudApplication!['name'] ?? '';
+        phone.text = cloudApplication!['phone'] ?? '';
+        address.text = cloudApplication!['address'] ?? '';
+        skills.text = cloudApplication!['skills'] ?? '';
+      }
+      saved = raw != null || cloudApplication != null || cloudApproved;
+      bookings = data.reversed.toList();
+    });
   }
   Future<void> _saveProfile() async {
     if(name.text.trim().isEmpty||phone.text.trim().isEmpty||skills.text.trim().isEmpty){
@@ -1093,8 +1171,8 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
     if(user!=null){
       try{
         final existing=await FirebaseFirestore.instance.collection('technicianApplications').where('userId',isEqualTo:user.uid).limit(20).get();
-        final hasPending=existing.docs.any((doc)=>doc.data()['status']=='pending');
-        if(!hasPending){
+        final hasActiveApplication=existing.docs.any((doc)=>['pending','approved'].contains(doc.data()['status']));
+        if(!hasActiveApplication){
           await FirebaseFirestore.instance.collection('technicianApplications').add({
             'userId':user.uid,'name':name.text.trim(),'phone':normalizedPhone,
             'address':address.text.trim(),'skills':skills.text.trim(),
@@ -1107,7 +1185,7 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
       }
     }
     final p=await SharedPreferences.getInstance();
-    await p.setString('elyramart_technician_profile_v1',jsonEncode({'name':name.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'skills':skills.text.trim(),'status':user==null?'local_pending':'pending'}));
+    await p.setString('elyramart_technician_profile_v1',jsonEncode({'name':name.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'skills':skills.text.trim(),'userId':user?.uid,'status':user==null?'local_pending':'pending'}));
     if(!mounted)return;
     setState(()=>saved=true);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(user==null?'টেকনিশিয়ান তথ্য শুধু এই ফোনে রাখা হয়েছে। অনলাইনে আবেদনের জন্য লগইন করুন।':'টেকনিশিয়ান আবেদন অনলাইনে পাঠানো হয়েছে। অ্যাডমিন যাচাই করবেন।')));
@@ -1579,13 +1657,17 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString('elyramart_customer_profile_v1');
+    final currentUser = FirebaseRuntime.initialized ? FirebaseAuth.instance.currentUser : null;
     if (!mounted) return;
     if (raw != null) {
       try {
         final data = Map<String, dynamic>.from(jsonDecode(raw) as Map);
-        name.text = data['name'] ?? '';
-        phone.text = data['phone'] ?? '';
-        address.text = data['address'] ?? '';
+        // Do not expose a previous account's locally cached contact details after account switching.
+        if (data['uid'] == currentUser?.uid) {
+          name.text = data['name'] ?? '';
+          phone.text = data['phone'] ?? '';
+          address.text = data['address'] ?? '';
+        }
       } catch (_) {}
     }
     setState(() => loading = false);
@@ -1753,7 +1835,9 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
     }
     final profile = {
       'name': name.text.trim(), 'phone': normalized,
-      'address': address.text.trim(), 'updatedAt': DateTime.now().toIso8601String(),
+      'address': address.text.trim(),
+      'uid': FirebaseRuntime.initialized ? FirebaseAuth.instance.currentUser?.uid : null,
+      'updatedAt': DateTime.now().toIso8601String(),
     };
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('elyramart_customer_profile_v1', jsonEncode(profile));
