@@ -333,18 +333,10 @@ class _HomePageState extends State<HomePage> {
           crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
           crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 1.27,
           children: [
-            _homeServiceCard(tx('হোম টেকনিশিয়ান','Home technicians'),tx('ইলেকট্রিশিয়ান, প্লাম্বার','Electrician, plumber'),
-              'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=700&q=80',
-              Icons.handyman_outlined, ()=>setState(()=>tab=1)),
-            _homeServiceCard(tx('হাসপাতাল','Hospitals'),tx('ঠিকানা ও ফোন খুঁজুন','Find address & phone'),
-              'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=700&q=80',
-              Icons.local_hospital_outlined, ()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const DailyLifeDirectoryPage()))),
-            _homeServiceCard(tx('মেয়েদের পার্লার','Beauty parlours'),tx('কাছের পার্লার খুঁজুন','Find a beauty parlour'),
-              'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=700&q=80',
-              Icons.face_retouching_natural, ()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const DailyLifeDirectoryPage()))),
-            _homeServiceCard(tx('বাসা ও অফিস ভাড়া','Home & office rent'),tx('দেখুন ও মালিককে ফোন করুন','Browse & call owner'),
-              'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=700&q=80',
-              Icons.apartment_outlined, ()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage()))),
+            _homeServiceCard(tx('হোম টেকনিশিয়ান','Home technicians'),tx('ইলেকট্রিশিয়ান, প্লাম্বার','Electrician, plumber'),Icons.handyman_outlined, ()=>setState(()=>tab=1)),
+            _homeServiceCard(tx('হাসপাতাল','Hospitals'),tx('ঠিকানা ও ফোন খুঁজুন','Find address & phone'),Icons.local_hospital_outlined, ()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const DailyLifeDirectoryPage()))),
+            _homeServiceCard(tx('মেয়েদের পার্লার','Beauty parlours'),tx('কাছের পার্লার খুঁজুন','Find a beauty parlour'),Icons.face_retouching_natural, ()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const DailyLifeDirectoryPage()))),
+            _homeServiceCard(tx('বাসা ও অফিস ভাড়া','Home & office rent'),tx('দেখুন ও মালিককে ফোন করুন','Browse & call owner'),Icons.apartment_outlined, ()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage()))),
           ],
         ),
         const SizedBox(height: 20),
@@ -391,13 +383,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _homeCategoryCard(String label, String value) {
-    final urls = <String, String>{
-      'ঔষধ':'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=300&q=75',
-      'মুদিখানা':'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=75',
-      'কসমেটিকস':'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=300&q=75',
-      'ফ্যাশন':'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=300&q=75',
-      'স্যানিটারি':'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=300&q=75',
-    };
     return InkWell(onTap:()=>setState(()=>category=value),borderRadius:BorderRadius.circular(16),
       child:Container(width:88,margin:const EdgeInsets.only(right:10),padding:const EdgeInsets.all(7),
         decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16),
@@ -412,7 +397,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _homeServiceCard(String title, String subtitle, String url, IconData icon, VoidCallback onTap) {
+  Widget _homeServiceCard(String title, String subtitle, IconData icon, VoidCallback onTap) {
     return Material(color:Colors.white,borderRadius:BorderRadius.circular(20),clipBehavior:Clip.antiAlias,
       child:InkWell(onTap:onTap,child:Stack(fit:StackFit.expand,children:[
         const DecoratedBox(decoration:BoxDecoration(gradient:LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xFF0B7658),Color(0xFF163C32)]))),
@@ -463,15 +448,6 @@ class NetworkPhoto extends StatelessWidget {
       child:Icon(fallbackIcon,color:green,size:34)),
   );
 }
-
-String productCategoryPhoto(String category)=>switch(category){
-  'ঔষধ'=>'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=700&q=80',
-  'মুদিখানা'=>'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=700&q=80',
-  'কসমেটিকস'=>'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=80',
-  'ফ্যাশন'=>'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80',
-  'স্যানিটারি'=>'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=700&q=80',
-  _=>'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=700&q=80',
-};
 
 class ProductCard extends StatelessWidget {
   final Product p; final VoidCallback onAdd;
