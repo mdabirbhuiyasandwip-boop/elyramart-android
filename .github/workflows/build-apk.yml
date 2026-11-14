@@ -12,6 +12,7 @@ on:
       - 'google-services.json'
       - 'codemagic.yaml'
       - 'tools/generate_brand_assets.py'
+      - 'docs/**'
       - '.github/workflows/build-apk.yml'
 
 concurrency:
