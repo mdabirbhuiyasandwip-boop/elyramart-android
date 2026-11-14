@@ -843,6 +843,7 @@ class _DailyLifeDirectoryPageState extends State<DailyLifeDirectoryPage> {
       body:ListView(padding:const EdgeInsets.all(16),children:[
         Wrap(spacing:8,children:[
           ChoiceChip(label:const Text('হাসপাতাল'),selected:category=='hospital',onSelected:(_){setState(()=>category='hospital');}),
+          ChoiceChip(label:const Text('রেস্টুরেন্ট'),selected:category=='restaurant',onSelected:(_){setState(()=>category='restaurant');}),
           ChoiceChip(label:const Text('মেয়েদের পার্লার'),selected:category=='beauty_parlour',onSelected:(_){setState(()=>category='beauty_parlour');}),
         ]),
         const SizedBox(height:12),
@@ -897,10 +898,23 @@ class _DailyLifeDirectoryPageState extends State<DailyLifeDirectoryPage> {
         ),
         const SizedBox(height:14),
         if(loading) const Center(child:CircularProgressIndicator()),
+        if(category=='restaurant') Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: OutlinedButton.icon(
+            onPressed: () {
+              final selectedDistrict = districts.where((d)=>d['id']==districtId).toList();
+              final area = selectedDistrict.isEmpty ? 'Bangladesh' : selectedDistrict.first['en'].toString();
+              final search = 'restaurants in $area';
+              launchUrl(Uri.parse('https://www.google.com/maps/search/?api=1&query=\u0024{Uri.encodeComponent(search)}'),mode:LaunchMode.externalApplication);
+            },
+            icon: const Icon(Icons.map_outlined),
+            label: const Text('এলাকার রেস্টুরেন্ট Google Maps-এ খুঁজুন'),
+          ),
+        ),
         if(!loading&&visible.isEmpty) Padding(padding:const EdgeInsets.symmetric(vertical:18),child:Column(children:[
           const Icon(Icons.location_searching_outlined,size:38,color:green),
           const SizedBox(height:8),
-          Text(category=='hospital'?'এই এলাকায় এখনো Elyramart-এর যাচাইকৃত হাসপাতাল তালিকা যোগ হয়নি।':'এই এলাকায় এখনো যাচাইকৃত পার্লার তালিকা যোগ হয়নি।',textAlign:TextAlign.center),
+          Text(category=='hospital'?'এই এলাকায় এখনো Elyramart-এর যাচাইকৃত হাসপাতাল তালিকা যোগ হয়নি।':category=='restaurant'?'এই এলাকায় এখনো Elyramart-এর যাচাইকৃত রেস্টুরেন্ট তালিকা যোগ হয়নি।':'এই এলাকায় এখনো যাচাইকৃত পার্লার তালিকা যোগ হয়নি।',textAlign:TextAlign.center),
           if(category=='hospital') ...[
             const SizedBox(height:8),
             OutlinedButton.icon(onPressed:()=>launchUrl(Uri.parse('https://hris.mohfw.gov.bd/public/facility-registry/'),mode:LaunchMode.externalApplication),icon:const Icon(Icons.open_in_new),label:const Text('সরকারি DGHS হাসপাতাল/স্বাস্থ্যকেন্দ্র তালিকা দেখুন')),
@@ -1300,11 +1314,37 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     setState(()=>mine[mine.indexOf(item)]=updated);
   }
   Future<void> pickProductImage() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined),
+            title: const Text('গ্যালারি থেকে ছবি নিন'),
+            subtitle: const Text('Gallery'),
+            onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
+          ),
+          ListTile(
+            leading: const Icon(Icons.camera_alt_outlined),
+            title: const Text('ক্যামেরা দিয়ে ছবি তুলুন'),
+            subtitle: const Text('Camera'),
+            onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
+          ),
+          const SizedBox(height: 8),
+        ]),
+      ),
+    );
+    if (source == null || !mounted) return;
     try{
-      final image=await ImagePicker().pickImage(source:ImageSource.gallery,imageQuality:80,maxWidth:1600);
+      final image=await ImagePicker().pickImage(source:source,imageQuality:80,maxWidth:1600);
       if(!mounted||image==null)return;
       setState(()=>selectedImage=image);
-    }catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('ছবি নির্বাচন করা যায়নি: $error')));}
+    }catch(error){
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content:Text('ছবি নেওয়া যায়নি। ক্যামেরা/গ্যালারির অনুমতি পরীক্ষা করুন: $error')),
+      );
+    }
   }
   Future<void> addProduct() async {
     if(!registered){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('আগে সেলার তথ্য সংরক্ষণ করুন')));return;}
