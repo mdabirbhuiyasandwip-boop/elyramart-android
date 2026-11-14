@@ -3,10 +3,24 @@
 সর্বশেষ আপডেট: ১৪ নভেম্বর ২০২৬  
 Repository: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android
 
+## বাসা ও অফিস ভাড়া — সংশোধিত নিয়ম
+
+- শুধু বাড়ি/ফ্ল্যাট/অফিসের বিজ্ঞাপনদাতা পোস্ট করবেন।
+- বাসা/অফিস খোঁজার মানুষ পোস্ট করবেন না; বিজ্ঞাপন দেখে সরাসরি ফোনে যোগাযোগ করবেন।
+- Firestore rules-এ `listingType: offer` ছাড়া নতুন listing তৈরি নিষিদ্ধ; পুরোনো wanted posts app browse screen-এ দেখানো হয় না।
+
+## হাসপাতাল ও মেয়েদের পার্লার ডিরেক্টরি
+
+- Home screen-এ হাসপাতাল ও মেয়েদের পার্লার directory entry point যোগ হয়েছে।
+- Offline location asset-এ ৮ বিভাগ, ৬৪ জেলা, ৪৯৫ উপজেলা আছে; user location ধরে filter করতে পারে।
+- Active `directoryListings` records দেখায়; phone dialer এবং Google Maps search action আছে।
+- সরকারি DGHS registry link fallback আছে। DGHS facility data import করা হয়নি; পার্লারের verified nationwide dataset-ও এখনো নেই।
+- Owner Admin-only Firestore rules directory records protect করে। বিস্তারিত `docs/OWNER_LOGIN_AND_DAILY_DIRECTORY_BN.md`.
+
 ## নতুন বাসা ও অফিস ভাড়া ফিচার
 
 - হোম স্ক্রিনে **বাসা ও অফিস ভাড়া** বিভাগ যোগ হয়েছে।
-- ব্যবহারকারী **ভাড়া দেব** বা **ভাড়া প্রয়োজন**—দুই ধরনের পোস্ট দিতে পারবেন।
+- কেবল ভাড়া দেওয়ার বিজ্ঞাপন পোস্ট করা যায়; খোঁজার ব্যবহারকারী সরাসরি বিজ্ঞাপনদাতার সঙ্গে যোগাযোগ করবেন।
 - বাসা ও অফিস আলাদা filter-এ দেখা যাবে।
 - শিরোনাম, মাসিক ভাড়া/বাজেট, এলাকা, ফোন ও বিস্তারিত দেখা যাবে।
 - ইমেইল-ভেরিফায়েড account ছাড়া পোস্ট করা যাবে না।
