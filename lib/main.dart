@@ -562,12 +562,45 @@ class RentalMarketplacePage extends StatefulWidget {
 class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
   bool loading = true;
   String filter = 'সব';
+  final searchController = TextEditingController();
   List<Map<String, dynamic>> listings = [];
 
   @override
   void initState() {
     super.initState();
     _loadListings();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _deleteListing(Map<String, dynamic> item) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || item['ownerId'] != user.uid) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tx('বিজ্ঞাপন মুছবেন?', 'Delete listing?')),
+        content: Text(tx('এই ভাড়ার বিজ্ঞাপনটি মুছে ফেলা হবে।', 'This rental listing will be deleted.')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(tx('না', 'Cancel'))),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tx('মুছুন', 'Delete'))),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await FirebaseFirestore.instance.collection('rentalListings').doc(item['_docId'].toString()).delete();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tx('বিজ্ঞাপন মুছে ফেলা হয়েছে।', 'Listing deleted.'))));
+        _loadListings();
+      }
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('বিজ্ঞাপন মুছতে সমস্যা হয়েছে: $error')));
+    }
   }
 
   Future<void> _loadListings() async {
@@ -601,12 +634,18 @@ class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
 
   @override
   Widget build(BuildContext context) {
-    final visible = listings.where((item) =>
-      (filter == 'সব' || item['propertyType'] == filter) &&
-      item['listingType'] == 'offer'
-    ).toList();
+    final search = searchController.text.trim().toLowerCase();
+    final visible = listings.where((item) {
+      final searchable = '${item['title'] ?? ''} ${item['propertyType'] ?? ''} ${item['location'] ?? ''} ${item['details'] ?? ''} ${item['rentAmount'] ?? ''}'.toLowerCase();
+      return (filter == 'সব' || item['propertyType'] == filter) &&
+          item['listingType'] == 'offer' &&
+          (search.isEmpty || searchable.contains(search));
+    }).toList();
     return Scaffold(
-      appBar: AppBar(title: Text(tx('বাসা ও অফিস ভাড়া', 'House & office rentals'))),
+      appBar: AppBar(
+        title: Text(tx('বাসা ও অফিস ভাড়া', 'House & office rentals')),
+        actions: [IconButton(tooltip: tx('রিফ্রেশ', 'Refresh'), onPressed: _loadListings, icon: const Icon(Icons.refresh))],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: green,
         foregroundColor: Colors.white,
@@ -632,6 +671,16 @@ class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
             ),
           ),
           const SizedBox(height: 14),
+          TextField(
+            controller: searchController,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              hintText: tx('এলাকা, বাসার ধরন বা শিরোনাম খুঁজুন', 'Search area, property type or title'),
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: searchController.text.isEmpty ? null : IconButton(onPressed: () { searchController.clear(); setState(() {}); }, icon: const Icon(Icons.close)),
+            ),
+          ),
+          const SizedBox(height: 12),
           Wrap(spacing: 8, children: ['সব', 'বাসা', 'অফিস'].map((value) =>
             ChoiceChip(
               label: Text(value),
@@ -696,6 +745,8 @@ class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
                         const SizedBox(width: 7),
                         Expanded(child: SelectableText(item['phone']?.toString() ?? '')),
                         IconButton(onPressed: () => launchUrl(Uri(scheme: 'tel', path: (item['phone'] ?? '').toString())), icon: const Icon(Icons.call, color: green), tooltip: 'বিজ্ঞাপনদাতাকে ফোন করুন'),
+                       if (FirebaseAuth.instance.currentUser?.uid == item['ownerId'])
+                         IconButton(onPressed: () => _deleteListing(item), icon: const Icon(Icons.delete_outline, color: Colors.red), tooltip: tx('নিজের বিজ্ঞাপন মুছুন', 'Delete your listing')), 
                         TextButton.icon(
                           onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(tx('যোগাযোগের আগে জায়গা ও কাগজপত্র যাচাই করুন।','Verify the property and documents before contacting.'))),
@@ -750,9 +801,9 @@ class _RentalPostPageState extends State<RentalPostPage> {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerLoginPage()));
       return;
     }
-    if (!user.emailVerified) {
+    if (!user.emailVerified && (user.phoneNumber == null || user.phoneNumber!.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('বিজ্ঞাপন দিতে ইমেইল ভেরিফাই করতে হবে।'),
+        content: Text('বিজ্ঞাপন দিতে ইমেইল অথবা SMS OTP দিয়ে ফোন নম্বর যাচাই করুন।'),
       ));
       return;
     }
