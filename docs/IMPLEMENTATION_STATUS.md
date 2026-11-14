@@ -15,7 +15,8 @@ This file separates code that exists from services that are actually deployed an
 - Added Owner Admin ticket queue with ticket status changes and admin replies; customer support history now displays replies.
 - Added owner rental listing edit form and owner-only field-limited Firestore update rule.
 - Added a widget test for the support centre guest state.
-- Added a Travel & Stay home shortcut and hub for toll, launch/steamer tickets, hotel booking and house/flat/office rentals. It links to the official D-Toll app, Shohoz launch-ticket app and BIWTC site; hotel API partnership research link is shown.
+- Added a Travel & Stay home shortcut and hub for toll, launch/steamer tickets, hotel booking and house/flat/office rentals. Current transport/hotel options are informational external links or existing rental listings; they are not in-app ticket/payment/confirmed hotel booking.
+- Expanded the requirements for a true one-app mobility experience: intercity bus seat maps and tickets, authorized train seat/berth ticketing, launch/ferry cabins, toll receipts, live hotel rooms, unified My Trips/Bookings, cancellations/refunds and provider-backed admin operations. The requirements explicitly prohibit fake inventory, schedules, PNRs or payment confirmations.
 - The hub explicitly labels direct in-app toll payment, launch ticketing and live hotel availability/booking as not yet integrated; no fake payment or booking confirmation is shown.
 - Added a widget test for the Travel & Stay hub and its integration-pending disclosures.
 - Expanded the product plan to cover practical everyday-life and future-ready services: verified essential directories, transport, jobs, education, home/family support, community help, accessibility, low-data use, privacy and trust/safety. These are roadmap items, not falsely labelled live features.
@@ -39,6 +40,8 @@ This file separates code that exists from services that are actually deployed an
 - Dedicated notifications inbox and production push delivery (FCM deployment/configuration and device tests remain).
 - Support ticket customer UI, Owner Admin queue, and Firestore rules are committed; rules still need deployment to Firebase before real online ticket submission can work. Staffed 24/7 live support, blog CMS and referral rewards remain future work.
 - Direct toll payment integration inside Elyramart (D-Toll/official operator authorization and secure transaction confirmation still required); the current hub links users to the official D-Toll app.
+- Direct bus seat inventory, seat holds and e-ticket integration (authorized bus operator/aggregator API required).
+- Direct train seat/berth availability and ticket issuance (authorized Bangladesh Railway ticketing channel/API required).
 - Direct launch/steamer ticket inventory and ticketing integration (authorized operator/aggregator API and booking confirmation still required); current hub links to Shohoz and BIWTC.
 - Live hotel inventory, price/availability and booking/cancellation integration (hotel API contract and credentials required); current hub provides a partner research link only.
 - bKash, Nagad, Rocket and card gateway integration. These remain disabled until owner approval, merchant credentials and testing.
@@ -68,6 +71,6 @@ This file separates code that exists from services that are actually deployed an
 5. Complete service-provider discovery and booking lifecycle.
 6. Add support ticket and notification inbox.
 7. Finish owner dashboard data and web admin.
-8. Build authorized toll, launch-ticket and hotel booking integrations after provider agreements/API access; meanwhile keep the Travel & Stay hub transparent about external links and pending in-app booking.
+8. Build authorized bus, train, launch/ferry, toll and hotel booking integrations after provider agreements/API access; add unified My Trips, seat/room inventory, ticket/receipt storage, cancellation/refund handling and owner exception queue. Do not label any provider service live until sandbox and production verification pass.
 9. Implement future roadmap modules incrementally after core marketplace is stable and each has verified data/providers.
 9. Real-device QA, signed release build and Play Store preparation.
