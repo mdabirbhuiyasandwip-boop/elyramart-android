@@ -391,8 +391,8 @@ class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
-              tx('বাসা বা অফিস ভাড়া দিতে চাইলে বিজ্ঞাপন দিন। আবার আপনার বাসা বা অফিস প্রয়োজন হলেও চাহিদা পোস্ট করতে পারবেন।',
-                 'Post a property for rent, or publish what kind of house or office you need.'),
+              tx('এখানে শুধু বাসা বা অফিস ভাড়ার বিজ্ঞাপন থাকবে। আপনার প্রয়োজনের জায়গা খুঁজে বিজ্ঞাপনদাতার সঙ্গে সরাসরি যোগাযোগ করুন।',
+                 'Browse houses and offices for rent, then contact the advertiser directly.'),
               style: const TextStyle(color: ink),
             ),
           ),
@@ -438,14 +438,14 @@ class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
                         Icon(property == 'অফিস' ? Icons.business_outlined : Icons.home_outlined, color: green),
                         const SizedBox(width: 8),
                         Expanded(child: Text(
-                          '${property} • ${offer ? 'ভাড়া দেওয়া হবে' : 'ভাড়া প্রয়োজন'}',
+                          '${property} • ভাড়া দেওয়া হবে',
                           style: const TextStyle(fontWeight: FontWeight.bold, color: green),
                         )),
                       ]),
                       const SizedBox(height: 8),
                       Text(item['title']?.toString() ?? '', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 5),
-                      Text('${offer ? 'মাসিক ভাড়া' : 'মাসিক বাজেট'}: ৳${amount}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                      Text('মাসিক ভাড়া: ৳${amount}', style: const TextStyle(fontWeight: FontWeight.w700)),
                       const SizedBox(height: 5),
                       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         const Icon(Icons.location_on_outlined, size: 18, color: Colors.black54),
@@ -461,6 +461,7 @@ class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
                         const Icon(Icons.call_outlined, size: 18, color: green),
                         const SizedBox(width: 7),
                         Expanded(child: SelectableText(item['phone']?.toString() ?? '')),
+                        IconButton(onPressed: () => launchUrl(Uri(scheme: 'tel', path: (item['phone'] ?? '').toString())), icon: const Icon(Icons.call, color: green), tooltip: 'বিজ্ঞাপনদাতাকে ফোন করুন'),
                         TextButton.icon(
                           onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(tx('যোগাযোগের আগে জায়গা ও কাগজপত্র যাচাই করুন।','Verify the property and documents before contacting.'))),
@@ -497,7 +498,7 @@ class _RentalPostPageState extends State<RentalPostPage> {
   final phone = TextEditingController();
   final details = TextEditingController();
   String propertyType = 'বাসা';
-  String listingType = 'offer';
+  final String listingType = 'offer';
   bool saving = false;
 
   @override
@@ -572,12 +573,7 @@ class _RentalPostPageState extends State<RentalPostPage> {
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(tx('ভাড়া বিজ্ঞাপন দিন', 'Post a rental listing'))),
     body: ListView(padding: const EdgeInsets.all(18), children: [
-      const Text('কী ধরনের বিজ্ঞাপন?', style: TextStyle(fontWeight: FontWeight.bold)),
-      const SizedBox(height: 8),
-      Wrap(spacing: 8, children: [
-        ChoiceChip(label: const Text('ভাড়া দেব'), selected: listingType == 'offer', onSelected: (_) => setState(() => listingType = 'offer')),
-        ChoiceChip(label: const Text('ভাড়া প্রয়োজন'), selected: listingType == 'wanted', onSelected: (_) => setState(() => listingType = 'wanted')),
-      ]),
+      const Text('শুধু বাসা বা অফিস ভাড়া দেওয়ার বিজ্ঞাপন প্রকাশ করুন।', style: TextStyle(fontWeight: FontWeight.bold)),
       const SizedBox(height: 14),
       const Text('কী ভাড়া হবে?', style: TextStyle(fontWeight: FontWeight.bold)),
       const SizedBox(height: 8),
