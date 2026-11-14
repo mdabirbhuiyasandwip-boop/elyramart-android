@@ -49,6 +49,15 @@ Build Elyramart as a Bangladesh-first, multi-vendor marketplace and local-servic
 - Technician/customer communication and status updates.
 - Live location tracking only when the provider explicitly shares location and the required permissions/backend are configured; otherwise show status and map/address without pretending to have live GPS.
 
+## 3A. Travel, tolls and accommodation
+- **Toll payments:** provide a toll-road/bridge directory, eligible vehicle details, official operator selection, fee display from an authoritative current source, payment through the operator's approved channel, and a verifiable receipt/reference. Never collect toll money or claim a toll is paid until an official operator/payment-gateway integration confirms settlement. No stored vehicle plate or travel history without user consent.
+- **Launch/ferry tickets:** search routes, terminals, operator, departure date/time, seat/class and passenger count; show only provider-confirmed schedules and availability; submit booking to an authorized operator/aggregator; issue provider-confirmed ticket/PNR and cancellation/refund terms. No invented schedule, seat availability or ticket.
+- **Hotel booking:** search destination, check-in/check-out, guest/room count, room type and amenities; show total price, taxes, cancellation policy and provider; confirm only after live availability and provider confirmation. Protect guest details and never expose them in public listings.
+- **House/flat rental:** retain the rental marketplace, with area, budget, property type, lease duration, move-in date, owner verification and visit scheduling. A listing/contact request is not a confirmed tenancy; deposits and rent must not be collected until safe, verified payment/contract workflows exist.
+- Shared travel/accommodation booking history, request status, support/dispute handling and receipts; clearly distinguish enquiry, pending provider confirmation, confirmed, cancelled and refunded states.
+- Provider onboarding must verify identity, business authority, route/property inventory and service terms. Integrate only official or contract-authorized provider APIs; respect licensing and local transport/accommodation rules.
+- **Release gate:** these services may appear as "coming soon" or enquiry-only until live provider contracts/APIs, settlement callbacks, security rules and end-to-end tests are in place. No mock bookings, simulated toll payment, fabricated hotel inventory or fake tickets.
+
 ## 4. Booking management
 - Select date/time and address; validate availability before confirmation.
 - Booking ID, customer/provider details, notes, price estimate and status history.
@@ -136,6 +145,7 @@ These are planned modules, not claims that they are already live. Build them in 
 1. Audit current repository and build; list existing vs missing features and fix compile/runtime issues.
 2. Stabilize authentication, backend configuration and owner-only security.
 3. Complete marketplace, rental search/listing management and service/booking workflows.
+4. Add travel and stay module: official toll payments, launch/ferry ticketing, hotel bookings and safer house-rental workflows, gated by verified provider integrations.
 4. Add notifications, chat, support and owner admin functions.
 5. Add the everyday-life modules in priority order: verified essential directories, jobs/education, family/home services, community help and optional planning tools.
 6. Add approved payment integrations only after credentials and explicit approval.
