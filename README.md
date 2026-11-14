@@ -24,6 +24,7 @@ A successful build is not proof of full live functionality, real-device QA or Pl
 - Seller and technician applications, approval flows, product submission and admin screens.
 - House and office rental listings: landlords post properties; seekers browse and contact advertisers directly.
 - Daily-life directory UI for hospitals and women's beauty parlours, with Bangladesh division/district/upazila selectors and direct call/map actions.
+- Refreshed Material 3 storefront with real online photography for categories, services and product category previews; network images include loading and fallback states.
 - COD order callable source with server-side product/stock validation.
 - Product image upload and FCM notification source.
 - Firestore and Storage security rules.
