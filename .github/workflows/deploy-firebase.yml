@@ -47,7 +47,13 @@ jobs:
           cd functions
           npm install
           npm run build
-      - name: Deploy Firestore rules and Cloud Functions
+      - name: Deploy Firestore rules without paid Cloud Functions
+        if: vars.ENABLE_CLOUD_FUNCTIONS_DEPLOY != 'true'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase deploy --only firestore:rules --project elyramart --non-interactive
+      - name: Deploy Firestore rules and Cloud Functions (Blaze billing required)
+        if: vars.ENABLE_CLOUD_FUNCTIONS_DEPLOY == 'true'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
         run: firebase deploy --only firestore:rules,functions --project elyramart --non-interactive
