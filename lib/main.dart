@@ -359,6 +359,24 @@ class _HomePageState extends State<HomePage> {
             ),
           ]),
         ),
+        const SizedBox(height: 10),
+        Card(
+          color: Colors.white,
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+            leading: const CircleAvatar(
+              backgroundColor: Color(0xFFEAF5EF),
+              child: Icon(Icons.my_location, color: green),
+            ),
+            title: Text(tx('GPS দিয়ে কাছের জায়গা খুঁজুন', 'Find nearby places with GPS'),
+              style: const TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: Text(tx('আপনার অবস্থান নিয়ে কাছের সেবা ও ঠিকানা ম্যাপে দেখুন',
+              'Use your location to explore nearby services and places on the map')),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const LocationSettingsPage())),
+          ),
+        ),
         if(searchQuery.trim().isNotEmpty)
           Container(margin:const EdgeInsets.only(top:14,bottom:4),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(18),border:Border.all(color:const Color(0xFFE5ECE8))),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
             Text(tx('সার্চের ফলাফল','Search results'),style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800,color:ink)),const SizedBox(height:6),
@@ -2700,7 +2718,16 @@ class _LocationSettingsPageState extends State<LocationSettingsPage> {
       ),
       const SizedBox(height:8),
       Text(tx('GPS চালু করে বর্তমান লোকেশন নিলে এখানে ম্যাপে পিন দেখা যাবে।','Get your GPS location to show a pin here on the map.'),style:const TextStyle(fontSize:12,color:Colors.black54)),
-      Text(tx('দ্রষ্টব্য: এই সংস্করণে GPS থেকে অক্ষাংশ/দ্রাঘিমাংশ নেওয়া ও এই ডিভাইসে রাখা হবে। মানচিত্র, ঠিকানার নাম, নিকটস্থ দোকান/টেকনিশিয়ান এবং সার্ভার সিঙ্ক পরবর্তী সংযোগের কাজ।','Note: This version reads GPS coordinates and stores them on this device. Maps, readable addresses, nearby shops/technicians and server sync still require further integration.'),
+      if (latitude != null && longitude != null)
+        OutlinedButton.icon(
+          onPressed: () => launchUrl(
+            Uri.parse('https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}&query_place_id='),
+            mode: LaunchMode.externalApplication,
+          ),
+          icon: const Icon(Icons.explore_outlined),
+          label: Text(tx('এই অবস্থানের আশেপাশের জায়গা খুঁজুন','Explore places near this location')),
+        ),
+      Text(tx('কাছের দোকান, প্রতিষ্ঠান ও সেবার তালিকা দেখাতে সংশ্লিষ্ট এলাকার যাচাইকৃত তথ্য বা অংশীদারদের তালিকা প্রয়োজন। GPS নিজে থেকে ব্যবসার তথ্য তৈরি করে না।','Nearby shop and service listings require verified local data or partner listings. GPS does not create business information by itself.'),
         style: const TextStyle(fontSize: 12, color: Colors.black54)),
     ]),
   );
