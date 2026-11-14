@@ -102,8 +102,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('সাহায্য ও অভিযোগ'), findsOneWidget);
     expect(find.text('কীভাবে সাহায্য করতে পারি?'), findsOneWidget);
-    expect(find.text('অনুরোধের ইতিহাস দেখতে লগইন করুন।'), findsOneWidget);
     expect(find.text('অনুরোধ জমা দিন'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('অনুরোধের ইতিহাস দেখতে লগইন করুন।'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('অনুরোধের ইতিহাস দেখতে লগইন করুন।'), findsOneWidget);
   });
 
   testWidgets('Elyramart main pages and customer profile open', (tester) async {
