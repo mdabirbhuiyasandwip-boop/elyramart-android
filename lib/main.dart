@@ -572,19 +572,24 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
     }
     if (!mounted) return;
     setState(() {
+      var localRegistered = false;
       if (raw != null) {
         final m = Map<String,dynamic>.from(jsonDecode(raw));
-        shop.text = m['shop'] ?? '';
-        owner.text = m['owner'] ?? '';
-        phone.text = m['phone'] ?? '';
-        address.text = m['address'] ?? '';
-      } else if (cloudApplication != null) {
+        if (m['userId'] == null) {
+          shop.text = m['shop'] ?? '';
+          owner.text = m['owner'] ?? '';
+          phone.text = m['phone'] ?? '';
+          address.text = m['address'] ?? '';
+          localRegistered = true;
+        }
+      }
+      if (cloudApplication != null) {
         shop.text = cloudApplication!['shopName'] ?? '';
         owner.text = cloudUser?['name'] ?? '';
         phone.text = cloudApplication!['contact'] ?? cloudUser?['phone'] ?? '';
         address.text = cloudApplication!['address'] ?? cloudUser?['address'] ?? '';
       }
-      registered = raw != null || cloudApplication != null || cloudApproved;
+      registered = localRegistered || cloudApplication != null || cloudApproved;
       mine = loadedProducts;
       orders = loadedOrders;
     });
@@ -630,7 +635,11 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
       }
     }
     final p=await SharedPreferences.getInstance();
-    await p.setString('elyramart_seller_profile_v1',jsonEncode({'shop':shop.text.trim(),'owner':owner.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'userId':user?.uid,'status':user==null?'local_pending':'pending'}));
+    if (user == null) {
+      await p.setString('elyramart_seller_profile_v1',jsonEncode({'shop':shop.text.trim(),'owner':owner.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'userId':null,'status':'local_pending'}));
+    } else {
+      await p.remove('elyramart_seller_profile_v1');
+    }
     if(!mounted)return;
     setState(()=>registered=true);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(user==null?'সেলার তথ্য শুধু এই ফোনে রাখা হয়েছে। অনলাইন আবেদনের জন্য লগইন করুন।':'সেলার আবেদন অনলাইনে পাঠানো হয়েছে। অ্যাডমিন অনুমোদনের পর পণ্য যোগ করতে পারবেন।')));
@@ -1143,19 +1152,24 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
     }
     if (!mounted) return;
     setState(() {
+      var localSaved = false;
       if (raw != null) {
         final m = Map<String,dynamic>.from(jsonDecode(raw));
-        name.text = m['name'] ?? '';
-        phone.text = m['phone'] ?? '';
-        address.text = m['address'] ?? '';
-        skills.text = m['skills'] ?? '';
-      } else if (cloudApplication != null) {
+        if (m['userId'] == null) {
+          name.text = m['name'] ?? '';
+          phone.text = m['phone'] ?? '';
+          address.text = m['address'] ?? '';
+          skills.text = m['skills'] ?? '';
+          localSaved = true;
+        }
+      }
+      if (cloudApplication != null) {
         name.text = cloudApplication!['name'] ?? '';
         phone.text = cloudApplication!['phone'] ?? '';
         address.text = cloudApplication!['address'] ?? '';
         skills.text = cloudApplication!['skills'] ?? '';
       }
-      saved = raw != null || cloudApplication != null || cloudApproved;
+      saved = localSaved || cloudApplication != null || cloudApproved;
       bookings = data.reversed.toList();
     });
   }
@@ -1185,7 +1199,11 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
       }
     }
     final p=await SharedPreferences.getInstance();
-    await p.setString('elyramart_technician_profile_v1',jsonEncode({'name':name.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'skills':skills.text.trim(),'userId':user?.uid,'status':user==null?'local_pending':'pending'}));
+    if (user == null) {
+      await p.setString('elyramart_technician_profile_v1',jsonEncode({'name':name.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'skills':skills.text.trim(),'userId':null,'status':'local_pending'}));
+    } else {
+      await p.remove('elyramart_technician_profile_v1');
+    }
     if(!mounted)return;
     setState(()=>saved=true);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(user==null?'টেকনিশিয়ান তথ্য শুধু এই ফোনে রাখা হয়েছে। অনলাইনে আবেদনের জন্য লগইন করুন।':'টেকনিশিয়ান আবেদন অনলাইনে পাঠানো হয়েছে। অ্যাডমিন যাচাই করবেন।')));
