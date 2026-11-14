@@ -1,41 +1,53 @@
 # Elyramart production readiness
 
-This document separates code that exists in the repository from services that still require owner-side Firebase/Google Play configuration. A successful Flutter build does not mean the live backend has been deployed or the app is ready to accept real orders.
+সর্বশেষ যাচাই: ১৪ নভেম্বর ২০২৬
 
-## Implemented in the app/repository
+এই নথিতে repository-তে থাকা code, CI build এবং live production deployment আলাদা করে দেখানো হয়েছে। Build success মানেই Firebase backend live, বাস্তব ফোনে QA সম্পন্ন, অথবা Play Store release-ready নয়।
 
-- Flutter Android marketplace client with Bangla/English interface and the short E brand mark.
-- Email/password customer authentication and email-verification checks for online actions.
-- Seller and technician applications with owner/admin approval flows.
-- Seller product submission and admin publication flow.
-- Server-side COD order callable that reads current product prices and stock, checks stock, decrements inventory in a Firestore transaction, and creates the order.
-- Delivery charge is added server-side (default ৳80; can be overridden by `settings/business.deliveryFee`). Admin can assign a rider name and Bangladesh mobile number to an online order.
-- Firebase Cloud Messaging token registration and server notification triggers for new orders, new service bookings, technician assignment, and booking status updates.
-- Customer order history, seller order visibility/status flow, and technician booking/assignment screens.
-- Firestore and Storage security rules are checked into the repository.
-- Android build workflow builds both APK and Play Store AAB and uploads them as workflow artifacts.
-- Codemagic YAML configuration is checked into the repository.
+## CI-তে যাচাইকৃত
 
-## Not yet live / owner action required
+- Android workflow run: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499666854 — success; commit `6f9b1da19314c388258f49b97d8a55c112f8cc2f`। APK artifact `Elyramart-APK-release` (~26.7 MB) এবং AAB artifact `Elyramart-Play-Store-AAB` (~56.1 MB) তৈরি হয়েছে। Artifacts ২৭ নভেম্বর ২০২৬ পর্যন্ত রাখা হবে।
+- Web workflow run: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499666897 — success; `Elyramart-Web-release` (~14.3 MB) artifact তৈরি।
+- Firebase Functions compile: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499739123 — success।
+- Firebase deploy: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499739022 — failed at credential validation. Secret `FIREBASE_SERVICE_ACCOUNT_JSON`-এ service-account key JSON-এর আবশ্যিক `type`, `project_id`, `private_key`, `client_email`, `token_uri` fields পাওয়া যায়নি। Android `google-services.json` এই secret-এর বিকল্প নয়।
+- GitHub Pages deploy: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499666844 — failed at Pages enablement/configuration. Repository owner-কে Settings → Pages → Build and deployment → Source-এ GitHub Actions নির্বাচন/enable করতে হবে।
 
-1. **Firebase backend deployment:** The latest backend deployment attempt failed because the GitHub Actions secret `FIREBASE_SERVICE_ACCOUNT_JSON` was not a Google Cloud service-account key. The Android `google-services.json` file is not a service-account key and must not be used for this secret.
-2. Create a dedicated Google Cloud service account for deployment, grant only the required Firebase deployment permissions, create a JSON key, and save the entire JSON as the repository secret `FIREBASE_SERVICE_ACCOUNT_JSON`. Never paste the key into chat or commit it to the repository. Then rerun the `Deploy Elyramart Firebase backend` workflow.
-3. In Firebase Console, confirm Email/Password Authentication is enabled and the Firestore database and Storage bucket exist in project `elyramart`.
-4. Set the owner email parameter to `elyramartbd@gmail.com` for the Functions deployment. The owner must sign in with that verified email and claim Owner Admin inside the app after deployment.
-5. **Billing:** Cloud Functions deployment/runtime may require the Firebase project to be on the Blaze billing plan. Do not upgrade or authorize paid usage without the account owner's explicit approval.
-6. **Android release signing:** The current CI build produces APK/AAB artifacts, but a Play Store production release requires a protected upload keystore and signing secrets. Generate and securely back up the upload key; never commit it or share its password in chat. Configure the signing values in the build system before a production release.
-7. **Play Store:** The owner must create/verify the Play Console developer account, complete identity and app-content declarations, provide privacy policy/data-safety details, and submit the signed AAB. These account/legal steps cannot be completed by repository code alone.
+## Repository-তে থাকা প্রধান code
 
-## Features that are not implemented yet
+- Flutter Android marketplace client; বাংলা/ইংরেজি UI ও short E brand mark।
+- Customer email/password authentication এবং email verification flow।
+- Seller ও technician application এবং owner/admin approval UI।
+- Seller product submission/publication flow।
+- Server-side COD order callable; stock validation ও Firestore transaction logic।
+- Delivery fee setting; default ৳৮০।
+- Product image upload ও FCM notification code।
+- Firestore/Storage security rules, Android APK/AAB workflow, Web build/Pages workflow এবং Codemagic YAML।
 
-- bKash/Nagad/card gateway integration. At present the only enabled checkout method is Cash on Delivery. A real gateway needs an approved merchant account and API credentials.
-- Rider self-service login/app, GPS delivery tracking, proof of delivery, and rider settlement are not implemented; current rider assignment is manual in the Owner Admin panel.
-- Push notification delivery still requires the backend Functions and Android app version with FCM to be deployed; notifications are not live until Firebase deployment succeeds.
-- Live production end-to-end tests using real customer, seller, admin, and technician accounts.
-- A publicly deployed production website/hosting setup.
+উপরের feature code থাকা মানে production Firebase project-এ সেগুলো deployed বা বাস্তবে tested—এমন নয়।
 
-## Build evidence
+## Live launch-এর জন্য এখনো প্রয়োজন
 
-- A previous GitHub Actions Android build completed successfully and produced APK and AAB artifacts. That build was for an earlier commit, not proof that the latest commit has passed.
-- A newer Android build run was started for the current source, but its job remained in progress at the last check and had no artifacts yet. Do not treat it as a successful build until GitHub reports a completed success and the artifacts are present.
-- Firebase Functions TypeScript compilation succeeded in CI, but the Firebase deployment failed at credential validation. The backend is therefore not confirmed live.
+1. Firebase Console project `elyramart`-এ Email/Password Authentication, Firestore ও Storage প্রস্তুত/যাচাই।
+2. সঠিক Google Cloud service-account JSON-কে GitHub Actions secret `FIREBASE_SERVICE_ACCOUNT_JSON` হিসেবে সংরক্ষণ এবং Firebase deploy workflow সফল করা।
+3. Cloud Functions-এর জন্য প্রয়োজন হলে Blaze billing ও Google Cloud API enablement। মালিকের স্পষ্ট অনুমতি ছাড়া paid billing পরিবর্তন নয়।
+4. Firebase deploy-এর পর owner email `elyramartbd@gmail.com` দিয়ে verified account sign-in করে app-এর মাধ্যমে Owner Admin claim করা।
+5. Repository Settings → Pages-এ GitHub Actions source enable করে Pages workflow পুনরায় চালানো।
+6. Android release upload signing key ও password নিরাপদে তৈরি/সংরক্ষণ এবং CI signing configure করা। বর্তমান AAB artifact-কে signed Play upload bundle ধরে নেওয়া যাবে না।
+7. Real-device QA: customer, seller, technician, admin, order, stock, booking, image upload, notifications এবং security rules।
+8. Privacy policy, terms, seller/technician verification, cancellation/refund/support information এবং Play Console declarations সম্পন্ন।
+9. Play Console developer account, app-content/data-safety declarations, signed AAB upload, testing track এবং Google review।
+
+## এখনও implement হয়নি / merchant বা product সিদ্ধান্ত প্রয়োজন
+
+- bKash/Nagad/card gateway: বর্তমান checkout Cash on Delivery (COD)।
+- Rider self-service app/login, live GPS tracking, proof of delivery এবং rider settlement।
+- Production end-to-end QA এবং public website hosting।
+- App Store/iOS release-এর জন্য আলাদা Apple signing ও App Store Connect setup।
+
+## Security guardrails
+
+- Service-account JSON, private key, upload keystore/password বা payment credentials কখনো chat, issue, log বা repository-তে commit করবেন না।
+- Firebase service-account secret-এ Android `google-services.json` ব্যবহার করবেন না।
+- Billing plan বা paid service চালু করার আগে মালিকের অনুমতি নিতে হবে।
+- Payment PIN/OTP/card secrets কখনো অ্যাপে সংগ্রহ বা Firestore-এ সংরক্ষণ করবেন না।
+- Order total, stock, commission ও payment verification trusted server-এ validate করতে হবে।
