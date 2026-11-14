@@ -193,15 +193,8 @@ class Product {
   final bool demoOnly;
   const Product(this.name, this.category, this.price, this.emoji, this.detail,{this.sellerId,this.productId,this.imageUrl,this.stock,this.demoOnly=false});
 }
-// Preview-only sample catalogue. Real listings come from approved seller records.
-const products = <Product>[
-  Product('প্যারাসিটামল ৫০০ মি.গ্রা. (ডেমো)', 'ঔষধ', '৳২০', '💊', 'ডেমো তালিকা — ওষুধ কেনার আগে চিকিৎসক/ফার্মাসিস্টের পরামর্শ ও আসল প্যাকেট যাচাই করুন',demoOnly:true),
-  Product('চাল ১ কেজি (ডেমো)', 'মুদিখানা', '৳৮০', '🍚', 'ডেমো তালিকা — প্রকৃত মূল্য ও স্টক বিক্রেতার কাছ থেকে নিশ্চিত হবে',demoOnly:true),
-  Product('সয়াবিন তেল ১ লিটার (ডেমো)', 'মুদিখানা', '৳১৭০', '🛒', 'ডেমো তালিকা — প্রকৃত মূল্য ও স্টক বিক্রেতার কাছ থেকে নিশ্চিত হবে',demoOnly:true),
-  Product('ফেসওয়াশ (ডেমো)', 'কসমেটিকস', '৳২৫০', '🧴', 'ডেমো তালিকা — ব্র্যান্ড, আসল পণ্য ও মেয়াদ বিক্রেতার কাছ থেকে নিশ্চিত হবে',demoOnly:true),
-  Product('টি-শার্ট (ডেমো)', 'ফ্যাশন', '৳৩৫০', '👕', 'ডেমো তালিকা — সাইজ ও প্রকৃত মূল্য বিক্রেতার কাছ থেকে নিশ্চিত হবে',demoOnly:true),
-  Product('পানির কল / ট্যাপ (ডেমো)', 'স্যানিটারি', '৳২২০', '🚰', 'ডেমো তালিকা — পণ্য ও প্রকৃত মূল্য বিক্রেতার কাছ থেকে নিশ্চিত হবে',demoOnly:true),
-];
+// Production catalogue: only active seller listings are displayed.
+const products = <Product>[];
 
 const services = <(String, IconData, String)>[
   ('ইলেকট্রিশিয়ান',Icons.electrical_services,'বিদ্যুৎ ও ওয়্যারিং সমস্যা'),
@@ -230,9 +223,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadCart() async {
     final prefs=await SharedPreferences.getInstance();
     final saved=prefs.getStringList('elyramart_cart_v1')??[];
-    final sellerRaw=prefs.getStringList('elyramart_seller_products_v1')??[];
     final loadedSeller=<Product>[];
-    for(final raw in sellerRaw){try{final m=Map<String,dynamic>.from(jsonDecode(raw) as Map);loadedSeller.add(Product(m['name']??'পণ্য',m['category']??'মুদিখানা','৳${m['price']??'0'}','🛍️','সেলার তালিকাভুক্ত পণ্য',demoOnly:true));}catch(_){}}
     if(FirebaseRuntime.initialized){
       try{
         final snapshot=await FirebaseFirestore.instance.collection('products').where('status',isEqualTo:'active').limit(60).get();
@@ -281,7 +272,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget home(){
     final allProducts=<Product>[...products,...sellerProducts];
-    final visibleProducts=allProducts.where((p)=>(category=='সব'||p.category==category) && ('\${p.name} \${p.category} \${p.detail}'.toLowerCase().contains(searchQuery.toLowerCase()))).toList();
+    final visibleProducts=allProducts.where((p)=>(category=='সব'||p.category==category) && p.sellerId!=null && p.productId!=null && p.imageUrl!=null && p.imageUrl!.isNotEmpty && ('${p.name} ${p.category} ${p.detail}'.toLowerCase().contains(searchQuery.toLowerCase()))).toList();
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
       children: [
@@ -289,7 +280,7 @@ class _HomePageState extends State<HomePage> {
           height: 224, clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(26)),
           child: Stack(fit: StackFit.expand, children: [
-            const NetworkPhoto(url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=85', fallbackIcon: Icons.shopping_basket_outlined),
+            const DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topLeft,end: Alignment.bottomRight,colors:[Color(0xFF07533F),Color(0xFF0B8A62),Color(0xFFB6DCCB)]))),
             Container(decoration: const BoxDecoration(gradient: LinearGradient(
               begin: Alignment.centerLeft, end: Alignment.centerRight,
               colors: [Color(0xE6073F32), Color(0xA6073F32), Color(0x1A073F32)],
@@ -412,7 +403,7 @@ class _HomePageState extends State<HomePage> {
         decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16),
           border:Border.all(color:category==value?green.withValues(alpha:.45):const Color(0xFFE9EEEB),width:category==value?1.4:1)),
         child:Column(children:[
-          Expanded(child:ClipRRect(borderRadius:BorderRadius.circular(11),child:NetworkPhoto(url:urls[value]!,fallbackIcon:Icons.category_outlined))),
+          Expanded(child:Container(decoration:BoxDecoration(color:const Color(0xFFEAF5EF),borderRadius:BorderRadius.circular(11)),alignment:Alignment.center,child:Icon(switch(value){'ঔষধ'=>Icons.medication_outlined,'মুদিখানা'=>Icons.local_grocery_store_outlined,'কসমেটিকস'=>Icons.spa_outlined,'ফ্যাশন'=>Icons.checkroom_outlined,'স্যানিটারি'=>Icons.plumbing_outlined,_=>Icons.category_outlined},color:green,size:30))),
           const SizedBox(height:7),
           Text(AppLanguage.english.value?englishCategory(label):label,maxLines:1,overflow:TextOverflow.ellipsis,
             style:TextStyle(fontSize:10,fontWeight:FontWeight.w700,color:category==value?green:ink)),
@@ -424,7 +415,8 @@ class _HomePageState extends State<HomePage> {
   Widget _homeServiceCard(String title, String subtitle, String url, IconData icon, VoidCallback onTap) {
     return Material(color:Colors.white,borderRadius:BorderRadius.circular(20),clipBehavior:Clip.antiAlias,
       child:InkWell(onTap:onTap,child:Stack(fit:StackFit.expand,children:[
-        NetworkPhoto(url:url,fallbackIcon:icon),
+        const DecoratedBox(decoration:BoxDecoration(gradient:LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xFF0B7658),Color(0xFF163C32)]))),
+        Center(child:Icon(icon,color:Colors.white.withValues(alpha:.18),size:82)),
         Container(decoration:const BoxDecoration(gradient:LinearGradient(
           begin:Alignment.topCenter,end:Alignment.bottomCenter,
           colors:[Color(0x12000000),Color(0xD900241C)],stops:[.2,1]))),
@@ -486,7 +478,7 @@ class ProductCard extends StatelessWidget {
   const ProductCard({super.key,required this.p,required this.onAdd});
   @override Widget build(BuildContext c){
     final outOfStock=p.stock!=null&&p.stock!<=0;
-    final photo=p.imageUrl??productCategoryPhoto(p.category);
+    final photo=p.imageUrl;
     return Container(
       padding:const EdgeInsets.all(10),
       decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(19),
@@ -494,11 +486,7 @@ class ProductCard extends StatelessWidget {
       child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         ClipRRect(borderRadius:BorderRadius.circular(14),child:SizedBox(height:112,width:double.infinity,
           child:Stack(fit:StackFit.expand,children:[
-            NetworkPhoto(url:photo,fallbackIcon:Icons.shopping_bag_outlined),
-            if(p.demoOnly) Positioned(left:7,top:7,child:Container(
-              padding:const EdgeInsets.symmetric(horizontal:7,vertical:4),
-              decoration:BoxDecoration(color:Colors.black.withValues(alpha:.62),borderRadius:BorderRadius.circular(20)),
-              child:const Text('ডেমো',style:TextStyle(color:Colors.white,fontSize:9,fontWeight:FontWeight.w700)))),
+            if(photo!=null && photo.isNotEmpty) NetworkPhoto(url:photo,fallbackIcon:Icons.broken_image_outlined) else Container(color:const Color(0xFFEAF5EF),alignment:Alignment.center,child:const Icon(Icons.image_not_supported_outlined,color:green,size:34)),
           ]))),
         const SizedBox(height:10),
         Text(p.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.w800,fontSize:13,color:ink)),
@@ -508,8 +496,8 @@ class ProductCard extends StatelessWidget {
         const SizedBox(height:8),
         Row(children:[
           Expanded(child:Text(p.price,style:const TextStyle(color:green,fontWeight:FontWeight.w900,fontSize:15))),
-          IconButton.filled(onPressed:(p.demoOnly||outOfStock)?null:onAdd,
-            icon:Icon(p.demoOnly?Icons.info_outline:Icons.add_rounded,size:18),
+          IconButton.filled(onPressed:(p.demoOnly||outOfStock||p.sellerId==null||p.imageUrl==null||p.imageUrl!.isEmpty)?null:onAdd,
+            icon:const Icon(Icons.add_rounded,size:18),
             style:IconButton.styleFrom(backgroundColor:green,foregroundColor:Colors.white,disabledBackgroundColor:const Color(0xFFE9EFEB),disabledForegroundColor:Colors.black38,minimumSize:const Size(36,36))),
         ]),
       ]),
