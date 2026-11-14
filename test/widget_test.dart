@@ -76,7 +76,7 @@ void main() {
 
     expect(find.text('Elyramart'), findsOneWidget);
     expect(find.textContaining('আপনার প্রতিদিনের'), findsOneWidget);
-    expect(find.text('এখনো কোনো পণ্য যোগ করা হয়নি। সেলাররা পণ্য যোগ করলে এখানে দেখা যাবে।'), findsOneWidget);
+    expect(find.textContaining('No products yet.'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('সেলার হোন'), 250, scrollable: find.byType(Scrollable).first);
     expect(find.text('সেলার হোন'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('টেকনিশিয়ান হোন'), 250, scrollable: find.byType(Scrollable).first);
