@@ -120,9 +120,36 @@ class ElyramartApp extends StatelessWidget {
     builder: (context, _) => MaterialApp(
     title: 'Elyramart',
     debugShowCheckedModeBanner: false,
-    theme: ThemeData(useMaterial3: true, scaffoldBackgroundColor: pale,
-      colorScheme: ColorScheme.fromSeed(seedColor: green),
-      appBarTheme: const AppBarTheme(backgroundColor: pale, foregroundColor: ink)),
+    theme: ThemeData(
+      useMaterial3: true,
+      scaffoldBackgroundColor: const Color(0xFFF7F9F8),
+      colorScheme: ColorScheme.fromSeed(seedColor: green, brightness: Brightness.light).copyWith(
+        primary: green, surface: Colors.white, secondary: const Color(0xFFFFB44A),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFFF7F9F8), foregroundColor: ink,
+        elevation: 0, scrolledUnderElevation: 0, centerTitle: false,
+      ),
+      cardTheme: CardThemeData(
+        color: Colors.white, elevation: 0, margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true, fillColor: const Color(0xFFF2F5F3),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: green, width: 1.4)),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: Colors.white, elevation: 8, height: 68,
+        indicatorColor: const Color(0xFFDDF3E9),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) => TextStyle(
+          fontSize: 11, fontWeight: states.contains(WidgetState.selected) ? FontWeight.w800 : FontWeight.w500,
+          color: states.contains(WidgetState.selected) ? green : Colors.black54,
+        )),
+      ),
+    ),
     home: HomePage(key: ValueKey(AppLanguage.english.value)),
   ),
   );
@@ -254,69 +281,241 @@ class _HomePageState extends State<HomePage> {
 
   Widget home(){
     final allProducts=<Product>[...products,...sellerProducts];
-    final visibleProducts=allProducts.where((p)=>(category=='সব'||p.category==category) && ('${p.name} ${p.category} ${p.detail}'.toLowerCase().contains(searchQuery.toLowerCase()))).toList();
-    return ListView(padding:const EdgeInsets.fromLTRB(16,8,16,24),children:[
-    Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF075C48),Color(0xFF10966D)]),borderRadius:BorderRadius.circular(22)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-      Text(tx('আপনার প্রয়োজন, এক জায়গায়','Everything you need, in one place'),style:TextStyle(color:Colors.white,fontSize:21,fontWeight:FontWeight.bold)),
-      const SizedBox(height:7),Text(tx('পণ্য অর্ডার করুন, বাসার জন্য টেকনিশিয়ান নিন','Order products and book home technicians'),style:TextStyle(color:Colors.white70)),
-      const SizedBox(height:16),Container(height:46,padding:const EdgeInsets.symmetric(horizontal:12),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(12)),child:Row(children:[const Icon(Icons.search,color:green),const SizedBox(width:8),Expanded(child:TextField(onChanged:(v)=>setState(()=>searchQuery=v),decoration:InputDecoration(hintText:tx('পণ্য খুঁজুন','Search products'),border:InputBorder.none,isDense:true))) ]))
-    ])),
-    const SizedBox(height:22),section(tx('ক্যাটাগরি','Categories'), tx('সব দেখুন','View all')),
-    SizedBox(height:42,child:ListView(scrollDirection:Axis.horizontal,children:categories.map((c)=>Padding(padding:const EdgeInsets.only(right:8),child:ChoiceChip(label:Text(AppLanguage.english.value?englishCategory(c):c),selected:category==c,onSelected:(_)=>setState(()=>category=c),selectedColor:const Color(0xFFD6EFE5),labelStyle:TextStyle(color:category==c?green:ink,fontWeight:FontWeight.w600)))).toList())),
-    const SizedBox(height:18),Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:const Color(0xFFE2F3EC),borderRadius:BorderRadius.circular(18)),child:Row(children:[Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(tx('বাসায় টেকনিশিয়ান লাগবে?','Need a technician at home?'),style:TextStyle(fontSize:17,fontWeight:FontWeight.bold,color:ink)),SizedBox(height:4),Text(tx('ইলেকট্রিশিয়ান, প্লাম্বারসহ বিভিন্ন সার্ভিস বুক করুন','Book electricians, plumbers and more'),style:TextStyle(color:ink))])),FilledButton(onPressed:()=>setState(()=>tab=1),style:FilledButton.styleFrom(backgroundColor:green),child:Text(tx('বুক করুন','Book now')))])),
-    const SizedBox(height:18),
-    Row(children:[
-      Expanded(child:InkWell(
-        borderRadius:BorderRadius.circular(14),
-        onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const SellerPortalPage())),
-        child:Container(padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),
-          child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-            Icon(Icons.storefront_outlined,color:green,size:25),SizedBox(height:7),
-            Text(tx('সেলার হোন','Become a seller'),style:TextStyle(fontWeight:FontWeight.bold,color:ink)),
-            Text(tx('দোকান খুলুন ও পরে পণ্য যোগ করুন','Open your shop and add products'),style:TextStyle(fontSize:11,color:Colors.black54))
-          ])
-        )
-      )),
-      const SizedBox(width:10),
-      Expanded(child:InkWell(
-        borderRadius:BorderRadius.circular(14),
-        onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const TechnicianPortalPage())),
-        child:Container(padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),
-          child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-            Icon(Icons.engineering_outlined,color:green,size:25),SizedBox(height:7),
-            Text(tx('টেকনিশিয়ান হোন','Become a technician'),style:TextStyle(fontWeight:FontWeight.bold,color:ink)),
-            Text(tx('দক্ষতা ও প্রোফাইল দিন','Add your skills and profile'),style:TextStyle(fontSize:11,color:Colors.black54))
-          ])
-        )
-      ))
-    ]),
-    const SizedBox(height:14),
-    Card(color:Colors.white,elevation:0,child:ListTile(
-      leading:CircleAvatar(backgroundColor:const Color(0xFFE2F3EC),child:Icon(Icons.apartment_outlined,color:green)),
-      title:Text(tx('বাসা ও অফিস ভাড়া','House & office rentals'),style:const TextStyle(fontWeight:FontWeight.bold)),
-      subtitle:Text(tx('বাসা বা অফিসের বিজ্ঞাপন দেখুন এবং মালিককে সরাসরি ফোন করুন।','List a property for rent or find a house/office.')),
-      trailing:FilledButton(onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage())),style:FilledButton.styleFrom(backgroundColor:green),child:Text(tx('দেখুন','Explore'))),
-      onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage())),
-    )),
-    const SizedBox(height:10),
-    Card(color:Colors.white,elevation:0,child:ListTile(
-      leading:CircleAvatar(backgroundColor:const Color(0xFFE2F3EC),child:Icon(Icons.local_hospital_outlined,color:green)),
-      title:Text(tx('হাসপাতাল ও মেয়েদের পার্লার','Hospitals & beauty parlours'),style:const TextStyle(fontWeight:FontWeight.bold)),
-      subtitle:Text(tx('বাংলাদেশের জেলা ও উপজেলা ধরে খুঁজুন; পাওয়া গেলে সরাসরি ফোন করুন।','Find services by district and upazila, then call directly.')),
-      trailing:const Icon(Icons.arrow_forward_ios,size:16),
-      onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const DailyLifeDirectoryPage())),
-    )),
-    const SizedBox(height:22),section(tx('সেলারদের পণ্য','Seller products'),''),
-    if(visibleProducts.isEmpty) Padding(padding:EdgeInsets.all(18),child:Text(tx('এখনো কোনো পণ্য যোগ করা হয়নি। সেলাররা পণ্য যোগ করলে এখানে দেখা যাবে。','No products yet. Products will appear here when sellers add them.'))) else Wrap(spacing:10,runSpacing:10,children:visibleProducts.map((p)=>SizedBox(width:(MediaQuery.of(context).size.width-42)/2,child:ProductCard(p:p,onAdd:()=>add(p)))).toList()),
-    const SizedBox(height:12),const Text('Elyramart — Your World, Your Choice',textAlign:TextAlign.center,style:TextStyle(color:Colors.black45,fontSize:12)),
-  ]);
+    final visibleProducts=allProducts.where((p)=>(category=='সব'||p.category==category) && ('\${p.name} \${p.category} \${p.detail}'.toLowerCase().contains(searchQuery.toLowerCase()))).toList();
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+      children: [
+        Container(
+          height: 224, clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(26)),
+          child: Stack(fit: StackFit.expand, children: [
+            const NetworkPhoto(url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=85', fallbackIcon: Icons.shopping_basket_outlined),
+            Container(decoration: const BoxDecoration(gradient: LinearGradient(
+              begin: Alignment.centerLeft, end: Alignment.centerRight,
+              colors: [Color(0xE6073F32), Color(0xA6073F32), Color(0x1A073F32)],
+            ))),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 19, 18, 17),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: .18), borderRadius: BorderRadius.circular(30)),
+                  child: Text(tx('বাংলাদেশের সব প্রয়োজন এক জায়গায়','Everything you need in one place'),
+                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
+                ),
+                const Spacer(),
+                Text(tx('আপনার প্রতিদিনের\\nবিশ্বস্ত ঠিকানা','Your everyday\\nessentials, delivered'),
+                  style: const TextStyle(color: Colors.white, fontSize: 25, height: 1.12, fontWeight: FontWeight.w900, letterSpacing: -.5)),
+                const SizedBox(height: 7),
+                Text(tx('পণ্য, বাসার সেবা ও প্রয়োজনীয় ঠিকানা—সব এক অ্যাপে','Shop, book services and find local places'),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                const SizedBox(height: 13),
+                Container(
+                  height: 46,
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                  child: TextField(
+                    onChanged: (v)=>setState(()=>searchQuery=v),
+                    textInputAction: TextInputAction.search,
+                    decoration: InputDecoration(
+                      hintText: tx('পণ্য বা সেবা খুঁজুন...','Search products or services...'),
+                      prefixIcon: const Icon(Icons.search_rounded, color: green),
+                      filled: false, border: InputBorder.none, contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ]),
+            ),
+          ]),
+        ),
+        const SizedBox(height: 24),
+        section(tx('কেনাকাটার বিভাগ','Shop by category'), tx('সব বিভাগ','All categories')),
+        SizedBox(height: 112, child: ListView(scrollDirection: Axis.horizontal, children: [
+          _homeCategoryCard('ঔষধ', 'ঔষধ'),
+          _homeCategoryCard('মুদিখানা', 'মুদিখানা'),
+          _homeCategoryCard('কসমেটিকস', 'কসমেটিকস'),
+          _homeCategoryCard('ফ্যাশন', 'ফ্যাশন'),
+          _homeCategoryCard('স্যানিটারি', 'স্যানিটারি'),
+        ])),
+        const SizedBox(height: 24),
+        section(tx('আপনার প্রয়োজনীয় সার্ভিস','Everyday services'), tx('সহজে খুঁজুন','Explore')),
+        GridView.count(
+          crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 1.27,
+          children: [
+            _homeServiceCard(tx('হোম টেকনিশিয়ান','Home technicians'),tx('ইলেকট্রিশিয়ান, প্লাম্বার','Electrician, plumber'),
+              'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=700&q=80',
+              Icons.handyman_outlined, ()=>setState(()=>tab=1)),
+            _homeServiceCard(tx('হাসপাতাল','Hospitals'),tx('ঠিকানা ও ফোন খুঁজুন','Find address & phone'),
+              'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=700&q=80',
+              Icons.local_hospital_outlined, ()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const DailyLifeDirectoryPage()))),
+            _homeServiceCard(tx('মেয়েদের পার্লার','Beauty parlours'),tx('কাছের পার্লার খুঁজুন','Find a beauty parlour'),
+              'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=700&q=80',
+              Icons.face_retouching_natural, ()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const DailyLifeDirectoryPage()))),
+            _homeServiceCard(tx('বাসা ও অফিস ভাড়া','Home & office rent'),tx('দেখুন ও মালিককে ফোন করুন','Browse & call owner'),
+              'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=700&q=80',
+              Icons.apartment_outlined, ()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage()))),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: const Color(0xFFEAF5EF), borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFD8EDE2))),
+          child: Row(children: [
+            Container(width: 46,height: 46,decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(15)),
+              child: const Icon(Icons.storefront_outlined,color:green,size:25)),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              Text(tx('আপনার ব্যবসা যুক্ত করুন','Grow with Elyramart'),style:const TextStyle(fontWeight:FontWeight.w800,color:ink)),
+              const SizedBox(height:3),
+              Text(tx('সেলার বা টেকনিশিয়ান হিসেবে যোগ দিন','Join as a seller or technician'),style:const TextStyle(fontSize:11,color:Colors.black54)),
+            ])),
+            IconButton.filledTonal(onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const SellerPortalPage())),
+              icon:const Icon(Icons.arrow_forward_rounded),style:IconButton.styleFrom(foregroundColor:green,backgroundColor:Colors.white)),
+          ]),
+        ),
+        const SizedBox(height: 22),
+        Row(children:[
+          Expanded(child:_homePortalCard(Icons.storefront_outlined,tx('সেলার হোন','Become a seller'),
+            tx('দোকান খুলুন ও পণ্য যোগ করুন','Open your shop'),()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const SellerPortalPage())))),
+          const SizedBox(width:10),
+          Expanded(child:_homePortalCard(Icons.engineering_outlined,tx('টেকনিশিয়ান হোন','Become a technician'),
+            tx('দক্ষতা ও প্রোফাইল দিন','Add your skills'),()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const TechnicianPortalPage())))),
+        ]),
+        const SizedBox(height: 24),
+        section(tx('সেলারদের পণ্য','Products from sellers'), tx('নতুন পণ্য','Latest')),
+        if(visibleProducts.isEmpty)
+          Container(padding:const EdgeInsets.all(22),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(18)),
+            child:Text(tx('এখনো কোনো পণ্য যোগ করা হয়নি। সেলাররা পণ্য যোগ করলে এখানে দেখা যাবে।','No products yet. Seller products will appear here.')))
+        else
+          LayoutBuilder(builder:(context,constraints){
+            final width=(constraints.maxWidth-12)/2;
+            return Wrap(spacing:12,runSpacing:12,children:visibleProducts.map((p)=>SizedBox(width:width,child:ProductCard(p:p,onAdd:()=>add(p)))).toList());
+          }),
+        const SizedBox(height: 20),
+        const Text('Elyramart  •  Your World, Your Choice',textAlign:TextAlign.center,
+          style:TextStyle(color:Colors.black45,fontSize:11,fontWeight:FontWeight.w600,letterSpacing:.2)),
+      ],
+    );
   }
+
+  Widget _homeCategoryCard(String label, String value) {
+    final urls = <String, String>{
+      'ঔষধ':'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=300&q=75',
+      'মুদিখানা':'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=75',
+      'কসমেটিকস':'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=300&q=75',
+      'ফ্যাশন':'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=300&q=75',
+      'স্যানিটারি':'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=300&q=75',
+    };
+    return InkWell(onTap:()=>setState(()=>category=value),borderRadius:BorderRadius.circular(16),
+      child:Container(width:88,margin:const EdgeInsets.only(right:10),padding:const EdgeInsets.all(7),
+        decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16),
+          border:Border.all(color:category==value?green.withValues(alpha:.45):const Color(0xFFE9EEEB),width:category==value?1.4:1)),
+        child:Column(children:[
+          Expanded(child:ClipRRect(borderRadius:BorderRadius.circular(11),child:NetworkPhoto(url:urls[value]!,fallbackIcon:Icons.category_outlined))),
+          const SizedBox(height:7),
+          Text(AppLanguage.english.value?englishCategory(label):label,maxLines:1,overflow:TextOverflow.ellipsis,
+            style:TextStyle(fontSize:10,fontWeight:FontWeight.w700,color:category==value?green:ink)),
+        ]),
+      ),
+    );
+  }
+
+  Widget _homeServiceCard(String title, String subtitle, String url, IconData icon, VoidCallback onTap) {
+    return Material(color:Colors.white,borderRadius:BorderRadius.circular(20),clipBehavior:Clip.antiAlias,
+      child:InkWell(onTap:onTap,child:Stack(fit:StackFit.expand,children:[
+        NetworkPhoto(url:url,fallbackIcon:icon),
+        Container(decoration:const BoxDecoration(gradient:LinearGradient(
+          begin:Alignment.topCenter,end:Alignment.bottomCenter,
+          colors:[Color(0x12000000),Color(0xD900241C)],stops:[.2,1]))),
+        Positioned(left:12,right:10,bottom:11,child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Container(width:31,height:31,decoration:BoxDecoration(color:Colors.white.withValues(alpha:.20),borderRadius:BorderRadius.circular(10)),
+            child:Icon(icon,color:Colors.white,size:18)),
+          const SizedBox(height:7),
+          Text(title,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.white,fontSize:14,fontWeight:FontWeight.w900)),
+          Text(subtitle,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.white70,fontSize:10)),
+        ])),
+      ])),
+    );
+  }
+
+  Widget _homePortalCard(IconData icon,String title,String subtitle,VoidCallback onTap)=>Material(
+    color:Colors.white,borderRadius:BorderRadius.circular(17),child:InkWell(onTap:onTap,borderRadius:BorderRadius.circular(17),
+      child:Padding(padding:const EdgeInsets.all(13),child:Row(children:[
+        Icon(icon,color:green,size:25),const SizedBox(width:9),
+        Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Text(title,style:const TextStyle(fontSize:12,fontWeight:FontWeight.w800,color:ink)),
+          Text(subtitle,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontSize:10,color:Colors.black54)),
+        ])),
+      ])),
+    ),
+  );
+
   Widget section(String a,String b)=>Padding(padding:const EdgeInsets.only(bottom:12),child:Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[Text(a,style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold,color:ink)),Text(b,style:const TextStyle(color:green,fontWeight:FontWeight.w600))]));
 }
 
 class Cat extends StatelessWidget { final String icon,name; const Cat({super.key,required this.icon,required this.name}); @override Widget build(BuildContext c)=>Container(width:76,margin:const EdgeInsets.only(right:10),padding:const EdgeInsets.all(8),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Text(icon,style:const TextStyle(fontSize:27)),const SizedBox(height:5),Text(name,style:const TextStyle(fontSize:11,fontWeight:FontWeight.w600))])); }
 
-class ProductCard extends StatelessWidget { final Product p; final VoidCallback onAdd; const ProductCard({super.key,required this.p,required this.onAdd}); @override Widget build(BuildContext c){final outOfStock=p.stock!=null&&p.stock!<=0;return Container(padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Container(height:92,width:double.infinity,decoration:BoxDecoration(color:pale,borderRadius:BorderRadius.circular(12)),child:p.imageUrl!=null?ClipRRect(borderRadius:BorderRadius.circular(12),child:Image.network(p.imageUrl!,fit:BoxFit.cover,width:double.infinity,errorBuilder:(_,__,___)=>Center(child:Text(p.emoji,style:const TextStyle(fontSize:42))))):Center(child:Text(p.emoji,style:const TextStyle(fontSize:42)))),const SizedBox(height:9),Text(p.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.bold)),Text(p.detail,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.black54,fontSize:11)),if(p.stock!=null)Text(outOfStock?'স্টক শেষ':'স্টক: ${p.stock}',style:TextStyle(color:outOfStock?Colors.red:Colors.black54,fontSize:11)),const SizedBox(height:8),Row(children:[Text(p.price,style:const TextStyle(color:green,fontWeight:FontWeight.bold)),const Spacer(),IconButton.filled(onPressed:(p.demoOnly||outOfStock)?null:onAdd,icon:Icon(p.demoOnly?Icons.info_outline:Icons.add,size:18),style:IconButton.styleFrom(backgroundColor:green,foregroundColor:Colors.white,minimumSize:const Size(34,34)))]) ]));} }
+class NetworkPhoto extends StatelessWidget {
+  final String url;
+  final IconData fallbackIcon;
+  const NetworkPhoto({super.key,required this.url,this.fallbackIcon=Icons.image_not_supported_outlined});
+  @override Widget build(BuildContext context)=>Image.network(
+    url,fit:BoxFit.cover,width:double.infinity,height:double.infinity,filterQuality:FilterQuality.medium,
+    loadingBuilder:(context,child,progress){
+      if(progress==null)return child;
+      return Container(color:const Color(0xFFEAF0EC),alignment:Alignment.center,
+        child:const SizedBox(width:20,height:20,child:CircularProgressIndicator(strokeWidth:2,color:green)));
+    },
+    errorBuilder:(context,error,stack)=>Container(color:const Color(0xFFEAF0EC),alignment:Alignment.center,
+      child:Icon(fallbackIcon,color:green,size:34)),
+  );
+}
+
+String productCategoryPhoto(String category)=>switch(category){
+  'ঔষধ'=>'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=700&q=80',
+  'মুদিখানা'=>'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=700&q=80',
+  'কসমেটিকস'=>'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=80',
+  'ফ্যাশন'=>'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80',
+  'স্যানিটারি'=>'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=700&q=80',
+  _=>'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=700&q=80',
+};
+
+class ProductCard extends StatelessWidget {
+  final Product p; final VoidCallback onAdd;
+  const ProductCard({super.key,required this.p,required this.onAdd});
+  @override Widget build(BuildContext c){
+    final outOfStock=p.stock!=null&&p.stock!<=0;
+    final photo=p.imageUrl??productCategoryPhoto(p.category);
+    return Container(
+      padding:const EdgeInsets.all(10),
+      decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(19),
+        border:Border.all(color:const Color(0xFFEDF1EE))),
+      child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        ClipRRect(borderRadius:BorderRadius.circular(14),child:SizedBox(height:112,width:double.infinity,
+          child:Stack(fit:StackFit.expand,children:[
+            NetworkPhoto(url:photo,fallbackIcon:Icons.shopping_bag_outlined),
+            if(p.demoOnly) Positioned(left:7,top:7,child:Container(
+              padding:const EdgeInsets.symmetric(horizontal:7,vertical:4),
+              decoration:BoxDecoration(color:Colors.black.withValues(alpha:.62),borderRadius:BorderRadius.circular(20)),
+              child:const Text('ডেমো',style:TextStyle(color:Colors.white,fontSize:9,fontWeight:FontWeight.w700)))),
+          ]))),
+        const SizedBox(height:10),
+        Text(p.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.w800,fontSize:13,color:ink)),
+        const SizedBox(height:3),
+        Text(p.detail,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.black54,fontSize:10)),
+        if(p.stock!=null)Text(outOfStock?'স্টক শেষ':'স্টক: \${p.stock}',style:TextStyle(color:outOfStock?Colors.red:Colors.black54,fontSize:10)),
+        const SizedBox(height:8),
+        Row(children:[
+          Expanded(child:Text(p.price,style:const TextStyle(color:green,fontWeight:FontWeight.w900,fontSize:15))),
+          IconButton.filled(onPressed:(p.demoOnly||outOfStock)?null:onAdd,
+            icon:Icon(p.demoOnly?Icons.info_outline:Icons.add_rounded,size:18),
+            style:IconButton.styleFrom(backgroundColor:green,foregroundColor:Colors.white,disabledBackgroundColor:const Color(0xFFE9EFEB),disabledForegroundColor:Colors.black38,minimumSize:const Size(36,36))),
+        ]),
+      ]),
+    );
+  }
+}
 
 class RentalMarketplacePage extends StatefulWidget {
   const RentalMarketplacePage({super.key});
