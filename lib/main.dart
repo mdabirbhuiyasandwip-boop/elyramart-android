@@ -13,18 +13,46 @@ import 'package:image_picker/image_picker.dart';
 
 class FirebaseRuntime { static bool initialized = false; }
 
+const _webFirebaseApiKey = String.fromEnvironment('ELYRAMART_FIREBASE_WEB_API_KEY');
+const _webFirebaseAppId = String.fromEnvironment('ELYRAMART_FIREBASE_WEB_APP_ID');
+const _webFirebaseSenderId = String.fromEnvironment('ELYRAMART_FIREBASE_MESSAGING_SENDER_ID');
+const _webFirebaseProjectId = String.fromEnvironment('ELYRAMART_FIREBASE_PROJECT_ID');
+const _webFirebaseAuthDomain = String.fromEnvironment('ELYRAMART_FIREBASE_AUTH_DOMAIN');
+const _webFirebaseStorageBucket = String.fromEnvironment('ELYRAMART_FIREBASE_STORAGE_BUCKET');
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-    try {
+  try {
+    if (kIsWeb) {
+      // Web Firebase is enabled only when the owner supplies the Web App
+      // configuration through CI dart-defines. Missing config keeps demo mode.
+      if (_webFirebaseApiKey.isNotEmpty &&
+          _webFirebaseAppId.isNotEmpty &&
+          _webFirebaseSenderId.isNotEmpty &&
+          _webFirebaseProjectId.isNotEmpty) {
+        await Firebase.initializeApp(
+          options: const FirebaseOptions(
+            apiKey: _webFirebaseApiKey,
+            appId: _webFirebaseAppId,
+            messagingSenderId: _webFirebaseSenderId,
+            projectId: _webFirebaseProjectId,
+            authDomain: _webFirebaseAuthDomain,
+            storageBucket: _webFirebaseStorageBucket,
+          ),
+        );
+        FirebaseRuntime.initialized = true;
+      } else {
+        debugPrint('Elyramart Web Firebase config missing; running in demo mode.');
+      }
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
       await Firebase.initializeApp();
       FirebaseRuntime.initialized = true;
-    } catch (error, stack) {
-      // Keep the app usable in offline/demo mode if Firebase Console setup
-      // is incomplete; online actions will show a clear unavailable message.
-      debugPrint('Elyramart Firebase initialization failed: $error');
-      debugPrintStack(stackTrace: stack);
     }
+  } catch (error, stack) {
+    // Keep the app usable in offline/demo mode if Firebase Console setup
+    // is incomplete; online actions will show a clear unavailable message.
+    debugPrint('Elyramart Firebase initialization failed: $error');
+    debugPrintStack(stackTrace: stack);
   }
   await AppLanguage.load();
   runApp(const ElyramartApp());
