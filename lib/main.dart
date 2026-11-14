@@ -2187,6 +2187,13 @@ class _AccountPageState extends State<AccountPage> {
             const Divider(height: 1),
           ],
           ListTile(
+            leading: const Icon(Icons.support_agent_outlined),
+            title: Text(tx('সাহায্য ও অভিযোগ','Help & support')),
+            subtitle: Text(tx('সমস্যা জানান, অভিযোগ করুন ও টিকিটের অবস্থা দেখুন','Submit a request or complaint and track its status')),
+            onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => const SupportCenterPage())),
+          ),
+          const Divider(height: 1),
+          ListTile(
             leading: const Icon(Icons.engineering_outlined),
             title: Text(tx('টেকনিশিয়ান সেন্টার','Technician centre')),
             subtitle: Text(tx('প্রোফাইল ও সার্ভিস বুকিং দেখুন','View profile and service bookings')),
@@ -2224,6 +2231,108 @@ class _AccountPageState extends State<AccountPage> {
       const SizedBox(height: 10),
       const Text('লগইন করলে অনলাইন অর্ডার ও বুকিং এখানে দেখা যাবে। লগইন ছাড়া তৈরি ডেমো তথ্য শুধু এই ডিভাইসে থাকে।', style: TextStyle(color: Colors.black54, fontSize: 12)),
     ],
+  );
+}
+
+class SupportCenterPage extends StatefulWidget {
+  const SupportCenterPage({super.key});
+  @override State<SupportCenterPage> createState() => _SupportCenterPageState();
+}
+
+class _SupportCenterPageState extends State<SupportCenterPage> {
+  final subject = TextEditingController();
+  final message = TextEditingController();
+  String category = 'সাধারণ সহায়তা';
+  bool saving = false, loading = true;
+  List<Map<String,dynamic>> tickets = [];
+
+  @override void initState() { super.initState(); _loadTickets(); }
+  @override void dispose() { subject.dispose(); message.dispose(); super.dispose(); }
+
+  Future<void> _loadTickets() async {
+    final user = FirebaseRuntime.initialized ? FirebaseAuth.instance.currentUser : null;
+    if (user == null) { if (mounted) setState(() => loading = false); return; }
+    try {
+      final snap = await FirebaseFirestore.instance.collection('supportTickets')
+        .where('userId', isEqualTo: user.uid).limit(50).get();
+      final rows = snap.docs.map((d) => <String,dynamic>{...d.data(), '_docId': d.id}).toList();
+      rows.sort((a,b) {
+        final av=a['createdAt'], bv=b['createdAt'];
+        final ad=av is Timestamp?av.toDate():DateTime(2000);
+        final bd=bv is Timestamp?bv.toDate():DateTime(2000);
+        return bd.compareTo(ad);
+      });
+      if (mounted) setState(() => tickets=rows);
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('টিকিট লোড হয়নি: $error')));
+    } finally { if (mounted) setState(() => loading=false); }
+  }
+
+  Future<void> _submit() async {
+    final user = FirebaseRuntime.initialized ? FirebaseAuth.instance.currentUser : null;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সাহায্য অনুরোধ পাঠাতে আগে লগইন করুন।')));
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerLoginPage()));
+      return;
+    }
+    if (!user.emailVerified && (user.phoneNumber == null || user.phoneNumber!.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সাহায্য অনুরোধ পাঠাতে ইমেইল অথবা ফোন যাচাই করুন।')));
+      return;
+    }
+    if (subject.text.trim().length < 4 || message.text.trim().length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('বিষয় কমপক্ষে ৪ অক্ষর এবং বিস্তারিত কমপক্ষে ১০ অক্ষর লিখুন।')));
+      return;
+    }
+    setState(() => saving=true);
+    try {
+      await FirebaseFirestore.instance.collection('supportTickets').add({
+        'userId': user.uid, 'subject': subject.text.trim(), 'message': message.text.trim(),
+        'category': category, 'status': 'open', 'createdAt': FieldValue.serverTimestamp(),
+      });
+      subject.clear(); message.clear();
+      await _loadTickets();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('আপনার সাহায্য অনুরোধ জমা হয়েছে।')));
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('অনুরোধ জমা হয়নি: $error')));
+    } finally { if (mounted) setState(() => saving=false); }
+  }
+
+  @override Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(tx('সাহায্য ও অভিযোগ','Help & support'))),
+    body: ListView(padding: const EdgeInsets.all(18), children: [
+      Text(tx('কীভাবে সাহায্য করতে পারি?','How can we help?'), style: const TextStyle(fontSize:20,fontWeight:FontWeight.w800,color:ink)),
+      const SizedBox(height:8),
+      Text(tx('অর্ডার, বুকিং, বিক্রেতা, পেমেন্ট বা অ্যাপ ব্যবহারের সমস্যা এখানে জানান। জরুরি চিকিৎসা বা বিপদের জন্য এই ফর্ম ব্যবহার করবেন না।','Report order, booking, seller, payment or app issues here. Do not use this form for medical or other emergencies.')),
+      const SizedBox(height:14),
+      DropdownButtonFormField<String>(
+        value: category, decoration: InputDecoration(labelText: tx('সমস্যার ধরন','Request type')),
+        items: ['সাধারণ সহায়তা','অর্ডার সংক্রান্ত','সার্ভিস বুকিং','সেলার/বিজ্ঞাপন','অ্যাকাউন্ট ও নিরাপত্তা','অভিযোগ/প্রতারণা','অন্যান্য']
+          .map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),
+        onChanged: saving ? null : (v){if(v!=null)setState(()=>category=v);},
+      ),
+      const SizedBox(height:12),
+      TextField(controller:subject,maxLength:120,decoration:InputDecoration(labelText:tx('বিষয়','Subject'))),
+      const SizedBox(height:12),
+      TextField(controller:message,minLines:4,maxLines:7,maxLength:2000,decoration:InputDecoration(labelText:tx('বিস্তারিত লিখুন','Describe the issue'))),
+      const SizedBox(height:12),
+      FilledButton.icon(onPressed:saving?null:_submit,
+        icon:saving?const SizedBox(width:18,height:18,child:CircularProgressIndicator(strokeWidth:2)):const Icon(Icons.send_outlined),
+        label:Text(saving?tx('জমা হচ্ছে...','Submitting...'):tx('অনুরোধ জমা দিন','Submit request'))),
+      const SizedBox(height:24),
+      Row(children:[Expanded(child:Text(tx('আমার সহায়তা অনুরোধ','My support requests'),style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold))),IconButton(onPressed:_loadTickets,icon:const Icon(Icons.refresh))]),
+      if (loading) const Center(child:Padding(padding:EdgeInsets.all(16),child:CircularProgressIndicator()))
+      else if (FirebaseAuth.instance.currentUser == null) Text(tx('অনুরোধের ইতিহাস দেখতে লগইন করুন।','Sign in to view your request history.'))
+      else if (tickets.isEmpty) Text(tx('এখনো কোনো অনুরোধ নেই।','No requests yet.'))
+      else ...tickets.map((t)=>Card(color:Colors.white,child:ListTile(
+        leading:const Icon(Icons.support_agent,color:green),
+        title:Text((t['subject']??'সহায়তা অনুরোধ').toString()),
+        subtitle:Text('\${t['category']??''}\\n\${t['message']??''}',maxLines:3,overflow:TextOverflow.ellipsis),
+        isThreeLine:true,
+        trailing:Text((t['status']=='open'?'খোলা':t['status']=='in_progress'?'চলমান':t['status']=='resolved'?'সমাধান':'বন্ধ').toString(),style:const TextStyle(color:green,fontWeight:FontWeight.w700)),
+      ))),
+      const SizedBox(height:8),
+      Text(tx('আমরা দ্রুত উত্তর দেওয়ার চেষ্টা করব। এটি ২৪/৭ লাইভ চ্যাট নয়; টিকিটের উত্তর অ্যাডমিন টিমের কার্যক্রমের ওপর নির্ভর করবে।','We will respond as soon as possible. This is not 24/7 live chat; replies depend on the admin team.'),style:const TextStyle(fontSize:12,color:Colors.black54)),
+    ]),
   );
 }
 
