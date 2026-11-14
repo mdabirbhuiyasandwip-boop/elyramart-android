@@ -76,7 +76,9 @@ void main() {
 
     expect(find.text('Elyramart'), findsOneWidget);
     expect(find.textContaining('আপনার প্রতিদিনের'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('সেলার হোন'), 250, scrollable: find.byType(Scrollable).first);
     expect(find.text('সেলার হোন'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('টেকনিশিয়ান হোন'), 250, scrollable: find.byType(Scrollable).first);
     expect(find.text('টেকনিশিয়ান হোন'), findsOneWidget);
     expect(find.text('রেস্টুরেন্ট'), findsNothing); // Restaurant is a service, not a product category.
 
