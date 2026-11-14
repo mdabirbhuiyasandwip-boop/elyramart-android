@@ -770,8 +770,10 @@ class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
                         const SizedBox(width: 7),
                         Expanded(child: SelectableText(item['phone']?.toString() ?? '')),
                         IconButton(onPressed: () => launchUrl(Uri(scheme: 'tel', path: (item['phone'] ?? '').toString())), icon: const Icon(Icons.call, color: green), tooltip: 'বিজ্ঞাপনদাতাকে ফোন করুন'),
-                       if (FirebaseAuth.instance.currentUser?.uid == item['ownerId'])
-                         IconButton(onPressed: () => _deleteListing(item), icon: const Icon(Icons.delete_outline, color: Colors.red), tooltip: tx('নিজের বিজ্ঞাপন মুছুন', 'Delete your listing')), 
+                       if (FirebaseRuntime.initialized && FirebaseAuth.instance.currentUser?.uid == item['ownerId']) ...[
+                         IconButton(onPressed: () => Navigator.push(context,MaterialPageRoute(builder: (_) => RentalPostPage(listing:item))).then((_)=>_loadListings()), icon: const Icon(Icons.edit_outlined, color: green), tooltip: tx('নিজের বিজ্ঞাপন সম্পাদনা করুন', 'Edit your listing')),
+                         IconButton(onPressed: () => _deleteListing(item), icon: const Icon(Icons.delete_outline, color: Colors.red), tooltip: tx('নিজের বিজ্ঞাপন মুছুন', 'Delete your listing')),
+                       ], 
                         TextButton.icon(
                           onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(tx('যোগাযোগের আগে জায়গা ও কাগজপত্র যাচাই করুন।','Verify the property and documents before contacting.'))),
@@ -796,7 +798,8 @@ class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
 }
 
 class RentalPostPage extends StatefulWidget {
-  const RentalPostPage({super.key});
+  final Map<String,dynamic>? listing;
+  const RentalPostPage({super.key,this.listing});
   @override
   State<RentalPostPage> createState() => _RentalPostPageState();
 }
@@ -810,6 +813,20 @@ class _RentalPostPageState extends State<RentalPostPage> {
   String propertyType = 'বাসা';
   final String listingType = 'offer';
   bool saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final item=widget.listing;
+    if(item!=null){
+      title.text=(item['title']??'').toString();
+      rent.text=(item['rentAmount']??'').toString();
+      location.text=(item['location']??'').toString();
+      phone.text=(item['phone']??'').toString();
+      details.text=(item['details']??'').toString();
+      propertyType=(item['propertyType']??'বাসা').toString();
+    }
+  }
 
   @override
   void dispose() {
@@ -855,21 +872,31 @@ class _RentalPostPageState extends State<RentalPostPage> {
     }
     setState(() => saving = true);
     try {
-      await FirebaseFirestore.instance.collection('rentalListings').add({
-        'ownerId': user.uid,
-        'ownerName': user.displayName ?? (user.email?.split('@').first ?? 'Elyramart user'),
+      final payload=<String,dynamic>{
         'propertyType': propertyType,
-        'listingType': listingType,
         'title': title.text.trim(),
         'rentAmount': amount,
         'location': location.text.trim(),
         'phone': normalizedPhone,
         'details': details.text.trim(),
-        'status': 'active',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+      };
+      if(widget.listing!=null){
+        if(widget.listing!['ownerId']!=user.uid)throw StateError('শুধু নিজের বিজ্ঞাপন সম্পাদনা করা যাবে।');
+        final id=(widget.listing!['_docId']??'').toString();
+        if(id.isEmpty)throw StateError('বিজ্ঞাপনের পরিচয় পাওয়া যায়নি।');
+        await FirebaseFirestore.instance.collection('rentalListings').doc(id).update({...payload,'updatedAt':FieldValue.serverTimestamp()});
+      }else{
+        await FirebaseFirestore.instance.collection('rentalListings').add({
+          ...payload,
+          'ownerId': user.uid,
+          'ownerName': user.displayName ?? (user.email?.split('@').first ?? 'Elyramart user'),
+          'listingType': listingType,
+          'status': 'active',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('আপনার বিজ্ঞাপন প্রকাশ হয়েছে।')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(widget.listing!=null?'আপনার বিজ্ঞাপন আপডেট হয়েছে।':'আপনার বিজ্ঞাপন প্রকাশ হয়েছে।')));
       Navigator.pop(context);
     } catch (error) {
       if (!mounted) return;
@@ -881,7 +908,7 @@ class _RentalPostPageState extends State<RentalPostPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(tx('ভাড়া বিজ্ঞাপন দিন', 'Post a rental listing'))),
+    appBar: AppBar(title: Text(widget.listing!=null?tx('বিজ্ঞাপন সম্পাদনা','Edit listing'):tx('ভাড়া বিজ্ঞাপন দিন', 'Post a rental listing'))),
     body: ListView(padding: const EdgeInsets.all(18), children: [
       const Text('শুধু বাসা বা অফিস ভাড়া দেওয়ার বিজ্ঞাপন প্রকাশ করুন।', style: TextStyle(fontWeight: FontWeight.bold)),
       const SizedBox(height: 14),
@@ -903,7 +930,7 @@ class _RentalPostPageState extends State<RentalPostPage> {
       FilledButton.icon(
         onPressed: saving ? null : _submit,
         icon: saving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.publish_outlined),
-        label: Text(saving ? 'প্রকাশ হচ্ছে...' : 'বিজ্ঞাপন প্রকাশ করুন'),
+        label: Text(saving ? 'সংরক্ষণ হচ্ছে...' : widget.listing!=null?'পরিবর্তন সংরক্ষণ করুন':'বিজ্ঞাপন প্রকাশ করুন'),
       ),
     ]),
   );
