@@ -46,6 +46,7 @@ Firebase ব্যবহার করলে:
 - `products/{id}`: sellerId, title, categoryId, price, stock, imageUrls, status, updatedAt
 - `orders/{id}`: customerId, sellerIds, items, address, subtotal, deliveryFee, commission, total, paymentStatus, status, createdAt
 - `serviceBookings/{id}`: customerId, categoryId, description, photoUrls, address, preferredAt, technicianId, status, createdAt
+- `rentalListings/{id}`: ownerId, ownerName, propertyType, listingType, title, rentAmount, location, phone, details, status, createdAt
 
 All money values should use integer BDT poisha or validated integer BDT; never trust client-calculated totals. Recalculate prices, delivery fees, discounts and commissions on a trusted server.
 
