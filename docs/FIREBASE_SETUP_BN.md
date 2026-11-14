@@ -15,7 +15,14 @@ Android app startup-এ Firebase Core initialize হয়। `google-services.json
 6. Firestore database ও Storage bucket-এর billing/plan requirements দেখে নিন; Cloud Functions deploy করতে Blaze plan এবং প্রয়োজনীয় Google Cloud APIs লাগতে পারে।
 7. Repository Settings → Secrets and variables → Actions-এ `FIREBASE_SERVICE_ACCOUNT_JSON` নামে secret যোগ করুন। এতে Firebase project `elyramart`-এর deploy permission-সহ service-account JSON-এর সম্পূর্ণ contents রাখুন। JSON কখনো repository-তে commit করবেন না।
 8. GitHub Actions → **Deploy Elyramart Firebase backend** → Run workflow চালান। এটি Firestore Rules, Storage Rules ও `claimOwnerAdmin` Cloud Function deploy করবে; মালিকের email parameter workflow-তে সেট করা আছে।
-9. Android native build-এ `google-services.json` থেকে Firebase options স্বয়ংক্রিয়ভাবে নেওয়া হয়। Web/iOS target চালু করার আগে FlutterFire CLI দিয়ে `flutterfire configure` চালিয়ে generated `lib/firebase_options.dart` তৈরি এবং `main.dart`-এ platform-aware initialization যোগ করতে হবে।
+9. Android native build-এ `google-services.json` থেকে Firebase options নেওয়া হয়। Web build-এ Firebase চালু করতে Firebase Console → Project settings → Your apps → Web app থেকে Web App config নিন। GitHub repository Settings → Secrets and variables → Actions-এ নিচের secrets যোগ করুন:
+   - `ELYRAMART_FIREBASE_WEB_API_KEY`
+   - `ELYRAMART_FIREBASE_WEB_APP_ID`
+   - `ELYRAMART_FIREBASE_MESSAGING_SENDER_ID`
+   - `ELYRAMART_FIREBASE_PROJECT_ID` (মান হবে `elyramart`)
+   - `ELYRAMART_FIREBASE_AUTH_DOMAIN` (যেমন Firebase Console-এ দেখানো domain)
+   - `ELYRAMART_FIREBASE_STORAGE_BUCKET` (Console-এর সঠিক bucket)
+   এরপর Web build/Pages workflow এগুলো Dart compile-time config হিসেবে ব্যবহার করবে। Web config না থাকলে Web app demo mode-এ খুলবে; Firebase login/cloud data চালু হবে না। iOS-এর জন্য এখনও FlutterFire configure এবং Apple build/signing আলাদা করে করতে হবে।
 
 ## নিরাপত্তা ও অনুমোদন নিয়ম
 
