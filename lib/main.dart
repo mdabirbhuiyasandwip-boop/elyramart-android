@@ -221,10 +221,24 @@ class _HomePageState extends State<HomePage> {
   List<Product> sellerProducts=[];
   List<Map<String,dynamic>> directorySearchItems=[];
   List<Map<String,dynamic>> rentalSearchItems=[];
+  Set<String> wishlistIds={};
   String category='সব';
   String searchQuery='';
   final categories=['সব','ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি'];
-  @override void initState(){super.initState();_loadCart();}
+  @override void initState(){super.initState();_loadCart();_loadWishlist();}
+  Future<void> _loadWishlist() async {
+    final prefs=await SharedPreferences.getInstance();
+    final ids=prefs.getStringList('elyramart_wishlist_v1')??[];
+    if(mounted)setState(()=>wishlistIds=ids.toSet());
+  }
+  Future<void> _toggleWishlist(Product product) async {
+    final id=product.productId;
+    if(id==null||id.isEmpty)return;
+    setState((){if(!wishlistIds.add(id))wishlistIds.remove(id);});
+    final prefs=await SharedPreferences.getInstance();
+    await prefs.setStringList('elyramart_wishlist_v1',wishlistIds.toList());
+    if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(wishlistIds.contains(id)?'পছন্দের তালিকায় যোগ হয়েছে':'পছন্দের তালিকা থেকে সরানো হয়েছে'),duration:const Duration(seconds:1))));
+  }
   Future<void> _loadCart() async {
     final prefs=await SharedPreferences.getInstance();
     final saved=prefs.getStringList('elyramart_cart_v1')??[];
@@ -275,7 +289,7 @@ class _HomePageState extends State<HomePage> {
       builder: (context, _, __) {
     final pages=[home(), const ServicesPage(), CartPage(items:cart,onRemove:removeFromCart,onOrderSaved:clearCartAfterOrder), const AccountPage()];
         return Scaffold(
-      appBar: AppBar(title: Row(children:[const ElyramartMark(size:38),const SizedBox(width:9),const Text('Elyramart',style:TextStyle(fontWeight:FontWeight.w800,letterSpacing:-.4))]), actions:[IconButton(tooltip:tx('সেটিংস','Settings'),onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const AppSettingsPage())),icon:const Icon(Icons.settings_outlined)),IconButton(onPressed:()=>setState(()=>tab=2),icon:Badge(label:Text('${cart.length}'),child:const Icon(Icons.shopping_bag_outlined)))],),
+      appBar: AppBar(title: Row(children:[const ElyramartMark(size:38),const SizedBox(width:9),const Text('Elyramart',style:TextStyle(fontWeight:FontWeight.w800,letterSpacing:-.4))]), actions:[IconButton(tooltip:tx('পছন্দের তালিকা','Wishlist'),onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>WishlistPage(items:sellerProducts.where((p)=>p.productId!=null&&wishlistIds.contains(p.productId)).toList(),onRemove:_toggleWishlist,onAdd:add))),icon:Badge(label:Text('${wishlistIds.length}'),child:const Icon(Icons.favorite_border))),IconButton(tooltip:tx('সেটিংস','Settings'),onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const AppSettingsPage())),icon:const Icon(Icons.settings_outlined)),IconButton(onPressed:()=>setState(()=>tab=2),icon:Badge(label:Text('${cart.length}'),child:const Icon(Icons.shopping_bag_outlined)))],),
       body: pages[tab],
       bottomNavigationBar: NavigationBar(selectedIndex:tab,onDestinationSelected:(v)=>setState(()=>tab=v),destinations:[
         NavigationDestination(icon:Icon(Icons.home_outlined),selectedIcon:Icon(Icons.home),label:tx('হোম','Home')),
@@ -445,7 +459,7 @@ class _HomePageState extends State<HomePage> {
         else
           LayoutBuilder(builder:(context,constraints){
             final width=(constraints.maxWidth-12)/2;
-            return Wrap(spacing:12,runSpacing:12,children:visibleProducts.map((p)=>SizedBox(width:width,child:ProductCard(p:p,onAdd:()=>add(p)))).toList());
+            return Wrap(spacing:12,runSpacing:12,children:visibleProducts.map((p)=>SizedBox(width:width,child:ProductCard(p:p,onAdd:()=>add(p),isFavorite:wishlistIds.contains(p.productId),onToggleFavorite:()=>_toggleWishlist(p)))).toList());
           }),
         const SizedBox(height: 20),
         const Text('Elyramart  •  Your World, Your Choice',textAlign:TextAlign.center,
@@ -522,8 +536,8 @@ class NetworkPhoto extends StatelessWidget {
 }
 
 class ProductCard extends StatelessWidget {
-  final Product p; final VoidCallback onAdd;
-  const ProductCard({super.key,required this.p,required this.onAdd});
+  final Product p; final VoidCallback onAdd; final bool isFavorite; final VoidCallback onToggleFavorite;
+  const ProductCard({super.key,required this.p,required this.onAdd,required this.isFavorite,required this.onToggleFavorite});
   @override Widget build(BuildContext c){
     final outOfStock=p.stock!=null&&p.stock!<=0;
     final photo=p.imageUrl;
@@ -535,6 +549,11 @@ class ProductCard extends StatelessWidget {
         ClipRRect(borderRadius:BorderRadius.circular(14),child:SizedBox(height:112,width:double.infinity,
           child:Stack(fit:StackFit.expand,children:[
             if(photo!=null && photo.isNotEmpty) NetworkPhoto(url:photo,fallbackIcon:Icons.broken_image_outlined) else Container(color:const Color(0xFFEAF5EF),alignment:Alignment.center,child:const Icon(Icons.image_not_supported_outlined,color:green,size:34)),
+            Positioned(top:5,right:5,child:Material(color:Colors.white.withValues(alpha:.94),shape:const CircleBorder(),child:IconButton(
+              tooltip:isFavorite?'পছন্দের তালিকা থেকে সরান':'পছন্দের তালিকায় যোগ করুন',
+              onPressed:onToggleFavorite,icon:Icon(isFavorite?Icons.favorite:Icons.favorite_border,color:isFavorite?Colors.red:ink,size:19),
+              visualDensity:VisualDensity.compact,constraints:const BoxConstraints.tightFor(width:36,height:36),
+            ))),
           ]))),
         const SizedBox(height:10),
         Text(p.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.w800,fontSize:13,color:ink)),
@@ -1250,6 +1269,36 @@ class _CheckoutPageState extends State<CheckoutPage> {
     ])
   );
 }
+ 
+class WishlistPage extends StatelessWidget {
+  final List<Product> items;
+  final ValueChanged<Product> onRemove;
+  final ValueChanged<Product> onAdd;
+  const WishlistPage({super.key,required this.items,required this.onRemove,required this.onAdd});
+  @override
+  Widget build(BuildContext context)=>Scaffold(
+    appBar:AppBar(title:Text(tx('পছন্দের পণ্য','Wishlist'))),
+    body:items.isEmpty
+      ?Center(child:Text(tx('এখনো কোনো পণ্য পছন্দের তালিকায় নেই।','Your wishlist is empty.')))
+      :ListView.separated(
+        padding:const EdgeInsets.all(16),itemCount:items.length,
+        separatorBuilder:(_,__)=>const SizedBox(height:10),
+        itemBuilder:(context,index){
+          final p=items[index];
+          return Card(color:Colors.white,child:ListTile(
+            leading:SizedBox(width:58,height:58,child:ClipRRect(borderRadius:BorderRadius.circular(10),child:p.imageUrl==null?const Icon(Icons.image_not_supported_outlined):NetworkPhoto(url:p.imageUrl!,fallbackIcon:Icons.broken_image_outlined))),
+            title:Text(p.name,maxLines:1,overflow:TextOverflow.ellipsis),
+            subtitle:Text(p.price),
+            trailing:Wrap(mainAxisSize:MainAxisSize.min,children:[
+              IconButton(tooltip:'কার্টে যোগ করুন',onPressed:p.stock!=null&&p.stock!<=0?null:()=>onAdd(p),icon:const Icon(Icons.add_shopping_cart,color:green)),
+              IconButton(tooltip:'সরান',onPressed:()=>onRemove(p),icon:const Icon(Icons.favorite,color:Colors.red)),
+            ]),
+          ));
+        },
+      ),
+  );
+}
+
 class SellerPortalPage extends StatefulWidget {
   const SellerPortalPage({super.key});
   @override State<SellerPortalPage> createState()=>_SellerPortalPageState();
