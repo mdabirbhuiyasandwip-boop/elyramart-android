@@ -237,7 +237,7 @@ class _HomePageState extends State<HomePage> {
     setState((){if(!wishlistIds.add(id))wishlistIds.remove(id);});
     final prefs=await SharedPreferences.getInstance();
     await prefs.setStringList('elyramart_wishlist_v1',wishlistIds.toList());
-    if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(wishlistIds.contains(id)?'পছন্দের তালিকায় যোগ হয়েছে':'পছন্দের তালিকা থেকে সরানো হয়েছে'),duration:const Duration(seconds:1))));
+    if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(wishlistIds.contains(id)?'পছন্দের তালিকায় যোগ হয়েছে':'পছন্দের তালিকা থেকে সরানো হয়েছে'),duration:const Duration(seconds:1)));
   }
   Future<void> _loadCart() async {
     final prefs=await SharedPreferences.getInstance();
