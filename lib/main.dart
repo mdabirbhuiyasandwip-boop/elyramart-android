@@ -304,7 +304,7 @@ class _HomePageState extends State<HomePage> {
                     style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
                 ),
                 const Spacer(),
-                Text(tx('আপনার প্রতিদিনের\\nবিশ্বস্ত ঠিকানা','Your everyday\\nessentials, delivered'),
+                Text(tx('আপনার প্রতিদিনের\nবিশ্বস্ত ঠিকানা','Your everyday\nessentials, delivered'),
                   style: const TextStyle(color: Colors.white, fontSize: 25, height: 1.12, fontWeight: FontWeight.w900, letterSpacing: -.5)),
                 const SizedBox(height: 7),
                 Text(tx('পণ্য, বাসার সেবা ও প্রয়োজনীয় ঠিকানা—সব এক অ্যাপে','Shop, book services and find local places'),
@@ -1106,7 +1106,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     widget.onOrderSaved();
     if(!mounted)return;
     setState(()=>saving=false);
-    showDialog(context:c,builder:(_)=>AlertDialog(title:Text(cloudSaved?'অর্ডার অনলাইনে পাঠানো হয়েছে':'ডেমো অর্ডার সংরক্ষিত'),content:Text('অর্ডার নম্বর: $confirmedOrderNumber\\nপণ্যের মোট: ৳$totalAmount\\nডেলিভারি চার্জ: ৳$serverDeliveryFee\\nসর্বমোট: ৳${serverTotalAmount??(totalAmount+serverDeliveryFee)}\\n${cloudSaved?'অর্ডার সার্ভারে সংরক্ষিত হয়েছে।':'অর্ডার শুধু এই ফোনে রাখা হয়েছে। অনলাইনে পাঠাতে লগইন করুন এবং Firebase চালু থাকতে হবে।'}'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
+    showDialog(context:c,builder:(_)=>AlertDialog(title:Text(cloudSaved?'অর্ডার অনলাইনে পাঠানো হয়েছে':'ডেমো অর্ডার সংরক্ষিত'),content:Text('অর্ডার নম্বর: $confirmedOrderNumber\nপণ্যের মোট: ৳$totalAmount\nডেলিভারি চার্জ: ৳$serverDeliveryFee\nসর্বমোট: ৳${serverTotalAmount??(totalAmount+serverDeliveryFee)}\n${cloudSaved?'অর্ডার সার্ভারে সংরক্ষিত হয়েছে।':'অর্ডার শুধু এই ফোনে রাখা হয়েছে। অনলাইনে পাঠাতে লগইন করুন এবং Firebase চালু থাকতে হবে।'}'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
   }
   @override Widget build(BuildContext c)=>Scaffold(
     appBar:AppBar(title:const Text('ডেলিভারি তথ্য')),
@@ -1607,7 +1607,7 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
               Card(color: Colors.white, child: ListTile(
                 leading: const Icon(Icons.verified_user_outlined, color: green),
                 title: Text(ownerProfile!['company'] ?? 'Elyramart'),
-                subtitle: Text('মালিক: ${ownerProfile!['owner'] ?? 'নাম দেওয়া হয়নি'}\\nমোবাইল: ${ownerProfile!['phone'] ?? ''}\\nইমেইল: ${ownerProfile!['email'] ?? ''}'),
+                subtitle: Text('মালিক: ${ownerProfile!['owner'] ?? 'নাম দেওয়া হয়নি'}\nমোবাইল: ${ownerProfile!['phone'] ?? ''}\nইমেইল: ${ownerProfile!['email'] ?? ''}'),
                 isThreeLine: true,
               )),
             heading('টেকনিশিয়ান প্রোফাইল'),
@@ -1617,7 +1617,7 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
               Card(color: Colors.white, child: ListTile(
                 leading: const Icon(Icons.engineering_outlined, color: green),
                 title: Text(technician!['name'] ?? ''),
-                subtitle: Text('মোবাইল: ${technician!['phone'] ?? ''}\\nদক্ষতা: ${technician!['skills'] ?? ''}\\nঠিকানা: ${technician!['address'] ?? ''}'),
+                subtitle: Text('মোবাইল: ${technician!['phone'] ?? ''}\nদক্ষতা: ${technician!['skills'] ?? ''}\nঠিকানা: ${technician!['address'] ?? ''}'),
                 isThreeLine: true,
               )),
             Wrap(
