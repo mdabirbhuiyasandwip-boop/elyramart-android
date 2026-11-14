@@ -35,6 +35,19 @@ void main() {
     expect(added, isFalse);
   });
 
+  testWidgets('cached customer profile is not shown after account sign-out', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'elyramart_customer_profile_v1':
+          '{"name":"Previous Account","phone":"01712345678","address":"Old address","uid":"previous-user"}',
+    });
+    await tester.pumpWidget(const MaterialApp(home: CustomerLoginPage()));
+    await tester.pumpAndSettle();
+    final fields = tester.widgetList<TextField>(find.byType(TextField)).toList();
+    expect(fields[0].controller?.text, isEmpty);
+    expect(fields[1].controller?.text, isEmpty);
+    expect(fields[2].controller?.text, isEmpty);
+  });
+
   testWidgets('Elyramart main pages and customer profile open', (tester) async {
     await tester.pumpWidget(const ElyramartApp());
     await tester.pumpAndSettle();
