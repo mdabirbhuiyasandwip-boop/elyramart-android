@@ -156,3 +156,29 @@ These are planned modules, not claims that they are already live. Build them in 
 - Firebase Android package ID: `com.elyramartbd.elyramart`.
 - Firebase project configuration and `google-services.json` are still required before online data/auth can be verified end-to-end.
 - The previously generated APK was a demo build; do not describe online orders, payments, synchronized data, live GPS or secure admin as operational until verified.
+
+
+## 15. One-app mobility and travel booking (required before claiming all-in-one)
+The customer journey must remain inside Elyramart from discovery through confirmed booking, payment (where approved), ticket/booking storage, cancellation/refund request and support. Do not send customers to another app or website as the intended final experience.
+
+### Transport modes
+- **Intercity bus:** route/from-to, travel date, operator, boarding/drop points, live departure inventory, seat map with genuinely available/held/sold seats, passenger details, fare/fees, booking hold expiry, payment, provider PNR/e-ticket, cancellation/refund rules and booking history.
+- **Train:** route, station, date, class, quota/category where legally supported, live train and seat/berth availability, passenger identity details required by the railway, official fare, payment, railway/provider ticket reference, downloadable ticket, cancellation/refund handling and booking history. Never imitate Bangladesh Railway inventory or issue a ticket without official authorization.
+- **Launch/ferry/steamer:** route, vessel, departure, cabin/seat class, passenger manifest, live availability, fare, ticket reference and cancellation/refund handling through an authorized operator/aggregator.
+- **Toll:** supported road/plaza and vehicle registration, authorized wallet/payment provider, clear fee, provider transaction reference and receipt. No claim of paid until provider confirms.
+- **Hotels:** destination, check-in/out, guests/rooms, live property/room/rate inventory, taxes/fees, cancellation terms, provider confirmation and booking history.
+- **House/flat/office rentals:** search, listing details, owner verification, viewing request, safe contact, application/booking workflow and dispute reporting; no deposit escrow until a compliant payment/escrow workflow is approved.
+
+### Shared booking centre
+- One in-app search and trip planner across bus, train, launch/ferry, hotel and rentals; allow multi-leg itinerary and saved passengers only with consent.
+- Unified My Trips / My Bookings with provider, reference/PNR, status, ticket/receipt, support, cancellation/refund request and notification history.
+- Display live availability timestamp, total price breakdown, provider identity, terms and booking hold expiry before payment.
+- Use server-side provider adapters and idempotent booking/payment operations; never store raw card data or expose provider secrets in the app.
+- Admin operations: provider/route configuration, booking lookup, exception queue, refund request tracking, audit log and customer support. Admin must not be able to fabricate provider confirmation.
+- Search-only or request-only states must be labelled honestly. Never show fake seat maps, seat holds, live schedules, fares, ticket numbers, booking success or payment success.
+
+### Integration/release gates
+- Bus, train, launch, toll and hotel services require written provider/aggregator authorization, documented production API, sandbox certification, credentials, settlement/refund terms, customer support escalation and security/privacy review.
+- Train integration specifically requires an authorized railway ticketing channel; public timetable information alone is not permission to sell or reserve seats.
+- Until each provider is certified, keep the feature marked **not yet available for in-app booking** and do not redirect users as if Elyramart completed their booking.
+- No paid API, gateway, subscription or billing activation without explicit owner approval.
