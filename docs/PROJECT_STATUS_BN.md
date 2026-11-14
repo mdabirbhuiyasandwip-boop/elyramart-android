@@ -175,3 +175,28 @@ Service-account JSON/private key, Android upload keystore/password, payment secr
 - Phone OTP code path build হয়েছে; Firebase Phone provider, SMS policy/quota and real handset SMS flow independently verified নয়.
 - Owner Admin custom claim callable live নয় যতক্ষণ Cloud Functions deploy না হয়. Online gateway, Rider live tracking, and production end-to-end handset tests remain incomplete.
 - **কোনো Firebase billing plan, paid SMS, payment gateway, Play Console purchase বা other paid service এই run-এ enable করা হয়নি।** Owner approval and secure credentials required.
+
+
+## ১৪ নভেম্বর ২০২৬ — মালিকের Free-only সিদ্ধান্ত
+
+মালিক স্পষ্টভাবে জানিয়েছেন: কোনো Firebase Blaze billing, paid SMS, paid hosting, payment gateway বা অন্য paid service চালু করা যাবে না। এই সিদ্ধান্ত অনুযায়ী কোনো billing বা paid service enable করা হয়নি এবং করা হবে না।
+
+### বিনামূল্যে যাচাইকৃত/সম্পন্ন
+- Android release APK/AAB CI build এবং widget tests সফল (run 43586412860); artifact তৈরি।
+- Firestore Rules deployment সফল (run 43586823063)।
+- Firebase Functions-এর TypeScript compile/check সফল (run 43586826897); compile সফল মানে Functions deploy নয়।
+- Web release build artifact তৈরি (run 43586412811); public website deploy নয়।
+- Complete source + docs archive artifact তৈরি (run 43587128667; artifact ID 14109724868; ৩০ দিন পর্যন্ত)।
+- Project status, owner setup, launch checklist ও developer handoff docs repository-তে রাখা হয়েছে।
+
+### Free-only অবস্থায় যেগুলো এখনো চালু নয়
+- Cloud Functions callable deploy (Owner Admin claim, trusted COD order, server notifications) — এই project workflow-তে Blaze billing gate; তাই deploy বন্ধ থাকবে।
+- Firebase Storage bucket/rules এবং cloud image upload — bucket/billing/enablement যাচাই ছাড়া live নয়।
+- Phone OTP real SMS — Firebase Phone provider, SMS policy/quota ও device verification দরকার; সম্ভাব্য SMS charge থাকায় enable করা হয়নি।
+- Public Firebase Hosting — Web Firebase config values ও owner configuration দরকার।
+- GitHub Pages publish — repository Pages settings/owner configuration এবং valid web Firebase config দরকার; build artifact-কে live website বলা যাবে না।
+- Play Store release — owner-owned upload keystore/signing secrets, Play Console account ও review দরকার; কোনো key বা account credential ChatGPT-তে পাঠানো যাবে না।
+- Real Android device QA — হাতে থাকা physical device-এ install ও flow পরীক্ষা ছাড়া সম্পন্ন বলা যাবে না।
+
+### Free-only launch boundary
+বর্তমান অ্যাপটি CI-তে build/test pass করা install-test candidate, production-ready live marketplace নয়। COD screen/source থাকা সত্ত্বেও server-side callable deploy না হওয়া পর্যন্ত production COD order completion নিশ্চিত নয়। bKash/Nagad/card payment, rider live tracking ও full multi-seller fulfillment এখনো implement/deploy হয়নি। কোনো paid service ছাড়াই source, UI, tests, documentation, build artifacts এবং Firestore Rules-এ কাজ করা যাবে; কিন্তু external setup/paid gates এড়িয়ে বাস্তব live backend চালু করা যাবে না।
