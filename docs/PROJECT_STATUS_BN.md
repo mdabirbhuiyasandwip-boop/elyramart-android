@@ -14,10 +14,16 @@ Repository: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android
 - Artifact দুটির মেয়াদ ২৭ নভেম্বর ২০২৬ পর্যন্ত। Build success মানে বাস্তব ফোনে সম্পূর্ণ QA বা Play Store প্রকাশ সম্পন্ন নয়।
 
 ### Web
-- Web build run: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499666897
-- ফলাফল: **completed / success**; `Elyramart-Web-release` artifact তৈরি হয়েছে (প্রায় 14.3 MB)।
+- পূর্বের Web build run: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499666897 — **success**; `Elyramart-Web-release` artifact তৈরি হয়েছে (প্রায় 14.3 MB)।
+- নতুন কোডে Web Firebase initialization যোগ হয়েছে; Firebase Console থেকে Web App config নিয়ে GitHub Actions secrets দিলে Web login/cloud data চালু হবে। Secrets না থাকলে Web demo mode-এ চলবে।
+- নতুন Web build run: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43565190109 — বর্তমানে running/pending; শেষ ফলাফল Actions-এ যাচাই করতে হবে.
 - GitHub Pages deploy run: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499666844
 - ফলাফল: **failure**। Flutter Web build ও tests সফল; `Configure GitHub Pages` ধাপে GitHub integration-এর Pages site তৈরি করার অনুমতি না থাকায় deploy আটকে গেছে। Repository owner-কে Settings → Pages-এ গিয়ে Build and deployment source হিসেবে **GitHub Actions** নির্বাচন/enable করতে হবে। তারপর workflow আবার চালাতে হবে।
+
+### সর্বশেষ source পরিবর্তন
+- Web app এখন `FirebaseOptions` দিয়ে platform-aware initialization সমর্থন করে; Android আগের মতো `google-services.json` ব্যবহার করে। Web-এর জন্য ৬টি `ELYRAMART_FIREBASE_*` GitHub Actions secret প্রয়োজন; তালিকা `docs/FIREBASE_SETUP_BN.md`-এ আছে।
+- Duplicate `google-services (3).json` এবং repository-র ভেতরে থাকা পুরোনো nested APK workflow সরানো হয়েছে।
+- Android build run: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43565196528 — চলমান।
 
 ### Firebase backend
 - Functions TypeScript compile/check run: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499739123 — **success**।
