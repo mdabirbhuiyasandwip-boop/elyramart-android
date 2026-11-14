@@ -35,7 +35,8 @@ Source of truth: repository root-এর Flutter source এবং বর্তম
 | `.github/workflows/build-web.yml` | Flutter Web build, analyze, widget tests, artifact | Firebase Web config secrets পেলে online mode; সর্বশেষ run যাচাই চলছে |
 | `.github/workflows/deploy-pages.yml` | Web build ও GitHub Pages deployment | workflow আছে; Pages owner enablement প্রয়োজন হতে পারে |
 | `.github/workflows/check-functions.yml` | Node 20 dependencies ও TypeScript compile check | আগে সফল |
-| `.github/workflows/deploy-firebase.yml` | Firestore/Storage rules ও Functions deploy | secret `FIREBASE_SERVICE_ACCOUNT_JSON` ভুল/অসম্পূর্ণ হওয়ায় credential validation-এ ব্যর্থ |
+| `.github/workflows/deploy-firebase.yml` | Firestore/Storage rules ও Functions deploy | secret `FIREBASE_SERVICE_ACCOUNT_JSON` সঠিক না থাকায় credential validation-এ ব্যর্থ |
+| `.github/workflows/deploy-hosting.yml` | Firebase Hosting-এ Flutter Web প্রকাশ | workflow যোগ করা হয়েছে; Service Account ও ছয়টি Web config secret প্রয়োজন |
 
 ## ৪. বিকল্প build ও helper scripts
 
@@ -44,6 +45,7 @@ Source of truth: repository root-এর Flutter source এবং বর্তম
 | `codemagic.yaml` | Codemagic দিয়ে Android APK/AAB build | আছে; signing key/credentials configure করা নেই |
 | `tools/generate_brand_assets.py` | Android/Web-এর E-only brand icon তৈরি | আছে |
 | `tools/configure_web_pwa.py` | Web manifest, title ও PWA metadata | আছে |
+| `tools/configure_android_signing.py` | Protected CI secrets থেকে upload keystore validate করে Android release sign setup | যোগ করা হয়েছে; চারটি signing secret না দেওয়া পর্যন্ত unsigned artifact তৈরি হবে |
 
 ## ৫. Test
 
@@ -60,6 +62,7 @@ Source of truth: repository root-এর Flutter source এবং বর্তম
 | `docs/DEVELOPER_HANDOFF_BN.md` | ভবিষ্যৎ developer-এর architecture ও handoff | আপডেট |
 | `docs/FIREBASE_SETUP_BN.md` | Firebase Android/Web, secrets ও deploy setup | Web config secrets যোগ করে আপডেট |
 | `docs/LAUNCH_CHECKLIST_BN.md` | end-to-end release checklist | তৈরি/আপডেট |
+| `docs/OWNER_ACTIONS_BN.md` | Firebase, Web Hosting, Pages ও Play signing-এর owner-only setup steps | যোগ করা হয়েছে |
 | `docs/PRIVACY_POLICY_DRAFT_BN.md` | Privacy policy-এর বাংলা খসড়া | মালিক/আইনজীবীর যাচাই ও public URL বাকি |
 | `docs/PRODUCTION_READINESS.md` | production readiness ও verified blockers | আপডেট |
 | `docs/PROJECT_STATUS_BN.md` | বর্তমান project status | আপডেট |
@@ -80,6 +83,7 @@ Source of truth: repository root-এর Flutter source এবং বর্তম
 2. Web online mode: Firebase Console-এর Web App config থেকে ৬টি `ELYRAMART_FIREBASE_*` secret যোগ করতে হবে।
 3. Public website: repository Settings → Pages-এ GitHub Actions source enable করতে হতে পারে।
 4. Play Store: upload keystore/password, Play Console account, policy declarations, privacy policy public URL ও Google review।
+5. Firebase Hosting: নতুন deploy workflow-তে Service Account এবং ছয়টি Web config secret যোগ করতে হবে।
 5. Live marketplace: Firebase services deploy, verified owner account, real seller/technician accounts, end-to-end QA এবং প্রয়োজনীয় legal/business permissions।
 
 **এই audit-এর উদ্দেশ্য:** কোনো ফাইলকে অকারণে “বাকি” বলা নয়; code, CI, deployment এবং owner-side setup আলাদা করে পরিষ্কার রাখা।
