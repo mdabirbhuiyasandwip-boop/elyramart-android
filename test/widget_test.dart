@@ -106,11 +106,14 @@ void main() {
     expect(find.text('ট্রেনের টিকিট ও সিট বুকিং'), findsOneWidget);
     expect(find.textContaining('বাস অপারেটরের অনুমোদিত লাইভ API না পাওয়া পর্যন্ত অ্যাপের ভেতরে বুকিং চালু নয়'), findsOneWidget);
     expect(find.textContaining('বাংলাদেশ রেলওয়ের অনুমোদিত টিকিটিং সংযোগ ছাড়া বুকিং চালু নয়'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('লঞ্চ ও স্টিমার টিকিট'), 220, scrollable: find.byType(Scrollable).first);
     expect(find.text('লঞ্চ ও স্টিমার টিকিট'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('হোটেল বুকিং'), 220, scrollable: find.byType(Scrollable).first);
     expect(find.text('হোটেল বুকিং'), findsOneWidget);
+    expect(find.textContaining('লাইভ রুম/দাম যাচাই ও বুকিং নিশ্চিতকরণ এখনো চালু নয়'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('বাসা, ফ্ল্যাট ও অফিস ভাড়া'), 220, scrollable: find.byType(Scrollable).first);
     expect(find.text('বাসা, ফ্ল্যাট ও অফিস ভাড়া'), findsOneWidget);
     expect(find.textContaining('Elyramart-এর ভেতরে সরাসরি পেমেন্ট চালু নয়'), findsOneWidget);
-    expect(find.textContaining('লাইভ রুম/দাম যাচাই ও বুকিং নিশ্চিতকরণ এখনো চালু নয়'), findsOneWidget);
   });
 
   testWidgets('support centre opens with a clear sign-in requirement', (tester) async {
