@@ -98,7 +98,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Elyramart অ্যাকাউন্ট'), findsOneWidget);
     expect(find.text('সেলার অ্যাকাউন্ট'), findsOneWidget);
-    expect(find.text('অ্যাডমিন প্যানেল'), findsOneWidget);
+    expect(find.text('অ্যাডমিন প্যানেল'), findsNothing); // Admin controls are hidden from ordinary users.
+    expect(find.text('কোম্পানির মালিক / Owner Settings'), findsNothing);
     expect(find.text('টেকনিশিয়ান সেন্টার'), findsOneWidget);
 
     await tester.tap(find.text('লগইন / রেজিস্ট্রেশন'));
