@@ -17,7 +17,7 @@ This file separates code that exists from services that are actually deployed an
 - Added a widget test for the support centre guest state.
 - Added a Travel & Stay home shortcut and hub for toll, launch/steamer tickets, hotel booking and house/flat/office rentals. Current transport/hotel options are informational external links or existing rental listings; they are not in-app ticket/payment/confirmed hotel booking.
 - Expanded the requirements for a true one-app mobility experience: intercity bus seat maps and tickets, authorized train seat/berth ticketing, launch/ferry cabins, toll receipts, live hotel rooms, unified My Trips/Bookings, cancellations/refunds and provider-backed admin operations. The requirements explicitly prohibit fake inventory, schedules, PNRs or payment confirmations.
-- The hub explicitly labels direct in-app toll payment, launch ticketing and live hotel availability/booking as not yet integrated; no fake payment or booking confirmation is shown.
+- The hub explicitly labels direct in-app bus/train seat booking, toll payment, launch ticketing and live hotel availability/booking as not yet integrated; no fake seats, ticket or payment confirmation is shown.
 - Added a widget test for the Travel & Stay hub and its integration-pending disclosures.
 - Expanded the product plan to cover practical everyday-life and future-ready services: verified essential directories, transport, jobs, education, home/family support, community help, accessibility, low-data use, privacy and trust/safety. These are roadmap items, not falsely labelled live features.
 
@@ -42,9 +42,11 @@ This file separates code that exists from services that are actually deployed an
 - Direct toll payment integration inside Elyramart (D-Toll/official operator authorization and secure transaction confirmation still required); the current hub links users to the official D-Toll app.
 - Direct bus seat inventory, seat holds and e-ticket integration (authorized bus operator/aggregator API required).
 - Direct train seat/berth availability and ticket issuance (authorized Bangladesh Railway ticketing channel/API required).
+- Direct bus seat inventory, seat holds and e-ticket integration (authorized bus operator/aggregator API required).
+- Direct train seat/berth availability and ticket issuance (authorized Bangladesh Railway ticketing channel required).
 - Direct launch/steamer ticket inventory and ticketing integration (authorized operator/aggregator API and booking confirmation still required); current hub links to Shohoz and BIWTC.
 - Live hotel inventory, price/availability and booking/cancellation integration (hotel API contract and credentials required); current hub provides a partner research link only.
-- bKash, Nagad, Rocket and card gateway integration. These remain disabled until owner approval, merchant credentials and testing.
+- bKash, Nagad, Rocket and card gateway integration. These remain disabled until owner approval, merchant credentials and sandbox/production transaction testing. Checkout currently supports COD in source only; live payment gateway is not connected.
 - Rider self-service, proof of delivery and settlement.
 - Rental owner edit flow is now implemented in source with restricted owner-only Firestore update rules; these rules still need Firebase deployment. Rental image gallery, saved rentals, map view and admin moderation/report queue remain incomplete.
 - Production website hosting and signed Play Store AAB.
