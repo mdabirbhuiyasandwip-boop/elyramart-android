@@ -262,14 +262,6 @@ class _HomePageState extends State<HomePage> {
     const SizedBox(height:22),section(tx('ক্যাটাগরি','Categories'), tx('সব দেখুন','View all')),
     SizedBox(height:42,child:ListView(scrollDirection:Axis.horizontal,children:categories.map((c)=>Padding(padding:const EdgeInsets.only(right:8),child:ChoiceChip(label:Text(AppLanguage.english.value?englishCategory(c):c),selected:category==c,onSelected:(_)=>setState(()=>category=c),selectedColor:const Color(0xFFD6EFE5),labelStyle:TextStyle(color:category==c?green:ink,fontWeight:FontWeight.w600)))).toList())),
     const SizedBox(height:18),Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:const Color(0xFFE2F3EC),borderRadius:BorderRadius.circular(18)),child:Row(children:[Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(tx('বাসায় টেকনিশিয়ান লাগবে?','Need a technician at home?'),style:TextStyle(fontSize:17,fontWeight:FontWeight.bold,color:ink)),SizedBox(height:4),Text(tx('ইলেকট্রিশিয়ান, প্লাম্বারসহ বিভিন্ন সার্ভিস বুক করুন','Book electricians, plumbers and more'),style:TextStyle(color:ink))])),FilledButton(onPressed:()=>setState(()=>tab=1),style:FilledButton.styleFrom(backgroundColor:green),child:Text(tx('বুক করুন','Book now')))])),
-    const SizedBox(height:14),
-    Card(color:Colors.white,elevation:0,child:ListTile(
-      leading:CircleAvatar(backgroundColor:const Color(0xFFE2F3EC),child:Icon(Icons.apartment_outlined,color:green)),
-      title:Text(tx('বাসা ও অফিস ভাড়া','House & office rentals'),style:const TextStyle(fontWeight:FontWeight.bold)),
-      subtitle:Text(tx('ভাড়া দেবেন বা বাসা/অফিস খুঁজছেন? এখানে বিজ্ঞাপন দিন ও দেখুন।','List a property for rent or find a house/office.')),
-      trailing:FilledButton(onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage())),style:FilledButton.styleFrom(backgroundColor:green),child:Text(tx('দেখুন','Explore'))),
-      onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage())),
-    )),
     const SizedBox(height:18),
     Row(children:[
       Expanded(child:InkWell(
@@ -296,6 +288,14 @@ class _HomePageState extends State<HomePage> {
         )
       ))
     ]),
+    const SizedBox(height:14),
+    Card(color:Colors.white,elevation:0,child:ListTile(
+      leading:CircleAvatar(backgroundColor:const Color(0xFFE2F3EC),child:Icon(Icons.apartment_outlined,color:green)),
+      title:Text(tx('বাসা ও অফিস ভাড়া','House & office rentals'),style:const TextStyle(fontWeight:FontWeight.bold)),
+      subtitle:Text(tx('ভাড়া দেবেন বা বাসা/অফিস খুঁজছেন? এখানে বিজ্ঞাপন দিন ও দেখুন।','List a property for rent or find a house/office.')),
+      trailing:FilledButton(onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage())),style:FilledButton.styleFrom(backgroundColor:green),child:Text(tx('দেখুন','Explore'))),
+      onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage())),
+    )),
     const SizedBox(height:22),section(tx('সেলারদের পণ্য','Seller products'),''),
     if(visibleProducts.isEmpty) Padding(padding:EdgeInsets.all(18),child:Text(tx('এখনো কোনো পণ্য যোগ করা হয়নি। সেলাররা পণ্য যোগ করলে এখানে দেখা যাবে。','No products yet. Products will appear here when sellers add them.'))) else Wrap(spacing:10,runSpacing:10,children:visibleProducts.map((p)=>SizedBox(width:(MediaQuery.of(context).size.width-42)/2,child:ProductCard(p:p,onAdd:()=>add(p)))).toList()),
     const SizedBox(height:12),const Text('Elyramart — Your World, Your Choice',textAlign:TextAlign.center,style:TextStyle(color:Colors.black45,fontSize:12)),
