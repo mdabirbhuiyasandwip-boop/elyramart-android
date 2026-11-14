@@ -1,0 +1,41 @@
+name: Package complete Elyramart source and documentation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-source.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout complete repository
+        uses: actions/checkout@v4
+      - name: Upload one complete source ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Elyramart-Complete-Source-and-Docs
+          path: |
+            .github/
+            docs/
+            functions/
+            lib/
+            test/
+            tools/
+            README.md
+            codemagic.yaml
+            firebase.json
+            firestore.rules
+            google-services.json
+            pubspec.yaml
+            storage.rules
+            Elyramart_GitHub_Upload.zip
+          include-hidden-files: true
+          if-no-files-found: error
+          compression-level: 6
+          retention-days: 30
