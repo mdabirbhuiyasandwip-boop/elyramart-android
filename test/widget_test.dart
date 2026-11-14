@@ -53,7 +53,21 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('বাসা ও অফিস ভাড়া'), findsOneWidget);
     expect(find.text('অনলাইন বিজ্ঞাপন দেখতে Firebase সংযোগ প্রয়োজন।'), findsOneWidget);
-    expect(find.text('বিজ্ঞাপন দিন'), findsOneWidget);
+    expect(find.text('ভাড়ার বিজ্ঞাপন দিন'), findsOneWidget);
+    expect(find.text('শুধু বাসা বা অফিস ভাড়া দেওয়ার বিজ্ঞাপন প্রকাশ করুন।'), findsOneWidget);
+  });
+
+  testWidgets('daily directory loads Bangladesh division district and upazila filters', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: DailyLifeDirectoryPage()));
+    await tester.pumpAndSettle();
+    expect(find.text('হাসপাতাল'), findsOneWidget);
+    expect(find.text('মেয়েদের পার্লার'), findsOneWidget);
+    expect(find.text('বিভাগ'), findsOneWidget);
+    expect(find.text('জেলা'), findsOneWidget);
+    expect(find.text('উপজেলা'), findsOneWidget);
+    await tester.tap(find.text('মেয়েদের পার্লার'));
+    await tester.pumpAndSettle();
+    expect(find.text('এই এলাকায় এখনো যাচাইকৃত পার্লার তালিকা যোগ হয়নি।'), findsOneWidget);
   });
 
   testWidgets('Elyramart main pages and customer profile open', (tester) async {
