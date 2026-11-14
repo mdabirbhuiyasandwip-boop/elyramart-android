@@ -30,7 +30,7 @@ void main() {
     );
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
-        body: ProductCard(p: product, onAdd: () => added = true),
+        body: ProductCard(p: product, onAdd: () => added = true, isFavorite: false, onToggleFavorite: () {}),
       ),
     ));
     final addButton = tester.widget<IconButton>(find.byType(IconButton));
@@ -38,6 +38,27 @@ void main() {
     expect(find.text('স্টক শেষ'), findsOneWidget);
     await tester.tap(find.byType(IconButton));
     expect(added, isFalse);
+  });
+
+  testWidgets('product wishlist heart action is available', (tester) async {
+    var toggled = false;
+    const product = Product(
+      'পছন্দের পণ্য', 'কসমেটিকস', '৳২০০', '🛍️', 'পরীক্ষার পণ্য',
+      sellerId: 'seller-1', productId: 'product-2', stock: 3,
+    );
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: ProductCard(
+          p: product,
+          onAdd: () {},
+          isFavorite: false,
+          onToggleFavorite: () => toggled = true,
+        ),
+      ),
+    ));
+    expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.favorite_border));
+    expect(toggled, isTrue);
   });
 
   testWidgets('cached customer profile is not shown after account sign-out', (tester) async {
