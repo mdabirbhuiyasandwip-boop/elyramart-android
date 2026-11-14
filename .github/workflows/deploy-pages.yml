@@ -59,7 +59,21 @@ jobs:
       - name: Run widget tests
         run: flutter test
       - name: Build Web app for repository Pages path
-        run: flutter build web --release --base-href /elyramart-android/
+        env:
+          ELYRAMART_FIREBASE_WEB_API_KEY: ${{ secrets.ELYRAMART_FIREBASE_WEB_API_KEY }}
+          ELYRAMART_FIREBASE_WEB_APP_ID: ${{ secrets.ELYRAMART_FIREBASE_WEB_APP_ID }}
+          ELYRAMART_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.ELYRAMART_FIREBASE_MESSAGING_SENDER_ID }}
+          ELYRAMART_FIREBASE_PROJECT_ID: ${{ secrets.ELYRAMART_FIREBASE_PROJECT_ID }}
+          ELYRAMART_FIREBASE_AUTH_DOMAIN: ${{ secrets.ELYRAMART_FIREBASE_AUTH_DOMAIN }}
+          ELYRAMART_FIREBASE_STORAGE_BUCKET: ${{ secrets.ELYRAMART_FIREBASE_STORAGE_BUCKET }}
+        run: |
+          flutter build web --release --base-href /elyramart-android/ \
+            --dart-define=ELYRAMART_FIREBASE_WEB_API_KEY="$ELYRAMART_FIREBASE_WEB_API_KEY" \
+            --dart-define=ELYRAMART_FIREBASE_WEB_APP_ID="$ELYRAMART_FIREBASE_WEB_APP_ID" \
+            --dart-define=ELYRAMART_FIREBASE_MESSAGING_SENDER_ID="$ELYRAMART_FIREBASE_MESSAGING_SENDER_ID" \
+            --dart-define=ELYRAMART_FIREBASE_PROJECT_ID="$ELYRAMART_FIREBASE_PROJECT_ID" \
+            --dart-define=ELYRAMART_FIREBASE_AUTH_DOMAIN="$ELYRAMART_FIREBASE_AUTH_DOMAIN" \
+            --dart-define=ELYRAMART_FIREBASE_STORAGE_BUCKET="$ELYRAMART_FIREBASE_STORAGE_BUCKET"
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
