@@ -12,6 +12,7 @@ This file separates code that exists from services that are actually deployed an
 - Added the complete product requirements and phased delivery plan in `docs/PRODUCT_REQUIREMENTS.md`.
 - Added a customer Help & Support screen with request categories, subject/details validation, verified-account submission, and customer-only request history.
 - Added Firestore security rules for support tickets: verified users can create their own tickets; customers can read only their own; admin can review/update status and reply fields.
+- Added Owner Admin ticket queue with ticket status changes and admin replies; customer support history now displays replies.
 - Added a widget test for the support centre guest state.
 - Expanded the product plan to cover practical everyday-life and future-ready services: verified essential directories, transport, jobs, education, home/family support, community help, accessibility, low-data use, privacy and trust/safety. These are roadmap items, not falsely labelled live features.
 
@@ -32,7 +33,7 @@ This file separates code that exists from services that are actually deployed an
 - Service provider public profiles, technician discovery by location, provider availability calendar and date/time booking.
 - Genuine live technician GPS tracking and in-app chat.
 - Dedicated notifications inbox and production push delivery (FCM deployment/configuration and device tests remain).
-- Support ticket rules are committed but still need deployment to Firebase before real online ticket submission can work. Staffed 24/7 live support, blog CMS and referral rewards remain future work.
+- Support ticket customer UI, Owner Admin queue, and Firestore rules are committed; rules still need deployment to Firebase before real online ticket submission can work. Staffed 24/7 live support, blog CMS and referral rewards remain future work.
 - bKash, Nagad, Rocket and card gateway integration. These remain disabled until owner approval, merchant credentials and testing.
 - Rider self-service, proof of delivery and settlement.
 - Rental image gallery, edit flow, saved rentals, map view and admin moderation/report queue.
