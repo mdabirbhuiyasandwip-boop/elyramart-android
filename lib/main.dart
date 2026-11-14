@@ -1024,7 +1024,7 @@ class _DailyLifeDirectoryPageState extends State<DailyLifeDirectoryPage> {
               final selectedDistrict = districts.where((d)=>d['id']==districtId).toList();
               final area = selectedDistrict.isEmpty ? 'Bangladesh' : selectedDistrict.first['en'].toString();
               final search = 'restaurants in $area';
-              launchUrl(Uri.parse('https://www.google.com/maps/search/?api=1&query=\u0024{Uri.encodeComponent(search)}'),mode:LaunchMode.externalApplication);
+              launchUrl(Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(search)}'),mode:LaunchMode.externalApplication);
             },
             icon: const Icon(Icons.map_outlined),
             label: const Text('এলাকার রেস্টুরেন্ট Google Maps-এ খুঁজুন'),
@@ -1104,7 +1104,7 @@ class _BookingPageState extends State<BookingPage> {
       'problem': problem.text.trim(),
       'status': 'requested',
       'createdAt': FieldValue.serverTimestamp(),
-      'customerId': user?.uid,
+      'customerId': user.uid,
     };
     try {
       await FirebaseFirestore.instance.collection('serviceBookings').add(booking);
