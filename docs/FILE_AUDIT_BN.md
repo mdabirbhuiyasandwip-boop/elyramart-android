@@ -35,7 +35,7 @@ Source of truth: repository root-এর Flutter source এবং বর্তম
 | `.github/workflows/build-web.yml` | Flutter Web build, analyze, widget tests, artifact | Firebase Web config secrets পেলে online mode; সর্বশেষ run যাচাই চলছে |
 | `.github/workflows/deploy-pages.yml` | Web build ও GitHub Pages deployment | workflow আছে; Pages owner enablement প্রয়োজন হতে পারে |
 | `.github/workflows/check-functions.yml` | Node 20 dependencies ও TypeScript compile check | আগে সফল |
-| `.github/workflows/deploy-firebase.yml` | Firestore/Storage rules ও Functions deploy | secret `FIREBASE_SERVICE_ACCOUNT_JSON` সঠিক না থাকায় credential validation-এ ব্যর্থ |
+| `.github/workflows/deploy-firebase.yml` | Firestore Rules বিনা Blaze-এ deploy; Functions/Storage opt-in | ১৪ নভেম্বর ২০২৬ run `43570891759`-এ Firestore Rules deploy success; Functions ও Storage intentionally skipped |
 | `.github/workflows/deploy-hosting.yml` | Firebase Hosting-এ Flutter Web প্রকাশ | workflow যোগ করা হয়েছে; Service Account ও ছয়টি Web config secret প্রয়োজন |
 
 ## ৪. বিকল্প build ও helper scripts
