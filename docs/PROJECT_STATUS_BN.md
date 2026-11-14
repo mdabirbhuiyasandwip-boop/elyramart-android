@@ -147,3 +147,11 @@ Service-account JSON/private key, Android upload keystore/password, payment secr
 - Firebase setup guide-এর পুরোনো “OTP UI নেই” বক্তব্য সংশোধন করা হয়েছে।
 
 **বর্তমান সিদ্ধান্ত:** source ও Web build CI-তে যাচাইকৃত; APK build ফলাফল pending। Elyramart এখনো production launch-ready নয়। বাস্তব ফোনে পরীক্ষা, live Firebase backend, private Owner Admin, secure payment/delivery workflow এবং signed AAB ছাড়া launch সম্পূর্ণ বলা যাবে না।
+
+
+## ১৪ নভেম্বর ২০২৬ — OTP ও অর্ডার অনুমতির সামঞ্জস্য
+
+- Firestore-এর `verifiedUser()` এখন Firebase-verified email **অথবা** Firebase Phone Authentication-এর verified `phone_number` token গ্রহণ করে। ফলে ফোন OTP ব্যবহারকারী customer-দের service booking, seller/technician application ও rental post rules-এ অযথা email-only বাধা থাকার কথা নয়।
+- Cloud Function `placeOrder`-এর authentication guard-ও verified email অথবা verified phone token গ্রহণ করার মতো করা হয়েছে; COD order backend code এখন phone OTP user-দেরও অনুমতি দেবে।
+- পরিবর্তনের পর Functions TypeScript compile workflow এবং Firebase backend workflow চালু হয়েছে। Compile ও Firestore rules deployment শেষ না হওয়া পর্যন্ত এই পরিবর্তন live/verified বলা হচ্ছে না। Cloud Functions deployment এখনো billing variable বন্ধ থাকায় করা হবে না।
+- Multi-seller order fulfilment-এর সীমাবদ্ধতা রয়ে গেছে: Firestore rules-এ seller update বর্তমানে এক seller-যুক্ত order-এর জন্য অনুমোদিত; split seller order lifecycle আলাদা করে implement/test করতে হবে।
