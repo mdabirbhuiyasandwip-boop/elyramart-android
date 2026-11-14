@@ -1116,12 +1116,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
         title:const Text('ক্যাশ অন ডেলিভারি'),
         subtitle:const Text('পণ্য হাতে পেয়ে টাকা পরিশোধ করুন — চালু'),
       )),
-      Card(color:Colors.white,child:ListTile(
-        leading:const Icon(Icons.lock_outline,color:Colors.black45),
-        title:const Text('bKash / Nagad / কার্ড'),
-        subtitle:const Text('অনলাইন পেমেন্ট এখনো চালু হয়নি — মার্চেন্ট গেটওয়ে সংযোগ প্রয়োজন'),
-        trailing:const Text('শিগগিরই',style:TextStyle(color:Colors.black54)),
-      )),
+      for (final method in const [
+        ('bKash', Icons.account_balance_wallet_outlined),
+        ('Nagad', Icons.account_balance_wallet_outlined),
+        ('Rocket', Icons.account_balance_outlined),
+        ('Visa / Mastercard', Icons.credit_card_outlined),
+        ('অন্যান্য সমর্থিত কার্ড', Icons.payment_outlined),
+      ])
+        Card(color:Colors.white,child:ListTile(
+          leading:Icon(method.$2,color:Colors.black45),
+          title:Text(method.$1),
+          subtitle:const Text('পেমেন্ট গেটওয়ে ও মার্চেন্ট অনুমোদন সংযোগের পর চালু হবে'),
+          trailing:const Text('পরে চালু হবে',style:TextStyle(color:Colors.black54)),
+        )),
       const SizedBox(height:8),
       const SizedBox(height:12),
       FilledButton(onPressed:saving?null:()=>saveOrder(c),child:Text(saving?'সংরক্ষণ হচ্ছে...':'অর্ডার তথ্য সংরক্ষণ করুন'))
@@ -2565,7 +2572,25 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
         const SizedBox(height: 8),
         field(email, 'ইমেইল', keyboard: TextInputType.emailAddress),
         field(password, 'পাসওয়ার্ড', obscure: true),
-        FilledButton(onPressed: authBusy ? null : _signIn, child: const Text('লগইন')),
+        FilledButton(onPressed: authBusy ? null : _signIn, child: const Text('ইমেইল ও পাসওয়ার্ড দিয়ে লগইন')),
+        const Card(child: ListTile(
+          leading: Icon(Icons.sms_outlined),
+          title: Text('মোবাইল নম্বর + OTP'),
+          subtitle: Text('Firebase Phone Authentication ও SMS সেটআপের পর চালু হবে'),
+          trailing: Text('পরে চালু হবে'),
+        )),
+        const Card(child: ListTile(
+          leading: Icon(Icons.g_mobiledata, size: 32),
+          title: Text('Google / Gmail দিয়ে লগইন'),
+          subtitle: Text('Google Sign-In কনফিগারেশন যোগ হলে চালু হবে'),
+          trailing: Text('পরে চালু হবে'),
+        )),
+        const Card(child: ListTile(
+          leading: Icon(Icons.mark_email_read_outlined),
+          title: Text('ইমেইল OTP যাচাই'),
+          subtitle: Text('বর্তমানে ইমেইল ভেরিফিকেশন লিংক ব্যবহৃত হয়; OTP ব্যবস্থা পরে সংযুক্ত হবে'),
+          trailing: Text('পরে চালু হবে'),
+        )),
         OutlinedButton(onPressed: authBusy ? null : _register, child: const Text('নতুন অ্যাকাউন্ট তৈরি')),
         TextButton(onPressed: authBusy ? null : _resetPassword, child: const Text('পাসওয়ার্ড ভুলে গেছেন?')),
         if(FirebaseRuntime.initialized&&FirebaseAuth.instance.currentUser!=null&&!FirebaseAuth.instance.currentUser!.emailVerified)
