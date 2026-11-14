@@ -294,7 +294,7 @@ class _HomePageState extends State<HomePage> {
     Card(color:Colors.white,elevation:0,child:ListTile(
       leading:CircleAvatar(backgroundColor:const Color(0xFFE2F3EC),child:Icon(Icons.apartment_outlined,color:green)),
       title:Text(tx('বাসা ও অফিস ভাড়া','House & office rentals'),style:const TextStyle(fontWeight:FontWeight.bold)),
-      subtitle:Text(tx('ভাড়া দেবেন বা বাসা/অফিস খুঁজছেন? এখানে বিজ্ঞাপন দিন ও দেখুন।','List a property for rent or find a house/office.')),
+      subtitle:Text(tx('বাসা বা অফিসের বিজ্ঞাপন দেখুন এবং মালিককে সরাসরি ফোন করুন।','List a property for rent or find a house/office.')),
       trailing:FilledButton(onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage())),style:FilledButton.styleFrom(backgroundColor:green),child:Text(tx('দেখুন','Explore'))),
       onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage())),
     )),
@@ -379,7 +379,7 @@ class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
           builder: (_) => const RentalPostPage(),
         )).then((_) => _loadListings()),
         icon: const Icon(Icons.add_home_work_outlined),
-        label: Text(tx('বিজ্ঞাপন দিন', 'Post a listing')),
+        label: Text(tx('ভাড়ার বিজ্ঞাপন দিন', 'List property for rent')),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
@@ -422,7 +422,6 @@ class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
             ))
           else
             ...visible.map((item) {
-              final offer = item['listingType'] == 'offer';
               final property = item['propertyType']?.toString() ?? 'বাসা';
               final amount = item['rentAmount'] ?? 0;
               return Card(
@@ -583,7 +582,7 @@ class _RentalPostPageState extends State<RentalPostPage> {
       ]),
       const SizedBox(height: 12),
       field(title, 'শিরোনাম (যেমন: ২ বেডরুমের বাসা)'),
-      field(rent, listingType == 'offer' ? 'মাসিক ভাড়া (টাকা)' : 'মাসিক বাজেট (টাকা)', keyboard: TextInputType.number),
+      field(rent, 'মাসিক ভাড়া (টাকা)', keyboard: TextInputType.number),
       field(location, 'এলাকা / ঠিকানা (যেমন: হালিশহর, চট্টগ্রাম)'),
       field(phone, 'যোগাযোগের মোবাইল নম্বর', keyboard: TextInputType.phone),
       field(details, 'বিস্তারিত (ঐচ্ছিক)', lines: 4),
