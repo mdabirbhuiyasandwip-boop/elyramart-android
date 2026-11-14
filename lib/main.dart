@@ -491,18 +491,21 @@ class _HomePageState extends State<HomePage> {
               ),
               ...nearbyPlaces.where((place) {
                 final q = searchQuery.trim().toLowerCase();
-                final text = '${place['name']} ${place['category']} ${place['address']}'.toLowerCase();
-                return q.isEmpty || text.contains(q);
-              }).take(20).map((place) => ListTile(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                leading: const CircleAvatar(child: Icon(Icons.place_outlined, color: green)),
-                title: Text(place['name'].toString()),
-                subtitle: Text('${place['category']} • ${(place['distance'] as double / 1000).toStringAsFixed(1)} km'
-                  '${(place['address'] ?? '').toString().isEmpty ? '' : ' • ${place['address']}'}'),
-                trailing: const Icon(Icons.map_outlined),
-                onTap: () => _openNearbyPlace(place),
-              )),
+                final searchable = '\${place['name']} \${place['category']} \${place['address']}'.toLowerCase();
+                return q.isEmpty || searchable.contains(q);
+              }).take(20).map((place) {
+                final distanceKm = ((place['distance'] as double) / 1000).toStringAsFixed(1);
+                final address = (place['address'] ?? '').toString();
+                return ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: const CircleAvatar(child: Icon(Icons.place_outlined, color: green)),
+                  title: Text(place['name'].toString()),
+                  subtitle: Text('\${place['category']} • $distanceKm km\${address.isEmpty ? '' : ' • $address'}'),
+                  trailing: const Icon(Icons.map_outlined),
+                  onTap: () => _openNearbyPlace(place),
+                );
+              }),
               const Text('OpenStreetMap-এর উন্মুক্ত মানচিত্র তথ্য • তালিকার কভারেজ এলাকা অনুযায়ী ভিন্ন হতে পারে।',
                 style: TextStyle(fontSize: 10, color: Colors.black45)),
             ]),
