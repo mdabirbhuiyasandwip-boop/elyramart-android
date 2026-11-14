@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show HttpClient;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:url_launcher/url_launcher.dart';
@@ -226,9 +227,108 @@ class _HomePageState extends State<HomePage> {
   String searchQuery='';
   Timer? _searchRefreshTimer;
   String liveSyncError='';
+  bool nearbyLoading=false;
+  String nearbyMessage='';
+  double? nearbyLatitude, nearbyLongitude;
+  List<Map<String,dynamic>> nearbyPlaces=[];
   final categories=['সব','ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি'];
   @override void initState(){super.initState();_loadCart();_loadWishlist();}
   @override void dispose(){_searchRefreshTimer?.cancel();super.dispose();}
+  Future<void> _findNearbyPlaces() async {
+    if (nearbyLoading) return;
+    setState(() { nearbyLoading = true; nearbyMessage = ''; });
+    HttpClient? client;
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        nearbyMessage = tx('ফোনের GPS/Location চালু করুন।', 'Turn on your phone location services.');
+        await Geolocator.openLocationSettings();
+        return;
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        nearbyMessage = tx('Elyramart-কে লোকেশন অনুমতি দিন।', 'Allow location permission for Elyramart.');
+        if (permission == LocationPermission.deniedForever) {
+          await Geolocator.openAppSettings();
+        }
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      ).timeout(const Duration(seconds: 20));
+      nearbyLatitude = position.latitude;
+      nearbyLongitude = position.longitude;
+      final query = '[out:json][timeout:20];(nwr(around:5000,'
+          '${position.latitude},${position.longitude})["name"];);out center 100;';
+      client = HttpClient()..connectionTimeout = const Duration(seconds: 15);
+      final request = await client.postUrl(
+        Uri.parse('https://overpass-api.de/api/interpreter'),
+      ).timeout(const Duration(seconds: 20));
+      request.headers.contentType = ContentType(
+        'application', 'x-www-form-urlencoded', charset: 'utf-8',
+      );
+      request.write('data=${Uri.encodeComponent(query)}');
+      final response = await request.close().timeout(const Duration(seconds: 25));
+      if (response.statusCode != 200) {
+        throw Exception('Nearby directory returned HTTP ${response.statusCode}');
+      }
+      final body = await response.transform(utf8.decoder).join().timeout(const Duration(seconds: 20));
+      final decoded = jsonDecode(body) as Map<String,dynamic>;
+      final elements = (decoded['elements'] as List? ?? const []);
+      final found = <Map<String,dynamic>>[];
+      for (final raw in elements) {
+        if (raw is! Map) continue;
+        final element = Map<String,dynamic>.from(raw);
+        final tags = Map<String,dynamic>.from(element['tags'] as Map? ?? const {});
+        final center = element['center'] is Map
+            ? Map<String,dynamic>.from(element['center'] as Map)
+            : <String,dynamic>{};
+        final lat = (element['lat'] ?? center['lat']) as num?;
+        final lon = (element['lon'] ?? center['lon']) as num?;
+        if (lat == null || lon == null || (tags['name'] ?? '').toString().trim().isEmpty) continue;
+        final address = [
+          tags['addr:street'], tags['addr:suburb'], tags['addr:city'],
+        ].where((v) => v != null && v.toString().trim().isNotEmpty).join(', ');
+        final kind = (tags['amenity'] ?? tags['shop'] ?? tags['tourism'] ??
+            tags['healthcare'] ?? tags['office'] ?? tags['craft'] ?? 'স্থানীয় প্রতিষ্ঠান').toString();
+        found.add({
+          'name': tags['name'].toString(),
+          'category': kind,
+          'address': address,
+          'lat': lat.toDouble(),
+          'lon': lon.toDouble(),
+          'distance': Geolocator.distanceBetween(
+            position.latitude, position.longitude, lat.toDouble(), lon.toDouble(),
+          ),
+        });
+      }
+      found.sort((a,b) => (a['distance'] as double).compareTo(b['distance'] as double));
+      if (mounted) setState(() {
+        nearbyPlaces = found;
+        nearbyMessage = found.isEmpty
+          ? tx('৫ কিমির মধ্যে OpenStreetMap-এ নামসহ কোনো জায়গা পাওয়া যায়নি।', 'No named places found in OpenStreetMap within 5 km.')
+          : tx('${found.length}টি কাছের জায়গা পাওয়া গেছে।', '${found.length} nearby places found.');
+      });
+    } catch (error) {
+      if (mounted) setState(() => nearbyMessage = tx(
+        'কাছের তালিকা লোড হয়নি। ইন্টারনেট সংযোগ দিয়ে আবার চেষ্টা করুন।',
+        'Nearby listings could not load. Check your internet connection and retry.',
+      ));
+      debugPrint('Elyramart nearby places failed: $error');
+    } finally {
+      client?.close(force: true);
+      if (mounted) setState(() => nearbyLoading = false);
+    }
+  }
+  Future<void> _openNearbyPlace(Map<String,dynamic> place) async {
+    final lat = place['lat'];
+    final lon = place['lon'];
+    final url = Uri.parse('https://www.google.com/maps/search/?api=1&query=${lat},${lon}');
+    await launchUrl(url, mode: LaunchMode.externalApplication);
+  }
   Future<void> _loadWishlist() async {
     final prefs=await SharedPreferences.getInstance();
     final ids=prefs.getStringList('elyramart_wishlist_v1')??[];
@@ -373,10 +473,47 @@ class _HomePageState extends State<HomePage> {
             subtitle: Text(tx('আপনার অবস্থান নিয়ে কাছের সেবা ও ঠিকানা ম্যাপে দেখুন',
               'Use your location to explore nearby services and places on the map')),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const LocationSettingsPage())),
+            onTap: _findNearbyPlaces,
           ),
         ),
+        if (nearbyLoading || nearbyMessage.isNotEmpty || nearbyPlaces.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(top: 10, bottom: 4),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Expanded(child: Text(tx('আপনার কাছাকাছি জায়গা', 'Places near you'),
+                  style: const TextStyle(fontWeight: FontWeight.w800, color: ink))),
+                IconButton(
+                  tooltip: tx('আবার খুঁজুন', 'Refresh nearby places'),
+                  onPressed: nearbyLoading ? null : _findNearbyPlaces,
+                  icon: const Icon(Icons.refresh, color: green),
+                ),
+              ]),
+              if (nearbyLoading) const LinearProgressIndicator(),
+              if (nearbyMessage.isNotEmpty) Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Text(nearbyMessage, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+              ),
+              ...nearbyPlaces.where((place) {
+                final q = searchQuery.trim().toLowerCase();
+                final text = '${place['name']} ${place['category']} ${place['address']}'.toLowerCase();
+                return q.isEmpty || text.contains(q);
+              }).take(20).map((place) => ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: const CircleAvatar(child: Icon(Icons.place_outlined, color: green)),
+                title: Text(place['name'].toString()),
+                subtitle: Text('${place['category']} • ${(place['distance'] as double / 1000).toStringAsFixed(1)} km'
+                  '${(place['address'] ?? '').toString().isEmpty ? '' : ' • ${place['address']}'}'),
+                trailing: const Icon(Icons.map_outlined),
+                onTap: () => _openNearbyPlace(place),
+              )),
+              const Text('OpenStreetMap-এর উন্মুক্ত মানচিত্র তথ্য • তালিকার কভারেজ এলাকা অনুযায়ী ভিন্ন হতে পারে।',
+                style: TextStyle(fontSize: 10, color: Colors.black45)),
+            ]),
+          ),
         if(searchQuery.trim().isNotEmpty)
           Container(margin:const EdgeInsets.only(top:14,bottom:4),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(18),border:Border.all(color:const Color(0xFFE5ECE8))),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
             Text(tx('সার্চের ফলাফল','Search results'),style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800,color:ink)),const SizedBox(height:6),
