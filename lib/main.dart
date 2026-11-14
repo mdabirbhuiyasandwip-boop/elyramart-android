@@ -318,6 +318,17 @@ class _HomePageState extends State<HomePage> {
             ),
           ]),
         ),
+        if(!FirebaseRuntime.initialized)
+        Container(
+          margin:const EdgeInsets.only(bottom:16),
+          padding:const EdgeInsets.all(13),
+          decoration:BoxDecoration(color:const Color(0xFFFFF4E5),borderRadius:BorderRadius.circular(14),border:Border.all(color:const Color(0xFFFFD79A))),
+          child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            const Icon(Icons.cloud_off_outlined,color:Color(0xFF9A5B00)),
+            const SizedBox(width:9),
+            Expanded(child:Text(tx('সার্ভার সংযোগ পাওয়া যায়নি। পণ্য, অর্ডার ও বুকিং লাইভভাবে কাজ করছে না। ইন্টারনেট ও Firebase সংযোগ পরীক্ষা করুন।','Server connection unavailable. Products, orders and bookings are not live. Check internet and Firebase setup.'),style:const TextStyle(fontSize:12,color:Color(0xFF754600)))),
+          ]),
+        ),
         const SizedBox(height: 24),
         section(tx('কেনাকাটার বিভাগ','Shop by category'), tx('সব বিভাগ','All categories')),
         SizedBox(height: 112, child: ListView(scrollDirection: Axis.horizontal, children: [
@@ -1936,7 +1947,7 @@ class _AccountPageState extends State<AccountPage> {
           ListTile(
             leading: const Icon(Icons.login),
             title: Text(tx('লগইন / রেজিস্ট্রেশন','Login / Register')),
-            subtitle: Text(tx('ডেমো প্রোফাইল তৈরি ও তথ্য সংরক্ষণ','Create a demo profile and save your details')),
+            subtitle: Text(tx('নিরাপদ অ্যাকাউন্ট তৈরি, লগইন ও অর্ডার ব্যবস্থাপনা','Create a secure account, sign in and manage orders')),
             onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => const CustomerLoginPage())),
           ),
           const Divider(height: 1),
