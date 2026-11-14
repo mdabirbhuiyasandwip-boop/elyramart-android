@@ -24,7 +24,7 @@ Source of truth: repository root-এর Flutter source এবং বর্তম
 | `functions/package.json` | Cloud Functions dependencies ও scripts | আছে |
 | `functions/tsconfig.json` | TypeScript compiler configuration | আছে |
 | `functions/src/index.ts` | Owner admin claim, COD order/stock transaction, order/booking notification triggers | Compile আগে সফল; deploy credential না থাকায় live deploy হয়নি |
-| `firestore.rules` | User, product, order, seller/technician application, booking ও settings access rules | seller product validation ও multi-seller order status guard যোগ করা হয়েছে; production deploy/Emulator test বাকি |
+| `firestore.rules` | User, product, order, seller/technician application, booking, rental listing ও settings access rules | rental listing security rules-সহ ১৪ নভেম্বর ২০২৬ run `43571797191`-এ compile ও deploy সফল; Emulator test বাকি |
 | `storage.rules` | User ও approved seller image upload access | আছে; Emulator/production verification বাকি |
 
 ## ৩. GitHub Actions / CI
