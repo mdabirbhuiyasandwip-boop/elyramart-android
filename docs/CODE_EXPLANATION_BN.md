@@ -6,7 +6,7 @@
 
 | ফাইল/ফোল্ডার | সহজ ব্যাখ্যা |
 |---|---|
-| `lib/main.dart` | Flutter অ্যাপের প্রধান কোড। স্ক্রিন, লগইন, পণ্য, কার্ট, COD checkout, অর্ডার, seller, technician ও admin UI এখানে আছে। বর্তমানে প্রায় ১,৯৮২ লাইন; ভবিষ্যৎ technician চাইলে feature অনুযায়ী আলাদা ফাইলে ভাগ করতে পারবেন। |
+| `lib/main.dart` | Flutter অ্যাপের প্রধান কোড। স্ক্রিন, লগইন, পণ্য, কার্ট, COD checkout, অর্ডার, seller, technician, admin এবং বাসা/অফিস ভাড়া browse/post UI এখানে আছে। ভবিষ্যৎ technician feature অনুযায়ী আলাদা ফাইলে ভাগ করতে পারবেন। |
 | `pubspec.yaml` | অ্যাপের নাম, version এবং Flutter/Firebase package-এর তালিকা। নতুন package যোগ বা version বদলাতে এখানে পরিবর্তন হয়। |
 | `pubspec.lock` | ব্যবহৃত package-গুলোর নির্দিষ্ট version lock করে; সাধারণত Flutter package manager এটি তৈরি/আপডেট করে। |
 | `google-services.json` | Android app-কে Firebase project-এর সঙ্গে পরিচয় করায়। এটি server private key নয়; GitHub deploy secret-এর বিকল্পও নয়। |
