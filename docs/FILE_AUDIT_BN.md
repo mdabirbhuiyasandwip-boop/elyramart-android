@@ -9,7 +9,7 @@ Source of truth: repository root-এর Flutter source এবং বর্তম
 
 | ফাইল | কাজ | অবস্থা |
 |---|---|---|
-| `lib/main.dart` | Flutter customer, seller, technician, admin UI; authentication, cart, COD checkout, booking, product image upload, local/demo fallback | মূল app code আছে; feature QA ও code modularization বাকি |
+| `lib/main.dart` | Flutter customer, seller, technician, admin ও rental UI; authentication, cart, COD checkout, booking, product/rental browse ও post | নতুন rental feature যোগ; latest APK/Web CI ও device QA যাচাই চলছে |
 | `pubspec.yaml` | Flutter ও Firebase package dependency; app version | আছে; release version bump পরে |
 | `google-services.json` | Android Firebase client configuration; package `com.elyramartbd.elyramart` | আছে; এটি deploy private key নয় |
 | `firebase.json` | Firestore rules, Storage rules ও Functions deployment mapping | আছে |
