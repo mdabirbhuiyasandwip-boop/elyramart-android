@@ -2500,6 +2500,17 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
   }
 
   Future<void> _save() async {
+    final user = FirebaseRuntime.initialized ? FirebaseAuth.instance.currentUser : null;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('প্রোফাইল অনলাইনে সংরক্ষণ করতে আগে লগইন বা নতুন অ্যাকাউন্ট তৈরি করুন।')));
+      return;
+    }
+    if (!user.emailVerified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('প্রোফাইল সংরক্ষণের আগে ইমেইল যাচাই করুন।')));
+      return;
+    }
     if (name.text.trim().isEmpty || phone.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('নাম ও মোবাইল নম্বর লিখুন')));
@@ -2511,25 +2522,22 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
         const SnackBar(content: Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));
       return;
     }
-    final profile = {
-      'name': name.text.trim(), 'phone': normalized,
-      'address': address.text.trim(),
-      'uid': FirebaseRuntime.initialized ? FirebaseAuth.instance.currentUser?.uid : null,
-      'updatedAt': DateTime.now().toIso8601String(),
-    };
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('elyramart_customer_profile_v1', jsonEncode(profile));
-    if (FirebaseRuntime.initialized && FirebaseAuth.instance.currentUser != null) {
-      try { await _syncUserProfile(); }
-      catch (_) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ফোনে সংরক্ষিত হয়েছে, কিন্তু ক্লাউডে সিঙ্ক হয়নি।')));
-        return;
-      }
+    try {
+      await _syncUserProfile();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('elyramart_customer_profile_v1', jsonEncode({
+        'name': name.text.trim(), 'phone': normalized,
+        'address': address.text.trim(), 'uid': user.uid,
+        'updatedAt': DateTime.now().toIso8601String(),
+      }));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('প্রোফাইল অনলাইনে সংরক্ষিত হয়েছে।')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('প্রোফাইল অনলাইনে সংরক্ষণ হয়নি: $error')));
     }
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(FirebaseRuntime.initialized && FirebaseAuth.instance.currentUser != null ? 'প্রোফাইল সংরক্ষিত হয়েছে।' : 'ডেমো প্রোফাইল এই ফোনে সংরক্ষিত হয়েছে')));
   }
 
   @override Widget build(BuildContext context) => Scaffold(
