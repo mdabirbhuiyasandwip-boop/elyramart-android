@@ -10,6 +10,7 @@ This file separates code that exists from services that are actually deployed an
 - Wishlist IDs persist locally on the current device using SharedPreferences.
 - Updated Android CI so `flutter analyze --no-pub` runs directly and its non-zero exit status cannot be hidden by `|| true`.
 - Added the complete product requirements and phased delivery plan in `docs/PRODUCT_REQUIREMENTS.md`.
+- Expanded the product plan to cover practical everyday-life and future-ready services: verified essential directories, transport, jobs, education, home/family support, community help, accessibility, low-data use, privacy and trust/safety. These are roadmap items, not falsely labelled live features.
 
 ## Existing source features confirmed during repository audit
 - Flutter Android app with Bengali/English toggle and Elyramart E-only mark.
@@ -34,6 +35,7 @@ This file separates code that exists from services that are actually deployed an
 - Rental image gallery, edit flow, saved rentals, map view and admin moderation/report queue.
 - Production website hosting and signed Play Store AAB.
 - Real-device end-to-end QA.
+- The newly added future-ready roadmap modules (jobs, education, transport, family/home-care, community-help, reminders and advanced accessibility) are not implemented or production-verified.
 
 ## Current CI
 - Android workflow run: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43630016244
@@ -55,4 +57,5 @@ This file separates code that exists from services that are actually deployed an
 5. Complete service-provider discovery and booking lifecycle.
 6. Add support ticket and notification inbox.
 7. Finish owner dashboard data and web admin.
-8. Real-device QA, signed release build and Play Store preparation.
+8. Implement future roadmap modules incrementally after core marketplace is stable and each has verified data/providers.
+9. Real-device QA, signed release build and Play Store preparation.
