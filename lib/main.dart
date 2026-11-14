@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show HttpClient;
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:url_launcher/url_launcher.dart';
@@ -237,7 +237,6 @@ class _HomePageState extends State<HomePage> {
   Future<void> _findNearbyPlaces() async {
     if (nearbyLoading) return;
     setState(() { nearbyLoading = true; nearbyMessage = ''; });
-    HttpClient? client;
     try {
       if (!await Geolocator.isLocationServiceEnabled()) {
         nearbyMessage = tx('ফোনের GPS/Location চালু করুন।', 'Turn on your phone location services.');
@@ -263,20 +262,15 @@ class _HomePageState extends State<HomePage> {
       nearbyLongitude = position.longitude;
       final query = '[out:json][timeout:20];(nwr(around:5000,'
           '${position.latitude},${position.longitude})["name"];);out center 100;';
-      client = HttpClient()..connectionTimeout = const Duration(seconds: 15);
-      final request = await client.postUrl(
+      final response = await http.post(
         Uri.parse('https://overpass-api.de/api/interpreter'),
-      ).timeout(const Duration(seconds: 20));
-      request.headers.contentType = ContentType(
-        'application', 'x-www-form-urlencoded', charset: 'utf-8',
-      );
-      request.write('data=${Uri.encodeComponent(query)}');
-      final response = await request.close().timeout(const Duration(seconds: 25));
+        headers: const {'content-type': 'application/x-www-form-urlencoded'},
+        body: {'data': query},
+      ).timeout(const Duration(seconds: 45));
       if (response.statusCode != 200) {
         throw Exception('Nearby directory returned HTTP ${response.statusCode}');
       }
-      final body = await response.transform(utf8.decoder).join().timeout(const Duration(seconds: 20));
-      final decoded = jsonDecode(body) as Map<String,dynamic>;
+      final decoded = jsonDecode(response.body) as Map<String,dynamic>;
       final elements = (decoded['elements'] as List? ?? const []);
       final found = <Map<String,dynamic>>[];
       for (final raw in elements) {
@@ -319,7 +313,6 @@ class _HomePageState extends State<HomePage> {
       ));
       debugPrint('Elyramart nearby places failed: $error');
     } finally {
-      client?.close(force: true);
       if (mounted) setState(() => nearbyLoading = false);
     }
   }
