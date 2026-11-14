@@ -1289,7 +1289,7 @@ class WishlistPage extends StatelessWidget {
             leading:SizedBox(width:58,height:58,child:ClipRRect(borderRadius:BorderRadius.circular(10),child:p.imageUrl==null?const Icon(Icons.image_not_supported_outlined):NetworkPhoto(url:p.imageUrl!,fallbackIcon:Icons.broken_image_outlined))),
             title:Text(p.name,maxLines:1,overflow:TextOverflow.ellipsis),
             subtitle:Text(p.price),
-            trailing:Wrap(mainAxisSize:MainAxisSize.min,children:[
+            trailing:Row(mainAxisSize:MainAxisSize.min,children:[
               IconButton(tooltip:'কার্টে যোগ করুন',onPressed:p.stock!=null&&p.stock!<=0?null:()=>onAdd(p),icon:const Icon(Icons.add_shopping_cart,color:green)),
               IconButton(tooltip:'সরান',onPressed:(){onRemove(p);Navigator.pop(context);},icon:const Icon(Icons.favorite,color:Colors.red)),
             ]),
@@ -1358,10 +1358,10 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
         }
       }
       if (cloudApplication != null) {
-        shop.text = cloudApplication!['shopName'] ?? '';
+        shop.text = cloudApplication['shopName'] ?? '';
         owner.text = cloudUser?['name'] ?? '';
-        phone.text = cloudApplication!['contact'] ?? cloudUser?['phone'] ?? '';
-        address.text = cloudApplication!['address'] ?? cloudUser?['address'] ?? '';
+        phone.text = cloudApplication['contact'] ?? cloudUser?['phone'] ?? '';
+        address.text = cloudApplication['address'] ?? cloudUser?['address'] ?? '';
       }
       registered = localRegistered || cloudApplication != null || cloudApproved;
       mine = loadedProducts;
@@ -1944,10 +1944,10 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
     if (!mounted) return;
     setState(() {
       if (cloudApplication != null) {
-        name.text = cloudApplication!['name'] ?? '';
-        phone.text = cloudApplication!['phone'] ?? '';
-        address.text = cloudApplication!['address'] ?? '';
-        skills.text = cloudApplication!['skills'] ?? '';
+        name.text = cloudApplication['name'] ?? '';
+        phone.text = cloudApplication['phone'] ?? '';
+        address.text = cloudApplication['address'] ?? '';
+        skills.text = cloudApplication['skills'] ?? '';
       }
       saved = cloudApplication != null || cloudApproved;
       bookings = data.reversed.toList();
