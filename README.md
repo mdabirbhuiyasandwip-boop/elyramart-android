@@ -22,6 +22,7 @@ A successful build is not proof of full live functionality, real-device QA or Pl
 - Customer email/password authentication and email verification flow.
 - Customer catalogue/cart/checkout and order history screens.
 - Seller and technician applications, approval flows, product submission and admin screens.
+- House and office rental listings: users can post a property for rent or publish a rental requirement, then browse active listings.
 - COD order callable source with server-side product/stock validation.
 - Product image upload and FCM notification source.
 - Firestore and Storage security rules.
@@ -40,6 +41,7 @@ These capabilities require Firebase Console setup, successful backend deployment
 ## Developer documentation
 
 - [বাংলা Code & File Explanation](docs/CODE_EXPLANATION_BN.md)
+- [বাসা ও অফিস ভাড়া ফিচার গাইড](docs/RENTAL_MARKETPLACE_BN.md)
 - [বাংলা Repository File Audit](docs/FILE_AUDIT_BN.md)
 - [বাংলা Developer Handoff](docs/DEVELOPER_HANDOFF_BN.md)
 - [বাংলা Firebase Setup](docs/FIREBASE_SETUP_BN.md)
