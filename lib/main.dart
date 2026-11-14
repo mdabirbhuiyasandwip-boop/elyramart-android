@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -273,6 +274,8 @@ class _HomePageState extends State<HomePage> {
   Widget home(){
     final allProducts=<Product>[...products,...sellerProducts];
     final visibleProducts=allProducts.where((p)=>(category=='সব'||p.category==category) && p.sellerId!=null && p.productId!=null && p.imageUrl!=null && p.imageUrl!.isNotEmpty && ('${p.name} ${p.category} ${p.detail}'.toLowerCase().contains(searchQuery.toLowerCase()))).toList();
+    final query=searchQuery.trim().toLowerCase();
+    final visibleServices=services.where((s)=>query.isEmpty || '${s.$1} ${s.$3} ${englishServiceName(s.$1)} ${englishServiceDetail(s.$3)}'.toLowerCase().contains(query)).toList();
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
       children: [
@@ -310,6 +313,7 @@ class _HomePageState extends State<HomePage> {
                     decoration: InputDecoration(
                       hintText: tx('পণ্য বা সেবা খুঁজুন...','Search products or services...'),
                       prefixIcon: const Icon(Icons.search_rounded, color: green),
+                      suffixIcon: searchQuery.isEmpty ? null : IconButton(tooltip:tx('মুছে ফেলুন','Clear search'),onPressed:()=>setState(()=>searchQuery=''),icon:const Icon(Icons.close_rounded,color:Colors.black54)),
                       filled: false, border: InputBorder.none, contentPadding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
@@ -318,6 +322,14 @@ class _HomePageState extends State<HomePage> {
             ),
           ]),
         ),
+        if(searchQuery.trim().isNotEmpty)
+          Container(margin:const EdgeInsets.only(top:14,bottom:4),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(18),border:Border.all(color:const Color(0xFFE5ECE8))),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            Text(tx('সার্চের ফলাফল','Search results'),style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800,color:ink)),const SizedBox(height:6),
+            if(visibleServices.isNotEmpty) ...[Text(tx('সার্ভিস (${visibleServices.length})','Services (${visibleServices.length})'),style:const TextStyle(color:green,fontWeight:FontWeight.w700)),...visibleServices.map((service)=>ListTile(contentPadding:EdgeInsets.zero,leading:CircleAvatar(backgroundColor:const Color(0xFFEAF5EF),child:Icon(service.$2,color:green)),title:Text(AppLanguage.english.value?englishServiceName(service.$1):service.$1),subtitle:Text(AppLanguage.english.value?englishServiceDetail(service.$3):service.$3),trailing:const Icon(Icons.arrow_forward_ios,size:14),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>BookingPage(service:AppLanguage.english.value?englishServiceName(service.$1):service.$1)))))],
+            Text(tx('পণ্য: ${visibleProducts.length}','Products: ${visibleProducts.length}'),style:const TextStyle(color:green,fontWeight:FontWeight.w700)),
+            if(visibleServices.isEmpty&&visibleProducts.isEmpty) Padding(padding:const EdgeInsets.only(top:8),child:Text(tx('কোনো মিল পাওয়া যায়নি। অন্য নামে খুঁজুন।','No matches found. Try another keyword.'))),
+            if(!FirebaseRuntime.initialized) Padding(padding:const EdgeInsets.only(top:8),child:Text(tx('লাইভ পণ্যের ফল পেতে সার্ভার সংযোগ চালু করতে হবে।','Server setup is required to show live product results.'),style:const TextStyle(fontSize:12,color:Colors.black54))),
+          ])),
         if(!FirebaseRuntime.initialized)
         Container(
           margin:const EdgeInsets.only(bottom:16),
@@ -439,7 +451,7 @@ class _HomePageState extends State<HomePage> {
     ),
   );
 
-  Widget section(String a,String b)=>Padding(padding:const EdgeInsets.only(bottom:12),child:Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[Text(a,style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold,color:ink)),Text(b,style:const TextStyle(color:green,fontWeight:FontWeight.w600))]));
+  Widget section(String a,String b)=>Padding(padding:const EdgeInsets.only(bottom:12),child:Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[Text(a,style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold,color:ink)),if(b==tx('সব বিভাগ','All categories')) TextButton(onPressed:()=>setState(()=>category='সব'),child:Text(b,style:const TextStyle(color:green,fontWeight:FontWeight.w700))) else Text(b,style:const TextStyle(color:green,fontWeight:FontWeight.w600))]));
 }
 
 class Cat extends StatelessWidget { final String icon,name; const Cat({super.key,required this.icon,required this.name}); @override Widget build(BuildContext c)=>Container(width:76,margin:const EdgeInsets.only(right:10),padding:const EdgeInsets.all(8),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Text(icon,style:const TextStyle(fontSize:27)),const SizedBox(height:5),Text(name,style:const TextStyle(fontSize:11,fontWeight:FontWeight.w600))])); }
@@ -1870,12 +1882,17 @@ class _AccountPageState extends State<AccountPage> {
   List<Map<String,dynamic>> orders = [];
   List<Map<String,dynamic>> bookings = [];
   bool _isOwnerAdmin = false;
+  StreamSubscription<User?>? _authSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadHistory();
+    if(FirebaseRuntime.initialized){_authSubscription=FirebaseAuth.instance.idTokenChanges().listen((_)=>_loadHistory());}
   }
+
+  @override
+  void dispose(){_authSubscription?.cancel();super.dispose();}
 
   Future<void> _loadHistory() async {
     final prefs = await SharedPreferences.getInstance();
