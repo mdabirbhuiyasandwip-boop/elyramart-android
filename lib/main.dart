@@ -441,6 +441,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     setState(()=>saving=true);
     final user = FirebaseRuntime.initialized ? FirebaseAuth.instance.currentUser : null;
     final orderNumber='ELY-${DateTime.now().millisecondsSinceEpoch}';
+    var confirmedOrderNumber=orderNumber;
     final orderData=<String,dynamic>{
       'orderNumber': orderNumber,
       'customerId': user?.uid,
@@ -475,7 +476,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
         orderData['deliveryFee']=serverDeliveryFee;
         orderData['subtotal']=result['subtotal']??totalAmount;
         orderData['totalAmount']=serverTotalAmount??(totalAmount+serverDeliveryFee);
-        orderData['orderNumber']=result['orderNumber']??orderNumber;
+        confirmedOrderNumber=(result['orderNumber'] as String?)?.trim().isNotEmpty==true
+            ? (result['orderNumber'] as String).trim() : orderNumber;
+        orderData['orderNumber']=confirmedOrderNumber;
         cloudSaved=true;
       }catch(error){
         if(!mounted)return;
@@ -492,7 +495,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     widget.onOrderSaved();
     if(!mounted)return;
     setState(()=>saving=false);
-    showDialog(context:c,builder:(_)=>AlertDialog(title:Text(cloudSaved?'অর্ডার অনলাইনে পাঠানো হয়েছে':'ডেমো অর্ডার সংরক্ষিত'),content:Text('অর্ডার নম্বর: $orderNumber\\nপণ্যের মোট: ৳$totalAmount\\nডেলিভারি চার্জ: ৳$serverDeliveryFee\\nসর্বমোট: ৳${serverTotalAmount??(totalAmount+serverDeliveryFee)}\\n${cloudSaved?'অর্ডার সার্ভারে সংরক্ষিত হয়েছে।':'অর্ডার শুধু এই ফোনে রাখা হয়েছে। অনলাইনে পাঠাতে লগইন করুন এবং Firebase চালু থাকতে হবে।'}'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
+    showDialog(context:c,builder:(_)=>AlertDialog(title:Text(cloudSaved?'অর্ডার অনলাইনে পাঠানো হয়েছে':'ডেমো অর্ডার সংরক্ষিত'),content:Text('অর্ডার নম্বর: $confirmedOrderNumber\\nপণ্যের মোট: ৳$totalAmount\\nডেলিভারি চার্জ: ৳$serverDeliveryFee\\nসর্বমোট: ৳${serverTotalAmount??(totalAmount+serverDeliveryFee)}\\n${cloudSaved?'অর্ডার সার্ভারে সংরক্ষিত হয়েছে।':'অর্ডার শুধু এই ফোনে রাখা হয়েছে। অনলাইনে পাঠাতে লগইন করুন এবং Firebase চালু থাকতে হবে।'}'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
   }
   @override Widget build(BuildContext c)=>Scaffold(
     appBar:AppBar(title:const Text('ডেলিভারি তথ্য')),
@@ -1313,9 +1316,11 @@ class _AccountPageState extends State<AccountPage> {
         }
       }).where((item) => item.isNotEmpty).toList().reversed.toList();
     }
-    var loadedOrders=decode('elyramart_local_orders_v1');
-    var loadedBookings=decode('elyramart_service_requests_v1');
     final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;
+    // Guest/demo history belongs only to the signed-out device session.
+    // Never mix it into a signed-in customer's account history.
+    var loadedOrders=user==null?decode('elyramart_local_orders_v1'):<Map<String,dynamic>>[];
+    var loadedBookings=user==null?decode('elyramart_service_requests_v1'):<Map<String,dynamic>>[];
     if(user!=null){
       try{
         final cloudOrders=await FirebaseFirestore.instance.collection('orders').where('customerId',isEqualTo:user.uid).limit(100).get();
