@@ -56,7 +56,7 @@ Repository: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android
 
 ## এখনো owner-এর হাতে থাকা কাজ
 
-1. Firebase Console-এ Email/Password Authentication ও Firestore database প্রস্তুত/যাচাই এবং owner email verify করা।
+1. Firebase service-account secret `FIREBASE_SERVICE_ACCOUNT_JSON` যাচাই হয়েছে এবং Firestore Rules deploy সফল। Firebase Console-এ Email/Password Authentication ও owner email verification এখনো বাস্তবে যাচাই করতে হবে।
 2. Cloud Functions/Storage দরকার হলে Blaze billing-এর সম্ভাব্য খরচ বুঝে নিজে সিদ্ধান্ত নেওয়া। Functions চালু হলে `ENABLE_CLOUD_FUNCTIONS_DEPLOY=true` variable দিতে হবে।
 3. Web app Firebase config-এর ছয়টি `ELYRAMART_FIREBASE_*` secrets যোগ করা; এরপর GitHub Pages variable/Pages settings অথবা Firebase Hosting setup করে public URL publish করা।
 4. Android upload keystore তৈরি, offline backup, চারটি signing secret যোগ করে signed AAB rebuild ও signature verify করা।
