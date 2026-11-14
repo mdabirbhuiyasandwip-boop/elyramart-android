@@ -163,3 +163,15 @@ Service-account JSON/private key, Android upload keystore/password, payment secr
 - Firestore rules compile ও Firebase project `elyramart`-এ deploy workflow [43586823063](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43586823063) **success**। Deploy log-এ rules compiled successfully এবং released rules দেখা গেছে। এখন verified email অথবা Firebase-verified phone token—দুই ধরনের user Firestore-এর verified-user gated actions ব্যবহার করতে পারবে।
 - Cloud Functions deploy step paid billing variable বন্ধ থাকায় চালানো হয়নি; COD callable ও Owner Admin claim এখনো live নয়। Storage deployment-ও বন্ধ।
 - APK workflow [43586412860](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43586412860)-এ Analyze ও Widget Tests সফল; Release APK build step এখনো in progress, AAB/artifact upload pending। APK/AAB পাওয়া না পর্যন্ত build complete বলা যাবে না।
+
+
+## ১৪ নভেম্বর ২০২৬ — সর্বশেষ যাচাই (বিকাল)
+
+- Android workflow run [43586412860](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43586412860) সম্পূর্ণ **success**: Flutter analyze, widget tests, release APK ও Play Store AAB build এবং artifact upload সফল।
+- APK artifact `Elyramart-APK-release`, artifact ID `14110683476`; AAB artifact `Elyramart-Play-Store-AAB`, artifact ID `14110837870`; উভয়ের GitHub artifact মেয়াদ ২৮ নভেম্বর ২০২৬ পর্যন্ত।
+- Downloaded APK/AAB-এর signature পরীক্ষা: certificate subject `CN=Android Debug`; তাই AAB Play Console production upload-এর জন্য signed নয়। APK-ও production signing নয়।
+- Firebase deploy run [43586823063](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43586823063) success: Firestore Rules deploy হয়েছে। Cloud Functions deployment billing gate-এর কারণে skipped; Storage deployment bucket/enablement gate-এর কারণে skipped।
+- GitHub Pages workflow deploy condition `ENABLE_GITHUB_PAGES_DEPLOY == true`; variable enabled নয়, তাই deployment হয়নি। Web artifact build-only.
+- Phone OTP code path build হয়েছে; Firebase Phone provider, SMS policy/quota and real handset SMS flow independently verified নয়.
+- Owner Admin custom claim callable live নয় যতক্ষণ Cloud Functions deploy না হয়. Online gateway, Rider live tracking, and production end-to-end handset tests remain incomplete.
+- **কোনো Firebase billing plan, paid SMS, payment gateway, Play Console purchase বা other paid service এই run-এ enable করা হয়নি।** Owner approval and secure credentials required.
