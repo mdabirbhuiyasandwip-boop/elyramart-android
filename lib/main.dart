@@ -706,14 +706,17 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
       Text('পণ্য: '+((o['items'] as List? ?? []).map((x)=>x['name']??'').join(', '))),
       Text('মোট: ৳'+(o['totalAmount']??0).toString(),style:const TextStyle(fontWeight:FontWeight.bold,color:green)),
       const SizedBox(height:8),
-      DropdownButtonFormField<String>(value:['local_pending','placed','confirmed','processing','completed','cancelled'].contains(o['status'])?o['status']:'local_pending',decoration:const InputDecoration(labelText:'অর্ডারের অবস্থা',border:OutlineInputBorder()),items:const [
-        DropdownMenuItem(value:'local_pending',child:Text('নতুন')),
-        DropdownMenuItem(value:'placed',child:Text('নতুন অনলাইন')),
-        DropdownMenuItem(value:'confirmed',child:Text('নিশ্চিত')),
-        DropdownMenuItem(value:'processing',child:Text('প্রস্তুত হচ্ছে')),
-        DropdownMenuItem(value:'completed',child:Text('সম্পন্ন')),
-        DropdownMenuItem(value:'cancelled',child:Text('বাতিল'))
-      ].where((option)=>o['_docId']==null||_sellerOrderNextStatuses((o['status']??'').toString()).contains(option.value)).toList(),onChanged:(v){if(v!=null)updateOrderStatus(o,v);})
+      if(o['_docId']!=null&&(o['sellerIds'] as List? ?? []).length>1)
+        const Text('একাধিক সেলার: অর্ডারের অবস্থা অ্যাডমিন নিয়ন্ত্রণ করবেন',style:TextStyle(color:Colors.black54,fontSize:12))
+      else
+        DropdownButtonFormField<String>(value:['local_pending','placed','confirmed','processing','completed','cancelled'].contains(o['status'])?o['status']:'local_pending',decoration:const InputDecoration(labelText:'অর্ডারের অবস্থা',border:OutlineInputBorder()),items:const [
+          DropdownMenuItem(value:'local_pending',child:Text('নতুন')),
+          DropdownMenuItem(value:'placed',child:Text('নতুন অনলাইন')),
+          DropdownMenuItem(value:'confirmed',child:Text('নিশ্চিত')),
+          DropdownMenuItem(value:'processing',child:Text('প্রস্তুত হচ্ছে')),
+          DropdownMenuItem(value:'completed',child:Text('সম্পন্ন')),
+          DropdownMenuItem(value:'cancelled',child:Text('বাতিল'))
+        ].where((option)=>o['_docId']==null||_sellerOrderNextStatuses((o['status']??'').toString()).contains(option.value)).toList(),onChanged:(v){if(v!=null)updateOrderStatus(o,v);})
     ])))),
     const SizedBox(height:12),const Text('অনলাইন আবেদন, পণ্য ও অর্ডার দেখতে Firebase-এ লগইন করুন। লগইন ছাড়া তৈরি ডেমো তথ্য শুধু এই ফোনে থাকে।',style:TextStyle(color:Colors.black54,fontSize:12))
   ]));
