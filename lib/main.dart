@@ -2398,7 +2398,7 @@ class _SupportCenterPageState extends State<SupportCenterPage> {
       else ...tickets.map((t)=>Card(color:Colors.white,child:ListTile(
         leading:const Icon(Icons.support_agent,color:green),
         title:Text((t['subject']??'সহায়তা অনুরোধ').toString()),
-        subtitle:Text('${t['category']??''}\\n${t['message']??''}',maxLines:3,overflow:TextOverflow.ellipsis),
+        subtitle:Text('${t['category']??''}\\n${t['message']??''}\\n${(t['adminReply']??'').toString().isEmpty?'':'Elyramart: ${t['adminReply']}'}',maxLines:5,overflow:TextOverflow.ellipsis),
         isThreeLine:true,
         trailing:Text((t['status']=='open'?'খোলা':t['status']=='in_progress'?'চলমান':t['status']=='resolved'?'সমাধান':'বন্ধ').toString(),style:const TextStyle(color:green,fontWeight:FontWeight.w700)),
       ))),
