@@ -2416,29 +2416,51 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
   Future<void> _verifyPhoneOtp() async {
     final id = phoneVerificationId;
     final code = phoneOtpCode.text.trim();
-    if (id == null || id.isEmpty) {
-      _showAuthMessage('আগে OTP পাঠান।'); return;
-    }
-    if (!RegExp(r'^\\d{6}
-    if (!FirebaseRuntime.initialized) {
-      _showAuthMessage('Firebase সংযোগ প্রস্তুত নয়।');
-      return;
-    }
-    if (email.text.trim().isEmpty) {
-      _showAuthMessage('পাসওয়ার্ড রিসেট লিংক পেতে আগে ইমেইল লিখুন।');
-      return;
-    }
+    if (id == null || id.isEmpty) { _showAuthMessage('আগে OTP পাঠান।'); return; }
+    if (!RegExp(r'^[0-9]{6}$').hasMatch(code)) { _showAuthMessage('SMS-এর ৬ সংখ্যার OTP লিখুন।'); return; }
+    setState(() { authBusy = true; authMessage = ''; });
+    try {
+      final credential = PhoneAuthProvider.credential(verificationId: id, smsCode: code);
+      await _completePhoneSignIn(credential);
+    } on FirebaseAuthException catch (e) { _showAuthMessage(_authError(e.code)); }
+    catch (e) { debugPrint('Elyramart phone OTP verification failed: $e'); _showAuthMessage('OTP যাচাই হয়নি। কোডটি পরীক্ষা করে আবার চেষ্টা করুন।'); }
+  }
+
+  Future<void> _completePhoneSignIn(PhoneAuthCredential credential) async {
+    final result = await FirebaseAuth.instance.signInWithCredential(credential);
+    final user = result.user;
+    if (user == null) throw StateError('Phone sign-in returned no user');
+    try {
+      final ref = FirebaseFirestore.instance.collection('users').doc(user.uid);
+      final snap = await ref.get();
+      if (!snap.exists) {
+        await ref.set({
+          'name': name.text.trim(),
+          'phone': normalizeBangladeshPhone(user.phoneNumber ?? phone.text) ?? phone.text.trim(),
+          'email': user.email ?? '', 'address': address.text.trim(), 'role': 'customer',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        final data = snap.data() ?? <String, dynamic>{};
+        name.text = (data['name'] ?? '').toString();
+        phone.text = (data['phone'] ?? phone.text).toString();
+        address.text = (data['address'] ?? '').toString();
+      }
+    } catch (e) { debugPrint('Elyramart phone profile sync deferred: $e'); }
+    if (!mounted) return;
+    setState(() { authBusy = false; phoneOtpSent = false; phoneVerificationId = null; phoneOtpCode.clear(); authMessage = 'মোবাইল নম্বর দিয়ে সফলভাবে লগইন হয়েছে।'; });
+  }
+
+  Future<void> _resetPassword() async {
+    if (!FirebaseRuntime.initialized) { _showAuthMessage('Firebase সংযোগ প্রস্তুত নয়।'); return; }
+    if (email.text.trim().isEmpty) { _showAuthMessage('পাসওয়ার্ড রিসেট লিংক পেতে আগে ইমেইল লিখুন।'); return; }
     setState(() { authBusy = true; authMessage = ''; });
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email.text.trim());
       _showAuthMessage('পাসওয়ার্ড পরিবর্তনের লিংক আপনার ইমেইলে পাঠানো হয়েছে।');
-    } on FirebaseAuthException catch (e) {
-      _showAuthMessage(_authError(e.code));
-    } catch (_) {
-      _showAuthMessage('রিসেট লিংক পাঠানো যায়নি। আবার চেষ্টা করুন।');
-    }
+    } on FirebaseAuthException catch (e) { _showAuthMessage(_authError(e.code)); }
+    catch (_) { _showAuthMessage('রিসেট লিংক পাঠানো যায়নি। আবার চেষ্টা করুন।'); }
   }
-
   Future<void> _register() async {
     if (!FirebaseRuntime.initialized) {
       _showAuthMessage('Firebase সংযোগ প্রস্তুত নয়।'); return;
