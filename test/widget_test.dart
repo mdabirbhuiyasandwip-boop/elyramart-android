@@ -97,6 +97,15 @@ void main() {
     expect(find.text('এই এলাকায় এখনো যাচাইকৃত পার্লার তালিকা যোগ হয়নি।'), findsOneWidget);
   });
 
+  testWidgets('support centre opens with a clear sign-in requirement', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: SupportCenterPage()));
+    await tester.pumpAndSettle();
+    expect(find.text('সাহায্য ও অভিযোগ'), findsOneWidget);
+    expect(find.text('কীভাবে সাহায্য করতে পারি?'), findsOneWidget);
+    expect(find.text('অনুরোধের ইতিহাস দেখতে লগইন করুন।'), findsOneWidget);
+    expect(find.text('অনুরোধ জমা দিন'), findsOneWidget);
+  });
+
   testWidgets('Elyramart main pages and customer profile open', (tester) async {
     await tester.pumpWidget(const ElyramartApp());
     await tester.pumpAndSettle();
