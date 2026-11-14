@@ -99,3 +99,27 @@ Service-account JSON/private key, Android upload keystore/password, payment secr
 - AAB signature inspection-এ `CN=Android Debug` পাওয়া গেছে; এটি Play Store upload keystore signature নয়। Production upload-এর আগে মালিকের নিজস্ব upload keystore ও চারটি GitHub signing secret দিয়ে পুনরায় build/sign করতে হবে।
 - APK build success মানে বাস্তব Android ফোনে install/run বা Firebase end-to-end QA সম্পন্ন হয়েছে—এমন নয়।
 - Owner Admin panel source-এ রাখা আছে এবং admin custom claim ছাড়া প্রবেশ বন্ধ। Cloud Functions/Blaze চালু না করায় `claimOwnerAdmin` এখনো live নয়; প্যানেলের production online actions আপাতত সীমিত। কোনো paid billing enable করা হয়নি।
+
+
+## ১৪ নভেম্বর ২০২৬ — Release preflight (সর্বশেষ যাচাই)
+
+### CI-তে যাচাইকৃত
+- Android workflow run [43581917105](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43581917105) এবং job conclusion: **success**।
+- Flutter analyzer: কোনো Error/Warning পাওয়া যায়নি; ৪৯টি Info-level lint/style suggestion আছে। Workflow-এর analyzer step Info-কে failure ধরে না।
+- Widget test: **৬/৬ pass** — phone normalization, out-of-stock cart guard, sign-out-এর পর cached profile না দেখানো, rental screen, Bangladesh location filters, এবং main navigation/account flows।
+- Release APK (55.6 MB) ও AAB (56.7 MB) build এবং artifact upload সফল।
+- Artifact ID: APK `14109195976`; AAB `14109310618`। Artifact retention ১৪ দিন; ২৮ নভেম্বর ২০২৬ পর্যন্ত download করা যাবে।
+- APK ও AAB archive integrity যাচাই হয়েছে। AAB certificate হলো `CN=Android Debug`; এটি Play Store release signing নয়।
+
+### Release blocker — এখনো সম্পন্ন নয়
+- বাস্তব Android ফোনে install/launch এবং end-to-end QA হয়নি।
+- Firebase Email/Password login, email verification ও owner account বাস্তবে যাচাই বাকি।
+- Cloud Functions deploy হয়নি; COD server-side callable ও Owner Admin claim function live নয়।
+- Firebase Storage bucket/rules deploy হয়নি; seller image upload live নয়।
+- Owner Admin UI source-এ আছে, কিন্তু custom claim ছাড়া production admin access/online actions কার্যকর নয়।
+- bKash/Nagad/card gateway নেই; checkout-এর production COD flow-ও Functions deploy না হওয়া পর্যন্ত সম্পূর্ণ নয়।
+- Signed AAB-এর জন্য owner-owned upload keystore ও চারটি protected GitHub secret বাকি।
+- Public website hosting/configuration, privacy/terms এবং Play Console review বাকি।
+
+### সিদ্ধান্ত
+**এটি CI-তে build ও widget-test pass করা install-test candidate; production launch বা Play Store submission-ready release নয়।** কোনো paid Firebase billing চালু করা হয়নি। Owner-এর স্পষ্ট অনুমতি ছাড়া billing enable করা যাবে না।
