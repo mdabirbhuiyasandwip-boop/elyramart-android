@@ -429,6 +429,7 @@ class _HomePageState extends State<HomePage> {
             _homeServiceCard(tx('হাসপাতাল','Hospitals'),tx('ঠিকানা ও ফোন খুঁজুন','Find address & phone'),Icons.local_hospital_outlined, ()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const DailyLifeDirectoryPage()))),
             _homeServiceCard(tx('মেয়েদের পার্লার','Beauty parlours'),tx('কাছের পার্লার খুঁজুন','Find a beauty parlour'),Icons.face_retouching_natural, ()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const DailyLifeDirectoryPage()))),
             _homeServiceCard(tx('বাসা ও অফিস ভাড়া','Home & office rent'),tx('দেখুন ও মালিককে ফোন করুন','Browse & call owner'),Icons.apartment_outlined, ()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage()))),
+            _homeServiceCard(tx('ভ্রমণ ও থাকার ব্যবস্থা','Travel & stay'),tx('টোল, লঞ্চ ও হোটেল','Tolls, launches & hotels'),Icons.directions_boat_outlined, ()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const TravelStayPage()))),
           ],
         ),
         const SizedBox(height: 20),
@@ -1085,6 +1086,62 @@ class _DailyLifeDirectoryPageState extends State<DailyLifeDirectoryPage> {
       ]),
     );
   }
+}
+
+class TravelStayPage extends StatelessWidget {
+  const TravelStayPage({super.key});
+
+  Future<void> _open(BuildContext context,String url) async {
+    final uri=Uri.parse(url);
+    try {
+      final ok=await launchUrl(uri,mode:LaunchMode.externalApplication);
+      if(!ok&&context.mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('লিংকটি খোলা যায়নি।')));
+    } catch(error) {
+      if(context.mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('লিংক খোলা যায়নি: $error')));
+    }
+  }
+
+  Widget _serviceCard(BuildContext context,{required IconData icon,required String title,required String description,required String status,required VoidCallback onTap}) {
+    return Card(color:Colors.white,margin:const EdgeInsets.only(bottom:12),child:ListTile(
+      contentPadding:const EdgeInsets.symmetric(horizontal:16,vertical:10),
+      leading:CircleAvatar(radius:24,backgroundColor:const Color(0xFFEAF5EF),child:Icon(icon,color:green,size:25)),
+      title:Text(title,style:const TextStyle(fontWeight:FontWeight.w800,color:ink)),
+      subtitle:Padding(padding:const EdgeInsets.only(top:5),child:Text('$description\n$status')),
+      isThreeLine:true,
+      trailing:const Icon(Icons.open_in_new_rounded,size:19),
+      onTap:onTap,
+    ));
+  }
+
+  @override Widget build(BuildContext context)=>Scaffold(
+    appBar:AppBar(title:Text(tx('ভ্রমণ ও থাকার ব্যবস্থা','Travel & stay'))),
+    body:ListView(padding:const EdgeInsets.all(16),children:[
+      Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:const Color(0xFFEAF5EF),borderRadius:BorderRadius.circular(18)),child:Text(
+        tx('যাতায়াত, টোল, লঞ্চ টিকিট, হোটেল এবং বাসা ভাড়া—এক জায়গা থেকে খুঁজে নেওয়ার ব্যবস্থা।','Find travel, toll, launch tickets, hotels and rentals in one place.'),
+        style:const TextStyle(fontWeight:FontWeight.w600,color:ink))),
+      const SizedBox(height:16),
+      _serviceCard(context,icon:Icons.toll_outlined,title:tx('টোল পেমেন্ট','Toll payments'),
+        description:tx('D-Toll সরকারি অ্যাপ দিয়ে গাড়ি নিবন্ধন, ওয়ালেট ও সমর্থিত টোল সেবা ব্যবহার করুন।','Use the official D-Toll app for vehicle registration, wallet and supported toll services.'),
+        status:tx('Elyramart-এর ভেতরে সরাসরি পেমেন্ট চালু নয়—সরকারি সংযোগ/অনুমোদন প্রয়োজন।','Direct in-app payment is not enabled; official integration/authorization is required.'),
+        onTap:()=>_open(context,'https://play.google.com/store/apps/details?id=bd.gov.dtoll')),
+      _serviceCard(context,icon:Icons.directions_boat_outlined,title:tx('লঞ্চ ও স্টিমার টিকিট','Launch & steamer tickets'),
+        description:tx('Shohoz-এ সমর্থিত লঞ্চের টিকিট ও কেবিন খুঁজুন; BIWTC-এর সরকারি সময়সূচি ও তথ্যও দেখুন।','Find supported launch tickets and cabins on Shohoz; check official BIWTC schedules and information.'),
+        status:tx('Elyramart-এ টিকিট বুকিং এখনো সরাসরি সংযুক্ত নয়।','Direct ticketing is not yet integrated in Elyramart.'),
+        onTap:()=>_open(context,'https://play.google.com/store/apps/details?id=com.shohoz.launch.consumer')),
+      _serviceCard(context,icon:Icons.hotel_outlined,title:tx('হোটেল বুকিং','Hotel booking'),
+        description:tx('হোটেল, রুম, তারিখ ও অতিথি অনুযায়ী বুকিং সুবিধা যুক্ত করার কাজের জন্য পার্টনার সংযোগ প্রয়োজন।','Live hotel search, rooms, dates and guest-based booking require a contracted inventory partner.'),
+        status:tx('লাইভ রুম/দাম যাচাই ও বুকিং নিশ্চিতকরণ এখনো চালু নয়।','Live room rates, availability and confirmed booking are not yet enabled.'),
+        onTap:()=>_open(context,'https://www.tourifye.com/')),
+      _serviceCard(context,icon:Icons.apartment_outlined,title:tx('বাসা, ফ্ল্যাট ও অফিস ভাড়া','House, flat & office rentals'),
+        description:tx('Elyramart-এর ভাড়ার তালিকা থেকে এলাকা, ধরন ও ভাড়া খুঁজুন।','Browse Elyramart rental listings by area, property type and rent.'),
+        status:tx('মালিকের সাথে যোগাযোগের আগে জায়গা ও কাগজপত্র যাচাই করুন।','Verify the property and documents before paying or committing.'),
+        onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage()))),
+      const SizedBox(height:8),
+      Text(tx('নিরাপত্তা: কোনো টিকিট, হোটেল বা টোল পেমেন্ট সফল হয়েছে বলে দেখানো হবে না, যতক্ষণ না সংশ্লিষ্ট অনুমোদিত সেবা থেকে নিশ্চিত ফল পাওয়া যায়।','Safety: Elyramart will not show a ticket, hotel booking or toll payment as successful until confirmed by the authorized provider.'),style:const TextStyle(fontSize:12,color:Colors.black54)),
+      const SizedBox(height:12),
+      OutlinedButton.icon(onPressed:()=>_open(context,'https://biwtc.gov.bd/'),icon:const Icon(Icons.account_balance_outlined),label:Text(tx('BIWTC সরকারি তথ্য','Official BIWTC information'))),
+    ]),
+  );
 }
 
 class ServicesPage extends StatelessWidget {
