@@ -13,6 +13,7 @@ This file separates code that exists from services that are actually deployed an
 - Added a customer Help & Support screen with request categories, subject/details validation, verified-account submission, and customer-only request history.
 - Added Firestore security rules for support tickets: verified users can create their own tickets; customers can read only their own; admin can review/update status and reply fields.
 - Added Owner Admin ticket queue with ticket status changes and admin replies; customer support history now displays replies.
+- Added owner rental listing edit form and owner-only field-limited Firestore update rule.
 - Added a widget test for the support centre guest state.
 - Expanded the product plan to cover practical everyday-life and future-ready services: verified essential directories, transport, jobs, education, home/family support, community help, accessibility, low-data use, privacy and trust/safety. These are roadmap items, not falsely labelled live features.
 
@@ -36,7 +37,7 @@ This file separates code that exists from services that are actually deployed an
 - Support ticket customer UI, Owner Admin queue, and Firestore rules are committed; rules still need deployment to Firebase before real online ticket submission can work. Staffed 24/7 live support, blog CMS and referral rewards remain future work.
 - bKash, Nagad, Rocket and card gateway integration. These remain disabled until owner approval, merchant credentials and testing.
 - Rider self-service, proof of delivery and settlement.
-- Rental image gallery, edit flow, saved rentals, map view and admin moderation/report queue.
+- Rental owner edit flow is now implemented in source with restricted owner-only Firestore update rules; these rules still need Firebase deployment. Rental image gallery, saved rentals, map view and admin moderation/report queue remain incomplete.
 - Production website hosting and signed Play Store AAB.
 - Real-device end-to-end QA.
 - The newly added future-ready roadmap modules (jobs, education, transport, family/home-care, community-help, reminders and advanced accessibility) are not implemented or production-verified.
