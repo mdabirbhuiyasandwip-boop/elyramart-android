@@ -2388,7 +2388,7 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
           _showAuthMessage(_authError(e.code));
         },
         codeSent: (String verificationId, int? resendToken) {
-          if (!mounted) return;
+          if (!mounted || FirebaseAuth.instance.currentUser?.phoneNumber != null) return;
           setState(() {
             phoneVerificationId = verificationId;
             phoneResendToken = resendToken;
