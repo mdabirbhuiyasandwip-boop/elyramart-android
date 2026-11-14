@@ -5,12 +5,9 @@
 ## ১. Firebase backend চালু করা
 
 1. https://console.firebase.google.com/ খুলে `elyramart` project নির্বাচন করুন।
-2. Project settings → Service accounts → Firebase Admin SDK → Generate new private key।
-3. JSON ফাইলটি নিজের নিরাপদ ডিভাইসে রাখুন। এটি `google-services.json` নয়।
-4. GitHub repository → Settings → Secrets and variables → Actions → New repository secret।
-5. Name: `FIREBASE_SERVICE_ACCOUNT_JSON`
-6. Secret value: ডাউনলোড করা service-account JSON ফাইলের সম্পূর্ণ contents।
-7. Save করার পর GitHub Actions → **Deploy Elyramart Firebase backend** → Run workflow। বর্তমানে workflow Firestore Rules বিনা Blaze-এ deploy করে; Cloud Functions ও Storage deployment ইচ্ছাকৃতভাবে বন্ধ থাকে।
+2. **বর্তমান অবস্থা:** GitHub secret `FIREBASE_SERVICE_ACCOUNT_JSON` যাচাই হয়েছে এবং Firestore Rules deploy সফল (run 43570891759)। তাই এই secret আবার তৈরি বা JSON আবার আপলোড করার দরকার নেই।
+3. ভবিষ্যতে key rotate করলে Google Cloud Service Account-এর নতুন JSON নিরাপদে তৈরি করে GitHub repository → Settings → Secrets and variables → Actions-এ একই `FIREBASE_SERVICE_ACCOUNT_JSON` secret update করবেন। এটি Android `google-services.json` নয়।
+4. GitHub Actions → **Deploy Elyramart Firebase backend** → Run workflow। বর্তমানে workflow Firestore Rules বিনা Blaze-এ deploy করে; Cloud Functions ও Storage deployment ইচ্ছাকৃতভাবে বন্ধ থাকে।
 8. Cloud Functions চালু করতে Firebase project-এ Blaze billing লাগবে। খরচ ও billing ঝুঁকি বুঝে মালিকের স্পষ্ট অনুমোদন ছাড়া `ENABLE_CLOUD_FUNCTIONS_DEPLOY=true` variable তৈরি করবেন না। অনুমোদনের পর GitHub → Settings → Secrets and variables → Actions → Variables-এ ওই variable-এর value `true` দিয়ে workflow পুনরায় চালান।
 9. Storage deployment-এর জন্য Firebase Storage bucket প্রস্তুত এবং Blaze প্রয়োজন হতে পারে। অনুমোদন ছাড়া `ENABLE_FIREBASE_STORAGE_DEPLOY=true` চালু করবেন না।
 
