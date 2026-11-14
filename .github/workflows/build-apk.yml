@@ -14,7 +14,6 @@ on:
       - 'codemagic.yaml'
       - 'tools/generate_brand_assets.py'
       - 'tools/configure_android_signing.py'
-      - 'docs/**'
       - '.github/workflows/build-apk.yml'
 
 concurrency:
