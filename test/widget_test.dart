@@ -52,7 +52,7 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: RentalMarketplacePage()));
     await tester.pumpAndSettle();
     expect(find.text('বাসা ও অফিস ভাড়া'), findsOneWidget);
-    expect(find.text('Firebase সংযোগ প্রয়োজন।'), findsOneWidget);
+    expect(find.text('অনলাইন বিজ্ঞাপন দেখতে Firebase সংযোগ প্রয়োজন।'), findsOneWidget);
     expect(find.text('বিজ্ঞাপন দিন'), findsOneWidget);
   });
 
