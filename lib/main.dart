@@ -1101,14 +1101,14 @@ class TravelStayPage extends StatelessWidget {
     }
   }
 
-  Widget _serviceCard(BuildContext context,{required IconData icon,required String title,required String description,required String status,required VoidCallback onTap}) {
+  Widget _serviceCard(BuildContext context,{required IconData icon,required String title,required String description,required String status,required VoidCallback onTap,bool external=true}) {
     return Card(color:Colors.white,margin:const EdgeInsets.only(bottom:12),child:ListTile(
       contentPadding:const EdgeInsets.symmetric(horizontal:16,vertical:10),
       leading:CircleAvatar(radius:24,backgroundColor:const Color(0xFFEAF5EF),child:Icon(icon,color:green,size:25)),
       title:Text(title,style:const TextStyle(fontWeight:FontWeight.w800,color:ink)),
       subtitle:Padding(padding:const EdgeInsets.only(top:5),child:Text('$description\n$status')),
       isThreeLine:true,
-      trailing:const Icon(Icons.open_in_new_rounded,size:19),
+      trailing:Icon(external?Icons.open_in_new_rounded:Icons.lock_outline_rounded,size:19,color:external?ink:Colors.black45),
       onTap:onTap,
     ));
   }
@@ -1120,6 +1120,16 @@ class TravelStayPage extends StatelessWidget {
         tx('যাতায়াত, টোল, লঞ্চ টিকিট, হোটেল এবং বাসা ভাড়া—এক জায়গা থেকে খুঁজে নেওয়ার ব্যবস্থা।','Find travel, toll, launch tickets, hotels and rentals in one place.'),
         style:const TextStyle(fontWeight:FontWeight.w600,color:ink))),
       const SizedBox(height:16),
+      _serviceCard(context,icon:Icons.directions_bus_outlined,title:tx('বাসের টিকিট ও সিট বুকিং','Bus tickets & seat booking'),
+        description:tx('গন্তব্য, যাত্রার তারিখ, বাস অপারেটর ও আসল সিট বেছে টিকিট কাটার ব্যবস্থা যুক্ত হবে।','Route, travel date, operator, live seat selection and e-ticket booking will be integrated.'),
+        status:tx('বাস অপারেটরের অনুমোদিত লাইভ API না পাওয়া পর্যন্ত অ্যাপের ভেতরে বুকিং চালু নয়।','In-app booking is unavailable until an authorized bus inventory API is connected.'),
+        external:false,
+        onTap:()=>showDialog(context:context,builder:(_)=>AlertDialog(title:Text(tx('বাস টিকিট বুকিং','Bus ticket booking')),content:Text(tx('বাস অপারেটরের অনুমোদিত সিট ও টিকিট সংযোগ এখনো প্রস্তুত নয়। বাস্তব সিট নিশ্চিত না করে বুকিং নেওয়া হবে না।','Authorized live bus seats and ticketing are not connected yet. No booking will be accepted without verified inventory.')),actions:[TextButton(onPressed:()=>Navigator.pop(context),child:Text(tx('ঠিক আছে','OK')))]))),
+      _serviceCard(context,icon:Icons.train_outlined,title:tx('ট্রেনের টিকিট ও সিট বুকিং','Train tickets & seat booking'),
+        description:tx('রুট, ট্রেন, শ্রেণি, আসন/বার্থের প্রাপ্যতা ও প্রকৃত রেল টিকিট যুক্ত হবে।','Route, train, class, seat/berth availability and genuine railway ticketing will be integrated.'),
+        status:tx('বাংলাদেশ রেলওয়ের অনুমোদিত টিকিটিং সংযোগ ছাড়া বুকিং চালু নয়।','Booking is unavailable without an authorized Bangladesh Railway ticketing channel.'),
+        external:false,
+        onTap:()=>showDialog(context:context,builder:(_)=>AlertDialog(title:Text(tx('ট্রেন টিকিট বুকিং','Train ticket booking')),content:Text(tx('বাংলাদেশ রেলওয়ের অনুমোদিত টিকিটিং সংযোগ এখনো পাওয়া যায়নি। আসল সিট ও টিকিট নিশ্চিত না করে বুকিং নেওয়া হবে না।','An authorized Bangladesh Railway ticketing integration is not connected yet. No booking will be accepted without genuine seats and tickets.')),actions:[TextButton(onPressed:()=>Navigator.pop(context),child:Text(tx('ঠিক আছে','OK')))]))),
       _serviceCard(context,icon:Icons.toll_outlined,title:tx('টোল পেমেন্ট','Toll payments'),
         description:tx('D-Toll সরকারি অ্যাপ দিয়ে গাড়ি নিবন্ধন, ওয়ালেট ও সমর্থিত টোল সেবা ব্যবহার করুন।','Use the official D-Toll app for vehicle registration, wallet and supported toll services.'),
         status:tx('Elyramart-এর ভেতরে সরাসরি পেমেন্ট চালু নয়—সরকারি সংযোগ/অনুমোদন প্রয়োজন।','Direct in-app payment is not enabled; official integration/authorization is required.'),
