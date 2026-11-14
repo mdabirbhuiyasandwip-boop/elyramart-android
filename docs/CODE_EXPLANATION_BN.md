@@ -14,6 +14,7 @@
 | `firestore.rules` | কে কোন Firestore data দেখতে/লিখতে পারবে তার security policy। Customer, seller, technician ও admin-এর অনুমতি এখানে নিয়ন্ত্রিত। |
 | `storage.rules` | Firebase Storage-এ profile/product image upload ও read permission নিয়ন্ত্রণ করে। |
 | `functions/src/index.ts` | trusted server code: মালিকের admin claim, COD order তৈরি ও stock যাচাই, order/booking notification। |
+| `rentalListings` Firestore collection | বাসা/অফিস ভাড়া দেওয়া ও বাসা/অফিস খোঁজার বিজ্ঞাপন সংরক্ষণ করে; নিয়ম `firestore.rules`-এ। |
 | `functions/package.json` | Cloud Functions-এর Node dependencies ও build command। |
 | `functions/tsconfig.json` | TypeScript কীভাবে JavaScript-এ compile হবে তার নিয়ম। |
 | `test/widget_test.dart` | Flutter automated UI/business-flow tests। নতুন feature যোগ করলে এখানে test বাড়াতে হবে। |
