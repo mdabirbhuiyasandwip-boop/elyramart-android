@@ -130,7 +130,7 @@ service cloud.firestore {
     }
 
     match /rentalListings/{listingId} {
-      allow read: if resource.data.status == 'active'
+      allow read: if (resource.data.status == 'active' && resource.data.listingType == 'offer')
         || isAdmin()
         || (signedIn() && resource.data.ownerId == request.auth.uid);
       allow create: if verifiedUser()
