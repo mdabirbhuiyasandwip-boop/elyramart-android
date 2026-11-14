@@ -1728,12 +1728,36 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
     }
   }
 
+  Future<void> _resetPassword() async {
+    if (!FirebaseRuntime.initialized) {
+      _showAuthMessage('Firebase সংযোগ প্রস্তুত নয়।');
+      return;
+    }
+    if (email.text.trim().isEmpty) {
+      _showAuthMessage('পাসওয়ার্ড রিসেট লিংক পেতে আগে ইমেইল লিখুন।');
+      return;
+    }
+    setState(() { authBusy = true; authMessage = ''; });
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email.text.trim());
+      _showAuthMessage('পাসওয়ার্ড পরিবর্তনের লিংক আপনার ইমেইলে পাঠানো হয়েছে।');
+    } on FirebaseAuthException catch (e) {
+      _showAuthMessage(_authError(e.code));
+    } catch (_) {
+      _showAuthMessage('রিসেট লিংক পাঠানো যায়নি। আবার চেষ্টা করুন।');
+    }
+  }
+
   Future<void> _register() async {
     if (!FirebaseRuntime.initialized) {
       _showAuthMessage('Firebase সংযোগ প্রস্তুত নয়।'); return;
     }
     if (email.text.trim().isEmpty || password.text.length < 6) {
       _showAuthMessage('সঠিক ইমেইল দিন এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড লিখুন।');
+      return;
+    }
+    if (name.text.trim().isEmpty || normalizeBangladeshPhone(phone.text) == null) {
+      _showAuthMessage('নতুন অ্যাকাউন্টের জন্য নাম ও সঠিক বাংলাদেশি মোবাইল নম্বর দিন।');
       return;
     }
     setState(() { authBusy = true; authMessage = ''; });
@@ -1929,6 +1953,7 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
         field(password, 'পাসওয়ার্ড', obscure: true),
         FilledButton(onPressed: authBusy ? null : _signIn, child: const Text('লগইন')),
         OutlinedButton(onPressed: authBusy ? null : _register, child: const Text('নতুন অ্যাকাউন্ট তৈরি')),
+        TextButton(onPressed: authBusy ? null : _resetPassword, child: const Text('পাসওয়ার্ড ভুলে গেছেন?')),
         if(FirebaseRuntime.initialized&&FirebaseAuth.instance.currentUser!=null&&!FirebaseAuth.instance.currentUser!.emailVerified)
           TextButton(onPressed:authBusy?null:_resendVerification,child:const Text('ইমেইল যাচাই লিংক আবার পাঠান')),
         if (FirebaseRuntime.initialized) ...[
