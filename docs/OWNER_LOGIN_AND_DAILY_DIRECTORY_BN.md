@@ -37,6 +37,8 @@ Source: Open Admin Data, Bangladesh Administrative Divisions, CC BY 4.0
 https://github.com/open-admin-data/bangladesh-administrative-divisions
 Source data updated 2026-09-08. Dataset attribution must remain with the asset.
 
+**গুরুত্বপূর্ণ গণনা-অমিল:** বাংলাদেশ জাতীয় তথ্য বাতায়ন বর্তমানে ৮ বিভাগ, ৬৪ জেলা ও ৫০০ উপজেলা দেখায়: https://bangladesh.gov.bd/views/upazila-list/ । তাই app asset-এর ৪৯৫ উপজেলার সঙ্গে সরকারি পোর্টালের ৫০০ সংখ্যার ৫টির অমিল আছে; পূর্ণাঙ্গ দাবি করার আগে এই ৫টি নাম ও parent district মিলিয়ে asset হালনাগাদ করতে হবে।
+
 ### হাসপাতাল
 
 সরকারি DGHS Facility Registry:
