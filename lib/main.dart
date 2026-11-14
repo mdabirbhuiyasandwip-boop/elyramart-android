@@ -999,7 +999,8 @@ String? normalizeBangladeshPhone(String input) {
   var value=input.trim();
   for(var i=0;i<10;i++){value=value.replaceAll(bn[i], '$i');}
   value=value.replaceAll(RegExp(r'[\s\-()]'), '');
-  if(value.startsWith('+880')){value='0'+value.substring(4);}
+  if(value.startsWith('00880')){value='0'+value.substring(5);}
+  else if(value.startsWith('+880')){value='0'+value.substring(4);}
   else if(value.startsWith('8801')){value='0'+value.substring(3);}
   return RegExp(r'^01[3-9]\d{8}$').hasMatch(value)?value:null;
 }
