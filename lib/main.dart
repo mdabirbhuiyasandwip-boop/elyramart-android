@@ -337,7 +337,25 @@ class _HomePageState extends State<HomePage> {
             Text(tx('সার্চের ফলাফল','Search results'),style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800,color:ink)),const SizedBox(height:6),
             if(visibleServices.isNotEmpty) ...[Text(tx('সার্ভিস (${visibleServices.length})','Services (${visibleServices.length})'),style:const TextStyle(color:green,fontWeight:FontWeight.w700)),...visibleServices.map((service)=>ListTile(contentPadding:EdgeInsets.zero,leading:CircleAvatar(backgroundColor:const Color(0xFFEAF5EF),child:Icon(service.$2,color:green)),title:Text(AppLanguage.english.value?englishServiceName(service.$1):service.$1),subtitle:Text(AppLanguage.english.value?englishServiceDetail(service.$3):service.$3),trailing:const Icon(Icons.arrow_forward_ios,size:14),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>BookingPage(service:AppLanguage.english.value?englishServiceName(service.$1):service.$1)))))],
             Text(tx('পণ্য: ${visibleProducts.length}','Products: ${visibleProducts.length}'),style:const TextStyle(color:green,fontWeight:FontWeight.w700)),
-            if(visibleDirectory.isNotEmpty) ...[const SizedBox(height:8),Text(tx('হাসপাতাল, রেস্টুরেন্ট ও প্রতিষ্ঠান (${visibleDirectory.length})','Hospitals, restaurants & places (${visibleDirectory.length})'),style:const TextStyle(color:green,fontWeight:FontWeight.w700)),...visibleDirectory.take(12).map((e)=>ListTile(contentPadding:EdgeInsets.zero,leading:const CircleAvatar(child:Icon(Icons.place_outlined)),title:Text((e['name']??'').toString()),subtitle:Text('${e['address']??''} • ${e['districtBn']??''}'),trailing:const Icon(Icons.location_on_outlined),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const DailyLifeDirectoryPage())))],
+            if (visibleDirectory.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                tx('হাসপাতাল, রেস্টুরেন্ট ও প্রতিষ্ঠান (${visibleDirectory.length})',
+                   'Hospitals, restaurants & places (${visibleDirectory.length})'),
+                style: const TextStyle(color: green, fontWeight: FontWeight.w700),
+              ),
+              ...visibleDirectory.take(12).map((e) => ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const CircleAvatar(child: Icon(Icons.place_outlined)),
+                title: Text((e['name'] ?? '').toString()),
+                subtitle: Text('${e['address'] ?? ''} • ${e['districtBn'] ?? ''}'),
+                trailing: const Icon(Icons.location_on_outlined),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DailyLifeDirectoryPage()),
+                ),
+              )),
+            ],
             if(visibleServices.isEmpty&&visibleProducts.isEmpty&&visibleDirectory.isEmpty) Padding(padding:const EdgeInsets.only(top:8),child:Text(tx('কোনো মিল পাওয়া যায়নি। অন্য নামে খুঁজুন।','No matches found. Try another keyword.'))),
             if(!FirebaseRuntime.initialized) Padding(padding:const EdgeInsets.only(top:8),child:Text(tx('লাইভ পণ্যের ফল পেতে সার্ভার সংযোগ চালু করতে হবে।','Server setup is required to show live product results.'),style:const TextStyle(fontSize:12,color:Colors.black54))),
           ])),
@@ -2234,7 +2252,51 @@ class _LocationSettingsPageState extends State<LocationSettingsPage> {
         )),
       ],
       const SizedBox(height: 12),
-      SizedBox(height:280, child: ClipRRect(borderRadius:BorderRadius.circular(18),child:FlutterMap(options:MapOptions(initialCenter:latitude!=null&&longitude!=null?LatLng(latitude!,longitude!):const LatLng(23.8103,90.4125),initialZoom:latitude!=null?15:6),children:[TileLayer(urlTemplate:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',userAgentPackageName:'com.elyramartbd.elyramart'),RichAttributionWidget(attributions:[TextSourceAttribution('© OpenStreetMap contributors',onTap:()=>launchUrl(Uri.parse('https://www.openstreetmap.org/copyright')))]),if(latitude!=null&&longitude!=null)MarkerLayer(markers:[Marker(point:LatLng(latitude!,longitude!),width:48,height:48,child:const Icon(Icons.location_pin,color:Colors.red,size:42))])])),
+      SizedBox(
+        height: 280,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: FlutterMap(
+            options: MapOptions(
+              initialCenter: latitude != null && longitude != null
+                  ? LatLng(latitude!, longitude!)
+                  : const LatLng(23.8103, 90.4125),
+              initialZoom: latitude != null ? 15 : 6,
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.elyramartbd.elyramart',
+              ),
+              RichAttributionWidget(
+                attributions: [
+                  TextSourceAttribution(
+                    '© OpenStreetMap contributors',
+                    onTap: () => launchUrl(
+                      Uri.parse('https://www.openstreetmap.org/copyright'),
+                    ),
+                  ),
+                ],
+              ),
+              if (latitude != null && longitude != null)
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: LatLng(latitude!, longitude!),
+                      width: 48,
+                      height: 48,
+                      child: const Icon(
+                        Icons.location_pin,
+                        color: Colors.red,
+                        size: 42,
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ),
       const SizedBox(height:8),
       Text(tx('GPS চালু করে বর্তমান লোকেশন নিলে এখানে ম্যাপে পিন দেখা যাবে।','Get your GPS location to show a pin here on the map.'),style:const TextStyle(fontSize:12,color:Colors.black54)),
       Text(tx('দ্রষ্টব্য: এই সংস্করণে GPS থেকে অক্ষাংশ/দ্রাঘিমাংশ নেওয়া ও এই ডিভাইসে রাখা হবে। মানচিত্র, ঠিকানার নাম, নিকটস্থ দোকান/টেকনিশিয়ান এবং সার্ভার সিঙ্ক পরবর্তী সংযোগের কাজ।','Note: This version reads GPS coordinates and stores them on this device. Maps, readable addresses, nearby shops/technicians and server sync still require further integration.'),
