@@ -240,10 +240,15 @@ class _HomePageState extends State<HomePage> {
           loadedSeller.add(Product(title,(data['categoryId']??'অন্যান্য').toString(),'৳${price is num?price.toStringAsFixed(0):price}','🛍️','Elyramart verified seller',sellerId:data['sellerId']?.toString(),productId:doc.id,imageUrl:imageUrls.isNotEmpty?imageUrls.first.toString():null,stock:(data['stock'] as num?)?.toInt()));
         }
       }catch(error){debugPrint('Elyramart product sync failed: $error');}
+      try {
+        final directory = await FirebaseFirestore.instance.collection('directoryListings').where('status',isEqualTo:'active').limit(500).get();
+        loadedDirectory = directory.docs.map((d)=><String,dynamic>{...d.data(),'_docId':d.id}).toList();
+      } catch(error) { debugPrint('Elyramart directory search sync failed: $error'); }
     }
     if(!mounted)return;
     setState((){
       sellerProducts=loadedSeller;
+      directorySearchItems=loadedDirectory;
       cart..clear()..addAll(saved.map((v){try{final m=Map<String,dynamic>.from(jsonDecode(v) as Map);return Product(m['name']??'',m['category']??'',m['price']??'',m['emoji']??'🛍️',m['detail']??'',sellerId:m['sellerId']?.toString(),productId:m['productId']?.toString(),imageUrl:m['imageUrl']?.toString(),demoOnly:m['demoOnly']==true||m['sellerId']==null);}catch(_){final i=int.tryParse(v);return i!=null&&i>=0&&i<products.length?products[i]:null;}}).whereType<Product>());
     });
   }
