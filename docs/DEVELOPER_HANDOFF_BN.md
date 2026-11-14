@@ -13,6 +13,7 @@ Elyramart হবে একটি cross-platform marketplace ও home-service pla
 - Approved seller পণ্য pending হিসেবে জমা দিতে পারে; Owner Admin প্রকাশ করলে customer catalogue-এ আসে।
 - Seller নিজের পণ্য ও তার সঙ্গে যুক্ত অর্ডার দেখতে পারে; Admin technician approval ও booking assignment করতে পারে।
 - Customer নিজের cloud order ও booking history দেখতে পারে; cart seller ownership সহ local cache-এ থাকে।
+- Rental marketplace: verified user বাসা/অফিস ভাড়া দিতে অথবা বাসা/অফিস খুঁজতে active listing post করতে পারে; সবাই active listing browse করতে পারে। Data collection `rentalListings`; security rule `firestore.rules`-এ।
 - Web build তৈরি হয়। Web Firebase initialization code যোগ হয়েছে; Web App config GitHub Actions secrets-এ না থাকলে demo mode, থাকলে Firebase online login/data চালু হতে পারে। Hosting enablement ও live test এখনও বাকি।
 - COD order callable, FCM notification triggers, product image upload এবং admin-এর manual rider assignment-এর source code আছে; Firebase deploy ও real-device tests ছাড়া এগুলো live বলে গণ্য নয়. bKash/Nagad/card gateway, rider self-service/live GPS/settlement এবং full production verification এখনও বাকি.
 - বর্তমান APK-কে production marketplace হিসেবে প্রকাশ করা যাবে না।
