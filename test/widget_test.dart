@@ -97,6 +97,18 @@ void main() {
     expect(find.text('এই এলাকায় এখনো যাচাইকৃত পার্লার তালিকা যোগ হয়নি।'), findsOneWidget);
   });
 
+  testWidgets('travel and stay hub clearly separates live partner links from pending integrations', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: TravelStayPage()));
+    await tester.pumpAndSettle();
+    expect(find.text('ভ্রমণ ও থাকার ব্যবস্থা'), findsOneWidget);
+    expect(find.text('টোল পেমেন্ট'), findsOneWidget);
+    expect(find.text('লঞ্চ ও স্টিমার টিকিট'), findsOneWidget);
+    expect(find.text('হোটেল বুকিং'), findsOneWidget);
+    expect(find.text('বাসা, ফ্ল্যাট ও অফিস ভাড়া'), findsOneWidget);
+    expect(find.textContaining('Elyramart-এর ভেতরে সরাসরি পেমেন্ট চালু নয়'), findsOneWidget);
+    expect(find.textContaining('লাইভ রুম/দাম যাচাই ও বুকিং নিশ্চিতকরণ এখনো চালু নয়'), findsOneWidget);
+  });
+
   testWidgets('support centre opens with a clear sign-in requirement', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: SupportCenterPage()));
     await tester.pumpAndSettle();
