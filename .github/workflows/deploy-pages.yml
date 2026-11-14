@@ -75,14 +75,22 @@ jobs:
             --dart-define=ELYRAMART_FIREBASE_PROJECT_ID="$ELYRAMART_FIREBASE_PROJECT_ID" \
             --dart-define=ELYRAMART_FIREBASE_AUTH_DOMAIN="$ELYRAMART_FIREBASE_AUTH_DOMAIN" \
             --dart-define=ELYRAMART_FIREBASE_STORAGE_BUCKET="$ELYRAMART_FIREBASE_STORAGE_BUCKET"
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+      - name: Upload Web build for owner-controlled publishing
+        uses: actions/upload-artifact@v4
         with:
-          enablement: true
+          name: Elyramart-Web-release
+          path: build/web/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Configure GitHub Pages
+        if: ${{ vars.ENABLE_GITHUB_PAGES_DEPLOY == 'true' }}
+        uses: actions/configure-pages@v5
       - name: Upload Pages artifact
+        if: ${{ vars.ENABLE_GITHUB_PAGES_DEPLOY == 'true' }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: build/web
       - name: Deploy to GitHub Pages
+        if: ${{ vars.ENABLE_GITHUB_PAGES_DEPLOY == 'true' }}
         id: deployment
         uses: actions/deploy-pages@v4
