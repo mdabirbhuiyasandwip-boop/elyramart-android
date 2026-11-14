@@ -30,7 +30,7 @@ Firebase Console → Project settings → Your apps → Web app থেকে con
 
 ## ৩. বিকল্প: GitHub Pages দিয়ে website প্রকাশ
 
-Repository → Settings → Pages → Build and deployment → Source → **GitHub Actions** নির্বাচন করে Save করুন। তারপর Actions → **Deploy Elyramart Web to GitHub Pages** → Run workflow। Pages deploy সফল হলে Actions deployment summary-তে public URL দেখাবে।
+Repository → Settings → Pages → Build and deployment → Source → **GitHub Actions** নির্বাচন করে Save করুন। এরপর Settings → Secrets and variables → Actions → Variables-এ `ENABLE_GITHUB_PAGES_DEPLOY` নামে variable তৈরি করে value `true` দিন। তারপর Actions → **Deploy Elyramart Web to GitHub Pages** → Run workflow। Variable না থাকলেও Web build artifact তৈরি হবে; Pages publish হবে শুধু owner variable `true` করলে।
 
 ## ৪. Play Store-এর জন্য signed AAB
 
