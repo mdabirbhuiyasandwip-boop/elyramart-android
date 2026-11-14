@@ -178,6 +178,29 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /supportTickets/{ticketId} {
+      allow create: if verifiedUser()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'open'
+        && request.resource.data.subject is string
+        && request.resource.data.subject.size() >= 4
+        && request.resource.data.subject.size() <= 120
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 10
+        && request.resource.data.message.size() <= 2000
+        && request.resource.data.category is string
+        && request.resource.data.keys().hasOnly([
+          'userId','subject','message','category','status','createdAt'
+        ]);
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status','adminReply','updatedAt'])
+        && request.resource.data.status in ['open','in_progress','resolved','closed'];
+      allow delete: if isAdmin();
+    }
+
     match /settings/{settingId} {
       allow read, write: if isAdmin();
     }
