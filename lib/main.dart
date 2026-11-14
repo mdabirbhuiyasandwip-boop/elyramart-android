@@ -664,6 +664,7 @@ class _DailyLifeDirectoryPageState extends State<DailyLifeDirectoryPage> {
         const SizedBox(height:10),
         if(locationsLoading) const LinearProgressIndicator(),
         DropdownButtonFormField<String>(
+          isExpanded:true,
           value:divisionId.isEmpty?null:divisionId,
           decoration:const InputDecoration(labelText:'বিভাগ',border:OutlineInputBorder()),
           items:divisions.map((d)=>DropdownMenuItem(value:d['id'].toString(),child:Text('${d['bn']} (${d['en']})'))).toList(),
@@ -671,6 +672,7 @@ class _DailyLifeDirectoryPageState extends State<DailyLifeDirectoryPage> {
         ),
         const SizedBox(height:8),
         DropdownButtonFormField<String>(
+          isExpanded:true,
           value:districtId.isEmpty?null:districtId,
           decoration:const InputDecoration(labelText:'জেলা',border:OutlineInputBorder()),
           items:allowedDistricts.map((d)=>DropdownMenuItem(value:d['id'].toString(),child:Text('${d['bn']} (${d['en']})'))).toList(),
@@ -678,6 +680,7 @@ class _DailyLifeDirectoryPageState extends State<DailyLifeDirectoryPage> {
         ),
         const SizedBox(height:8),
         DropdownButtonFormField<String>(
+          isExpanded:true,
           value:upazilaId.isEmpty?null:upazilaId,
           decoration:const InputDecoration(labelText:'উপজেলা',border:OutlineInputBorder()),
           items:allowedUpazilas.map((u)=>DropdownMenuItem(value:u['id'].toString(),child:Text('${u['bn']} (${u['en']})'))).toList(),
