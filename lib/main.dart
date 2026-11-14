@@ -160,8 +160,9 @@ class Product {
   final String? sellerId;
   final String? productId;
   final String? imageUrl;
+  final int? stock;
   final bool demoOnly;
-  const Product(this.name, this.category, this.price, this.emoji, this.detail,{this.sellerId,this.productId,this.imageUrl,this.demoOnly=false});
+  const Product(this.name, this.category, this.price, this.emoji, this.detail,{this.sellerId,this.productId,this.imageUrl,this.stock,this.demoOnly=false});
 }
 // Preview-only sample catalogue. Real listings come from approved seller records.
 const products = <Product>[
@@ -211,7 +212,7 @@ class _HomePageState extends State<HomePage> {
           final title=(data['title']??'পণ্য').toString();
           final price=data['price'];
           final imageUrls=data['imageUrls'] as List? ?? [];
-          loadedSeller.add(Product(title,(data['categoryId']??'অন্যান্য').toString(),'৳${price is num?price.toStringAsFixed(0):price}','🛍️','Elyramart verified seller',sellerId:data['sellerId']?.toString(),productId:doc.id,imageUrl:imageUrls.isNotEmpty?imageUrls.first.toString():null));
+          loadedSeller.add(Product(title,(data['categoryId']??'অন্যান্য').toString(),'৳${price is num?price.toStringAsFixed(0):price}','🛍️','Elyramart verified seller',sellerId:data['sellerId']?.toString(),productId:doc.id,imageUrl:imageUrls.isNotEmpty?imageUrls.first.toString():null,stock:(data['stock'] as num?)?.toInt()));
         }
       }catch(error){debugPrint('Elyramart product sync failed: $error');}
     }
@@ -297,7 +298,7 @@ class _HomePageState extends State<HomePage> {
 
 class Cat extends StatelessWidget { final String icon,name; const Cat({super.key,required this.icon,required this.name}); @override Widget build(BuildContext c)=>Container(width:76,margin:const EdgeInsets.only(right:10),padding:const EdgeInsets.all(8),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Text(icon,style:const TextStyle(fontSize:27)),const SizedBox(height:5),Text(name,style:const TextStyle(fontSize:11,fontWeight:FontWeight.w600))])); }
 
-class ProductCard extends StatelessWidget { final Product p; final VoidCallback onAdd; const ProductCard({super.key,required this.p,required this.onAdd}); @override Widget build(BuildContext c)=>Container(padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Container(height:92,width:double.infinity,decoration:BoxDecoration(color:pale,borderRadius:BorderRadius.circular(12)),child:p.imageUrl!=null?ClipRRect(borderRadius:BorderRadius.circular(12),child:Image.network(p.imageUrl!,fit:BoxFit.cover,width:double.infinity,errorBuilder:(_,__,___)=>Center(child:Text(p.emoji,style:const TextStyle(fontSize:42))))):Center(child:Text(p.emoji,style:const TextStyle(fontSize:42)))),const SizedBox(height:9),Text(p.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.bold)),Text(p.detail,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.black54,fontSize:11)),const SizedBox(height:8),Row(children:[Text(p.price,style:const TextStyle(color:green,fontWeight:FontWeight.bold)),const Spacer(),IconButton.filled(onPressed:p.demoOnly?null:onAdd,icon:Icon(p.demoOnly?Icons.info_outline:Icons.add,size:18),style:IconButton.styleFrom(backgroundColor:green,foregroundColor:Colors.white,minimumSize:const Size(34,34)))]) ])); }
+class ProductCard extends StatelessWidget { final Product p; final VoidCallback onAdd; const ProductCard({super.key,required this.p,required this.onAdd}); @override Widget build(BuildContext c){final outOfStock=p.stock!=null&&p.stock!<=0;return Container(padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Container(height:92,width:double.infinity,decoration:BoxDecoration(color:pale,borderRadius:BorderRadius.circular(12)),child:p.imageUrl!=null?ClipRRect(borderRadius:BorderRadius.circular(12),child:Image.network(p.imageUrl!,fit:BoxFit.cover,width:double.infinity,errorBuilder:(_,__,___)=>Center(child:Text(p.emoji,style:const TextStyle(fontSize:42))))):Center(child:Text(p.emoji,style:const TextStyle(fontSize:42)))),const SizedBox(height:9),Text(p.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.bold)),Text(p.detail,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.black54,fontSize:11)),if(p.stock!=null)Text(outOfStock?'স্টক শেষ':'স্টক: ${p.stock}',style:TextStyle(color:outOfStock?Colors.red:Colors.black54,fontSize:11)),const SizedBox(height:8),Row(children:[Text(p.price,style:const TextStyle(color:green,fontWeight:FontWeight.bold)),const Spacer(),IconButton.filled(onPressed:(p.demoOnly||outOfStock)?null:onAdd,icon:Icon(p.demoOnly?Icons.info_outline:Icons.add,size:18),style:IconButton.styleFrom(backgroundColor:green,foregroundColor:Colors.white,minimumSize:const Size(34,34)))]) ]));} }
 
 class ServicesPage extends StatelessWidget {
   const ServicesPage({super.key});
@@ -714,7 +715,7 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
         DropdownMenuItem(value:'cancelled',child:Text('বাতিল'))
       ].where((option)=>o['_docId']==null||_sellerOrderNextStatuses((o['status']??'').toString()).contains(option.value)).toList(),onChanged:(v){if(v!=null)updateOrderStatus(o,v);})
     ])))),
-    const SizedBox(height:12),const Text('গুরুত্বপূর্ণ: সেলার আবেদন, পণ্য ও অর্ডার শুধু এই ফোনে সংরক্ষিত। অন্য ফোনে অর্ডার পৌঁছাতে সার্ভার সংযোগ প্রয়োজন।',style:TextStyle(color:Colors.black54,fontSize:12))
+    const SizedBox(height:12),const Text('অনলাইন আবেদন, পণ্য ও অর্ডার দেখতে Firebase-এ লগইন করুন। লগইন ছাড়া তৈরি ডেমো তথ্য শুধু এই ফোনে থাকে।',style:TextStyle(color:Colors.black54,fontSize:12))
   ]));
 }
 class AdminOverviewPage extends StatefulWidget {
@@ -921,7 +922,7 @@ class _AdminOverviewPageState extends State<AdminOverviewPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: <Widget>[
-            const Text('এই ডিভাইসের ডেমো ডেটা', style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.w600)),
+            const Text('Owner Admin — অনলাইন নিয়ন্ত্রণ প্যানেল', style: TextStyle(color: green, fontWeight: FontWeight.w600)),
             const SizedBox(height: 12),
             heading('কোম্পানির মালিক'),
             if (ownerProfile == null)
@@ -1175,7 +1176,7 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
               )),
             const SizedBox(height: 12),
             const Text(
-              'সতর্কতা: এটি একই ফোনের ডেমো প্রোফাইল ও বুকিং তালিকা। অনলাইন টেকনিশিয়ান অ্যাকাউন্ট, যাচাই বা গ্রাহকের সঙ্গে সরাসরি সংযোগ এখনো চালু হয়নি।',
+              'অনলাইন বুকিং দেখতে ও কাজের অবস্থা আপডেট করতে যাচাইকৃত লগইন এবং অ্যাডমিন অনুমোদন প্রয়োজন। লগইন ছাড়া আবেদন শুধু এই ফোনে সংরক্ষিত থাকে।',
               style: TextStyle(color: Colors.black54, fontSize: 12),
             ),
           ],
@@ -1763,7 +1764,7 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
     }
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('ডেমো প্রোফাইল এই ফোনে সংরক্ষিত হয়েছে')));
+      SnackBar(content: Text(FirebaseRuntime.initialized && FirebaseAuth.instance.currentUser != null ? 'প্রোফাইল সংরক্ষিত হয়েছে।' : 'ডেমো প্রোফাইল এই ফোনে সংরক্ষিত হয়েছে')));
   }
 
   @override Widget build(BuildContext context) => Scaffold(
