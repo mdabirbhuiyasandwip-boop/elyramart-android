@@ -2198,7 +2198,7 @@ class _LocationSettingsPageState extends State<LocationSettingsPage> {
   @override void initState() {
     super.initState();
     SharedPreferences.getInstance().then((p) {
-      if (mounted) setState(() => coordinates = p.getString('elyramart_last_location_v1'));
+      if (mounted) { final saved=p.getString('elyramart_last_location_v1'); final parts=saved?.split(','); setState(() { coordinates=saved; if(parts!=null&&parts.length==2){latitude=double.tryParse(parts[0].trim());longitude=double.tryParse(parts[1].trim());} }); }
     });
   }
 
@@ -2229,6 +2229,9 @@ class _LocationSettingsPageState extends State<LocationSettingsPage> {
         )),
       ],
       const SizedBox(height: 12),
+      SizedBox(height:280, child: ClipRRect(borderRadius:BorderRadius.circular(18),child:FlutterMap(options:MapOptions(initialCenter:latitude!=null&&longitude!=null?LatLng(latitude!,longitude!):const LatLng(23.8103,90.4125),initialZoom:latitude!=null?15:6),children:[TileLayer(urlTemplate:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',userAgentPackageName:'com.elyramartbd.elyramart'),if(latitude!=null&&longitude!=null)MarkerLayer(markers:[Marker(point:LatLng(latitude!,longitude!),width:48,height:48,child:const Icon(Icons.location_pin,color:Colors.red,size:42))])])),
+      const SizedBox(height:8),
+      Text(tx('GPS চালু করে বর্তমান লোকেশন নিলে এখানে ম্যাপে পিন দেখা যাবে।','Get your GPS location to show a pin here on the map.'),style:const TextStyle(fontSize:12,color:Colors.black54)),
       Text(tx('দ্রষ্টব্য: এই সংস্করণে GPS থেকে অক্ষাংশ/দ্রাঘিমাংশ নেওয়া ও এই ডিভাইসে রাখা হবে। মানচিত্র, ঠিকানার নাম, নিকটস্থ দোকান/টেকনিশিয়ান এবং সার্ভার সিঙ্ক পরবর্তী সংযোগের কাজ।','Note: This version reads GPS coordinates and stores them on this device. Maps, readable addresses, nearby shops/technicians and server sync still require further integration.'),
         style: const TextStyle(fontSize: 12, color: Colors.black54)),
     ]),
