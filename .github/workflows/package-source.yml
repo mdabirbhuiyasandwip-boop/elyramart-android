@@ -30,6 +30,7 @@ jobs:
           path: |
             .github/
             docs/
+            assets/
             functions/
             lib/
             test/
