@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - 'lib/**'
+      - 'test/**'
       - 'web/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
