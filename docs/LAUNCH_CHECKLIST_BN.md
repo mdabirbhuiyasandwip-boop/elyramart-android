@@ -8,8 +8,8 @@
 - [x] Android AAB build সফল; artifact তৈরি।
 - [x] Flutter Web build সফল; artifact তৈরি।
 - [x] Firebase Functions TypeScript compile সফল।
-- [ ] নতুন documentation commit-এর পর Android build আবার সফল হয়েছে—যাচাই করতে হবে।
-- [ ] নতুন documentation commit-এর পর Web build আবার সফল হয়েছে—যাচাই করতে হবে।
+- [ ] সর্বশেষ source/documentation commit-এর পর Android build পুনরায় চালিয়ে যাচাই।
+- [ ] সর্বশেষ source/documentation commit-এর পর Web build পুনরায় চালিয়ে যাচাই।
 
 ## B. Firebase owner-side setup
 
