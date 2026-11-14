@@ -17,6 +17,24 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
+  testWidgets('out-of-stock seller products cannot be added to cart', (tester) async {
+    var added = false;
+    const product = Product(
+      'স্টক শেষ পণ্য', 'মুদিখানা', '৳১০০', '🛍️', 'পরীক্ষার পণ্য',
+      sellerId: 'seller-1', productId: 'product-1', stock: 0,
+    );
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: ProductCard(p: product, onAdd: () => added = true),
+      ),
+    ));
+    final addButton = tester.widget<IconButton>(find.byType(IconButton));
+    expect(addButton.onPressed, isNull);
+    expect(find.text('স্টক শেষ'), findsOneWidget);
+    await tester.tap(find.byType(IconButton));
+    expect(added, isFalse);
+  });
+
   testWidgets('Elyramart main pages and customer profile open', (tester) async {
     await tester.pumpWidget(const ElyramartApp());
     await tester.pumpAndSettle();
