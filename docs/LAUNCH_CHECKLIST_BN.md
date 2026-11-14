@@ -26,7 +26,8 @@
 
 ## C. Website
 
-- [ ] GitHub repository Settings → Pages → Build and deployment → Source = GitHub Actions।
+- [ ] Firebase Hosting deploy workflow-তে সঠিক Service Account ও ৬টি Web config secret যোগ করে public hosting deploy সফল।
+- [ ] বিকল্প হিসেবে GitHub repository Settings → Pages → Build and deployment → Source = GitHub Actions।
 - [ ] Pages workflow সফল।
 - [ ] Public URL HTTPS-এ খোলে।
 - [ ] Web Firebase configuration যোগ/যাচাই; login ও cloud data বাস্তবে test।
