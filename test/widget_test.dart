@@ -9,8 +9,13 @@ void main() {
   test('Bangladesh phone normalization accepts local and international formats', () {
     expect(normalizeBangladeshPhone('01712345678'), '01712345678');
     expect(normalizeBangladeshPhone('+8801712345678'), '01712345678');
+    expect(normalizeBangladeshPhone('008801712345678'), '01712345678');
+    expect(normalizeBangladeshPhone('8801712345678'), '01712345678');
+    expect(normalizeBangladeshPhone(' 01712-345678 '), '01712345678');
     expect(normalizeBangladeshPhone('০১৭১২৩৪৫৬৭৮'), '01712345678');
     expect(normalizeBangladeshPhone('01212345678'), isNull);
+    expect(normalizeBangladeshPhone('+8801212345678'), isNull);
+    expect(normalizeBangladeshPhone('0171234567'), isNull);
   });
 
   setUp(() {
