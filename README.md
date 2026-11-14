@@ -37,6 +37,7 @@ These capabilities require Firebase Console setup, successful backend deployment
 
 ## Developer documentation
 
+- [বাংলা Repository File Audit](docs/FILE_AUDIT_BN.md)
 - [বাংলা Developer Handoff](docs/DEVELOPER_HANDOFF_BN.md)
 - [বাংলা Firebase Setup](docs/FIREBASE_SETUP_BN.md)
 - [বাংলা Project Status and Verified Blockers](docs/PROJECT_STATUS_BN.md)
