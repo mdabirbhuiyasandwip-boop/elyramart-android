@@ -11,6 +11,7 @@ Repository: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android
 - সেলার পণ্য জমা দিতে লগইন, অনুমোদিত seller এবং নিজের তোলা আসল পণ্যের ছবি আবশ্যক।
 - লগইন ছাড়া service booking বা checkout সফল/সংরক্ষিত বলে দেখানো হয় না; আগে account login করতে বলে।
 - Customer profile local-only demo save বন্ধ; verified account দিয়ে cloud sync ছাড়া profile saved বলে দেখায় না।
+- Technician আবেদনও verified login ছাড়া জমা হয় না; local-only technician profile/booking demo load বন্ধ করা হয়েছে।
 - Firebase initialization ব্যর্থ হলে Home-এ স্পষ্ট server connection warning দেখায়।
 - Widget tests-এ empty real catalogue ও login-required profile save-এর expectation যোগ করা হয়েছে।
 
