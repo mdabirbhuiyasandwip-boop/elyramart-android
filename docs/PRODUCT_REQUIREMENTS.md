@@ -76,13 +76,26 @@ Build Elyramart as a Bangladesh-first, multi-vendor marketplace and local-servic
 - Help centre, FAQ, support tickets/complaints and ticket status.
 - Live support is a future capability requiring staffed coverage and an actual chat provider; do not advertise 24/7 until staffed and operational.
 
-## 9. Other features
+## 9. Everyday-life and future-ready services
+These are planned modules, not claims that they are already live. Build them in stages after the core marketplace is stable; each module must have real providers/data, clear operating responsibility and owner moderation.
+- **Health access:** searchable verified hospital, clinic, pharmacy, diagnostic-centre and blood-donor directory; emergency contact shortcuts. Do not diagnose, prescribe, promise ambulance availability or expose donor/patient personal data. Emergency guidance must clearly direct users to official emergency services.
+- **Transport and mobility:** local transport/rent-a-vehicle contacts, parcel/courier options and accessible route information where reliable providers/data exist. Do not claim live vehicle tracking without a working opt-in location service.
+- **Jobs and earning:** job listings, part-time/gig work, employer profiles, skill training and application tracking; report scams, prohibit upfront recruitment fees and moderate employers.
+- **Education and growth:** tutors, coaching, courses, learning resources, exam preparation and skill-development listings; verify claims and clearly label paid courses.
+- **Home and family support:** cleaning, laundry, home shifting, childcare/elder-care provider directories and repair services. Sensitive care providers require stronger verification, references and clear safety/reporting procedures.
+- **Community essentials:** blood donation requests, lost-and-found, community help, disaster/weather alerts and verified relief information. Keep location sharing optional and prevent public exposure of private addresses.
+- **Daily planning tools:** reminders for bills/appointments, saved addresses, order and booking history, reusable shopping lists and service schedules. Reminders are opt-in and can be turned off.
+- **Accessibility and inclusion:** readable text, screen-reader labels, clear contrast, simple Bengali-first navigation, low-data mode, graceful offline/error states and support for older or less technical users.
+- **Trust and safety:** verified badges only after actual checks; report/block flows, review moderation, dispute handling, transparent fees, privacy controls, account deletion/request process and audit logs.
+- **Future integrations:** utility bill payment, mobile financial services, insurance or other regulated financial products only after legal/provider review, owner approval and secure official integrations. No wallet, lending, investment or financial advice claims in the initial release.
+
+## 10. Other features
 - Offers and discounts.
 - Blog/tips content managed by owner.
 - Referral programme only after fraud controls and reward rules are implemented.
 - Shareable listing/product links and social login where configured.
 
-## 10. Android screens
+## 11. Android screens
 - Splash/brand screen using Elyramart identity.
 - Home: global search, owner-managed promotional banners, categories, flash sale/featured products, service shortcuts and rental shortcuts.
 - All categories.
@@ -94,14 +107,14 @@ Build Elyramart as a Bangladesh-first, multi-vendor marketplace and local-servic
 - Sign-in, registration and account recovery.
 - Private owner admin entry must not be visible to ordinary users; backend must independently enforce owner authorization.
 
-## 11. Web admin panel
+## 12. Web admin panel
 - Dashboard: live counts for users, products, orders and bookings; sales and order-status charts; recent orders and bookings.
 - Do not hardcode illustrative numbers (for example 12,568 users); show actual database counts or an honest empty state.
 - Sections: Dashboard, Users, Sellers, Products, Orders, Rentals, Bookings, Technicians, Categories, Reviews, Support Tickets, Promotions, Settings, Audit Logs, Logout.
 - Owner can approve/reject seller and technician applications, moderate products/rentals, manage orders/bookings, configure categories and promotions, and review support cases.
 - Admin panel must require owner authentication and server-side authorization.
 
-## 12. Technology and integrations
+## 13. Technology and integrations
 - Android app: Flutter.
 - Web admin: React/Next.js (after Android core stabilizes).
 - Backend: existing project architecture should be audited before choosing/adding services; Firebase Auth/Firestore/Storage/Cloud Messaging may be used where appropriate. Avoid introducing a second backend stack without a migration plan.
@@ -109,13 +122,14 @@ Build Elyramart as a Bangladesh-first, multi-vendor marketplace and local-servic
 - Database: Firestore or the project's established database; define indexes, validation, access rules and backup/export strategy.
 - Payments: approved Bangladesh gateway integrations only after credentials and owner approval.
 
-## 13. Quality, security and release gates
+## 14. Quality, security and release gates
 - Audit current code and dependencies before feature work; preserve existing working rental/search/owner-security code.
 - Add automated tests for auth/roles, product search, rental search/ownership, booking lifecycle, order lifecycle and security rules.
 - Verify loading, empty, offline, permission-denied and network-error states.
 - No fake product inventory, fake reviews, fabricated dashboard statistics or simulated payment success in production mode.
 - Test on a real Android device, including sign-in, search, GPS permission, listing creation, order/booking flows and owner-only access.
 - Firebase/backend setup, secrets, API keys, payment merchant credentials and map billing must be configured by the owner or explicitly authorized; never commit secrets.
+- No paid billing, paid API or subscription is to be enabled without explicit owner approval.
 - Play Store publication is a later step after testing, privacy policy/data-safety disclosures, signing and release checks.
 
 ## Delivery phases
@@ -123,9 +137,10 @@ Build Elyramart as a Bangladesh-first, multi-vendor marketplace and local-servic
 2. Stabilize authentication, backend configuration and owner-only security.
 3. Complete marketplace, rental search/listing management and service/booking workflows.
 4. Add notifications, chat, support and owner admin functions.
-5. Add approved payment integrations only after credentials and explicit approval.
-6. Device testing, security review, performance/accessibility checks and release APK.
-7. Build and deploy web admin/public website; prepare Play Store release.
+5. Add the everyday-life modules in priority order: verified essential directories, jobs/education, family/home services, community help and optional planning tools.
+6. Add approved payment integrations only after credentials and explicit approval.
+7. Device testing, security review, performance/accessibility checks and release APK.
+8. Build and deploy web admin/public website; prepare Play Store release.
 
 ## Current known project constraints
 - Firebase Android package ID: `com.elyramartbd.elyramart`.
