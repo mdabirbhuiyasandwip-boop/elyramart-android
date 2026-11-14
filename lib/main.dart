@@ -220,6 +220,7 @@ class _HomePageState extends State<HomePage> {
   final cart=<Product>[];
   List<Product> sellerProducts=[];
   List<Map<String,dynamic>> directorySearchItems=[];
+  List<Map<String,dynamic>> rentalSearchItems=[];
   String category='সব';
   String searchQuery='';
   final categories=['সব','ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি'];
@@ -229,6 +230,7 @@ class _HomePageState extends State<HomePage> {
     final saved=prefs.getStringList('elyramart_cart_v1')??[];
     final loadedSeller=<Product>[];
     var loadedDirectory=<Map<String,dynamic>>[];
+    var loadedRentals=<Map<String,dynamic>>[];
     if(FirebaseRuntime.initialized){
       try{
         final snapshot=await FirebaseFirestore.instance.collection('products').where('status',isEqualTo:'active').limit(60).get();
@@ -244,11 +246,16 @@ class _HomePageState extends State<HomePage> {
         final directory = await FirebaseFirestore.instance.collection('directoryListings').where('status',isEqualTo:'active').limit(500).get();
         loadedDirectory = directory.docs.map((d)=><String,dynamic>{...d.data(),'_docId':d.id}).toList();
       } catch(error) { debugPrint('Elyramart directory search sync failed: $error'); }
+      try {
+        final rentals = await FirebaseFirestore.instance.collection('rentalListings').where('status',isEqualTo:'active').limit(300).get();
+        loadedRentals = rentals.docs.map((d)=><String,dynamic>{...d.data(),'_docId':d.id}).toList();
+      } catch(error) { debugPrint('Elyramart rental search sync failed: $error'); }
     }
     if(!mounted)return;
     setState((){
       sellerProducts=loadedSeller;
       directorySearchItems=loadedDirectory;
+      rentalSearchItems=loadedRentals;
       cart..clear()..addAll(saved.map((v){try{final m=Map<String,dynamic>.from(jsonDecode(v) as Map);return Product(m['name']??'',m['category']??'',m['price']??'',m['emoji']??'🛍️',m['detail']??'',sellerId:m['sellerId']?.toString(),productId:m['productId']?.toString(),imageUrl:m['imageUrl']?.toString(),demoOnly:m['demoOnly']==true||m['sellerId']==null);}catch(_){final i=int.tryParse(v);return i!=null&&i>=0&&i<products.length?products[i]:null;}}).whereType<Product>());
     });
   }
@@ -285,6 +292,7 @@ class _HomePageState extends State<HomePage> {
     final visibleProducts=allProducts.where((p)=>(category=='সব'||p.category==category) && p.sellerId!=null && p.productId!=null && p.imageUrl!=null && p.imageUrl!.isNotEmpty && ('${p.name} ${p.category} ${p.detail}'.toLowerCase().contains(searchQuery.toLowerCase()))).toList();
     final query=searchQuery.trim().toLowerCase();
     final visibleDirectory=directorySearchItems.where((e)=>query.isNotEmpty && '${e['name']??''} ${e['address']??''} ${e['districtBn']??''} ${e['upazilaBn']??''} ${e['phone']??''} ${e['category']??''}'.toLowerCase().contains(query)).toList();
+    final visibleRentals=rentalSearchItems.where((e)=>query.isNotEmpty && e['listingType']=='offer' && '${e['title']??''} ${e['propertyType']??''} ${e['location']??''} ${e['details']??''} ${e['rentAmount']??''}'.toLowerCase().contains(query)).toList();
     final visibleServices=services.where((s)=>query.isEmpty || '${s.$1} ${s.$3} ${englishServiceName(s.$1)} ${englishServiceDetail(s.$3)}'.toLowerCase().contains(query)).toList();
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
@@ -337,6 +345,18 @@ class _HomePageState extends State<HomePage> {
             Text(tx('সার্চের ফলাফল','Search results'),style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800,color:ink)),const SizedBox(height:6),
             if(visibleServices.isNotEmpty) ...[Text(tx('সার্ভিস (${visibleServices.length})','Services (${visibleServices.length})'),style:const TextStyle(color:green,fontWeight:FontWeight.w700)),...visibleServices.map((service)=>ListTile(contentPadding:EdgeInsets.zero,leading:CircleAvatar(backgroundColor:const Color(0xFFEAF5EF),child:Icon(service.$2,color:green)),title:Text(AppLanguage.english.value?englishServiceName(service.$1):service.$1),subtitle:Text(AppLanguage.english.value?englishServiceDetail(service.$3):service.$3),trailing:const Icon(Icons.arrow_forward_ios,size:14),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>BookingPage(service:AppLanguage.english.value?englishServiceName(service.$1):service.$1)))))],
             Text(tx('পণ্য: ${visibleProducts.length}','Products: ${visibleProducts.length}'),style:const TextStyle(color:green,fontWeight:FontWeight.w700)),
+            if (visibleRentals.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(tx('বাসা ও অফিস ভাড়া (${visibleRentals.length})', 'Homes & offices for rent (${visibleRentals.length})'), style: const TextStyle(color: green, fontWeight: FontWeight.w700)),
+              ...visibleRentals.take(10).map((e) => ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const CircleAvatar(child: Icon(Icons.apartment_outlined)),
+                title: Text((e['title'] ?? 'ভাড়ার বিজ্ঞাপন').toString()),
+                subtitle: Text('${e['propertyType'] ?? 'বাসা'} • ${e['location'] ?? ''} • ৳${e['rentAmount'] ?? ''}/মাস'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RentalMarketplacePage())),
+              )),
+            ],
             if (visibleDirectory.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
@@ -356,7 +376,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               )),
             ],
-            if(visibleServices.isEmpty&&visibleProducts.isEmpty&&visibleDirectory.isEmpty) Padding(padding:const EdgeInsets.only(top:8),child:Text(tx('কোনো মিল পাওয়া যায়নি। অন্য নামে খুঁজুন।','No matches found. Try another keyword.'))),
+            if(visibleServices.isEmpty&&visibleProducts.isEmpty&&visibleDirectory.isEmpty&&visibleRentals.isEmpty) Padding(padding:const EdgeInsets.only(top:8),child:Text(tx('কোনো মিল পাওয়া যায়নি। অন্য নামে খুঁজুন।','No matches found. Try another keyword.'))),
             if(!FirebaseRuntime.initialized) Padding(padding:const EdgeInsets.only(top:8),child:Text(tx('লাইভ পণ্যের ফল পেতে সার্ভার সংযোগ চালু করতে হবে।','Server setup is required to show live product results.'),style:const TextStyle(fontSize:12,color:Colors.black54))),
           ])),
         if(!FirebaseRuntime.initialized)
