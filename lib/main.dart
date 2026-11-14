@@ -2314,30 +2314,48 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
       _showAuthMessage('Firebase সংযোগ প্রস্তুত নয়। ইন্টারনেট ও Firebase সেটআপ পরীক্ষা করুন।');
       return;
     }
-    if (email.text.trim().isEmpty || password.text.isEmpty) {
+    final normalizedEmail = email.text.trim().toLowerCase();
+    if (normalizedEmail.isEmpty || password.text.isEmpty) {
       _showAuthMessage('ইমেইল ও পাসওয়ার্ড লিখুন।'); return;
     }
     setState(() { authBusy = true; authMessage = ''; });
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email.text.trim(), password: password.text,
+        email: normalizedEmail, password: password.text,
       );
-      final signedIn=FirebaseAuth.instance.currentUser;
-      await signedIn?.reload();
-      final refreshed=FirebaseAuth.instance.currentUser;
-      name.clear();
-      phone.clear();
-      address.clear();
-      if(refreshed!=null&&!refreshed.emailVerified){
-        _showAuthMessage('লগইন হয়েছে, তবে অর্ডার ও আবেদন পাঠানোর আগে ইমেইল যাচাই করুন। নিচের বাটনে আবার যাচাই লিংক পাঠাতে পারবেন।');
-        return;
-      }
-      await _loadCloudProfile();
-      _showAuthMessage('সফলভাবে লগইন হয়েছে।');
     } on FirebaseAuthException catch (e) {
       _showAuthMessage(_authError(e.code));
-    } catch (_) {
-      _showAuthMessage('লগইন করা যায়নি। আবার চেষ্টা করুন।');
+      return;
+    } catch (e) {
+      debugPrint('Elyramart sign-in failed: $e');
+      _showAuthMessage('লগইন করা যায়নি। ইন্টারনেট পরীক্ষা করে আবার চেষ্টা করুন।');
+      return;
+    }
+
+    // Authentication success is independent of profile/Firestore availability.
+    // A temporary profile sync failure must never tell the customer that login failed.
+    final signedIn = FirebaseAuth.instance.currentUser;
+    try { await signedIn?.reload(); } catch (e) {
+      debugPrint('Elyramart auth refresh deferred: $e');
+    }
+    final refreshed = FirebaseAuth.instance.currentUser;
+    name.clear();
+    phone.clear();
+    address.clear();
+
+    var profileReady = true;
+    try {
+      await _loadCloudProfile();
+    } catch (e) {
+      profileReady = false;
+      debugPrint('Elyramart profile sync deferred after sign-in: $e');
+    }
+    if (refreshed != null && !refreshed.emailVerified) {
+      _showAuthMessage('লগইন সফল হয়েছে। অর্ডার ও আবেদন ব্যবহারের আগে ইমেইল যাচাই করুন। নিচের বাটনে যাচাই লিংক আবার পাঠাতে পারবেন।');
+    } else if (!profileReady) {
+      _showAuthMessage('লগইন সফল হয়েছে। সাময়িক নেটওয়ার্ক সমস্যার কারণে প্রোফাইল পরে সিঙ্ক হবে।');
+    } else {
+      _showAuthMessage('সফলভাবে লগইন হয়েছে।');
     }
   }
 
@@ -2374,28 +2392,58 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
       return;
     }
     setState(() { authBusy = true; authMessage = ''; });
+    UserCredential credential;
     try {
-      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email.text.trim(), password: password.text,
+      credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email.text.trim().toLowerCase(), password: password.text,
       );
-      await credential.user?.sendEmailVerification();
-      await _syncUserProfile();
-      _showAuthMessage('অ্যাকাউন্ট তৈরি হয়েছে। ইমেইলে পাঠানো লিংক দিয়ে ঠিকানা যাচাই করুন।');
     } on FirebaseAuthException catch (e) {
       _showAuthMessage(_authError(e.code));
-    } catch (_) {
-      _showAuthMessage('রেজিস্ট্রেশন করা যায়নি। আবার চেষ্টা করুন।');
+      return;
+    } catch (e) {
+      debugPrint('Elyramart account creation failed: $e');
+      _showAuthMessage('অ্যাকাউন্ট তৈরি করা যায়নি। ইন্টারনেট পরীক্ষা করে আবার চেষ্টা করুন।');
+      return;
+    }
+
+    // The account already exists at this point. Keep that success even if
+    // email delivery or profile storage is temporarily unavailable.
+    var verificationSent = false;
+    var profileSaved = true;
+    try {
+      await credential.user?.sendEmailVerification();
+      verificationSent = true;
+    } catch (e) {
+      debugPrint('Elyramart verification email deferred: $e');
+    }
+    try {
+      await _syncUserProfile();
+    } catch (e) {
+      profileSaved = false;
+      debugPrint('Elyramart initial profile sync deferred: $e');
+    }
+    if (!verificationSent && !profileSaved) {
+      _showAuthMessage('অ্যাকাউন্ট তৈরি হয়েছে। ইমেইল যাচাই ও প্রোফাইল সিঙ্ক এখন হয়নি; ইন্টারনেট ঠিক হলে যাচাই লিংক আবার পাঠান।');
+    } else if (!verificationSent) {
+      _showAuthMessage('অ্যাকাউন্ট তৈরি হয়েছে। যাচাই ইমেইল পাঠানো যায়নি; নিচের বাটনে আবার পাঠান।');
+    } else if (!profileSaved) {
+      _showAuthMessage('অ্যাকাউন্ট তৈরি হয়েছে এবং যাচাই ইমেইল পাঠানো হয়েছে। প্রোফাইল পরে সিঙ্ক হবে।');
+    } else {
+      _showAuthMessage('অ্যাকাউন্ট তৈরি হয়েছে। ইমেইলে পাঠানো যাচাই লিংক খুলুন।');
     }
   }
 
   String _authError(String code) => switch (code) {
-    'email-already-in-use' => 'এই ইমেইলে আগে থেকেই অ্যাকাউন্ট আছে।',
+    'email-already-in-use' => 'এই ইমেইলে আগে থেকেই অ্যাকাউন্ট আছে। লগইন করুন বা পাসওয়ার্ড রিসেট করুন।',
     'invalid-email' => 'ইমেইল ঠিকানাটি সঠিক নয়।',
-    'weak-password' => 'আরও শক্তিশালী পাসওয়ার্ড দিন।',
+    'weak-password' => 'আরও শক্তিশালী পাসওয়ার্ড দিন (কমপক্ষে ৬ অক্ষর)।',
     'user-not-found' || 'wrong-password' || 'invalid-credential' => 'ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।',
-    'network-request-failed' => 'ইন্টারনেট সংযোগ পরীক্ষা করুন।',
-    'too-many-requests' => 'অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।',
-    _ => 'অনুরোধটি সম্পন্ন হয়নি ($code)।',
+    'user-disabled' => 'এই অ্যাকাউন্ট সাময়িকভাবে বন্ধ। সহায়তার সঙ্গে যোগাযোগ করুন।',
+    'operation-not-allowed' => 'Firebase-এ এই লগইন পদ্ধতি এখনো চালু করা হয়নি।',
+    'network-request-failed' => 'ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।',
+    'too-many-requests' => 'নিরাপত্তার জন্য অনেক চেষ্টা সীমিত করা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।',
+    'requires-recent-login' => 'নিরাপত্তার জন্য আবার লগইন করুন।',
+    _ => 'অনুরোধটি সম্পন্ন হয়নি। আবার চেষ্টা করুন। (কোড: $code)',
   };
 
   Future<void> _loadCloudProfile() async {
