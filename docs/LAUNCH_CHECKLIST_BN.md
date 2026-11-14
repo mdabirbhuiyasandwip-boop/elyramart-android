@@ -72,3 +72,21 @@
 ## Release gate
 
 Public launch কেবল তখনই হবে যখন Firebase deploy, public hosting, security review, real-device QA, signed AAB এবং Play Console review সম্পন্ন। Build artifact তৈরি হওয়াকে public launch বলা যাবে না।
+
+
+## ১৪ নভেম্বর ২০২৬ — সর্বশেষ release preflight ফলাফল
+
+- [x] Android CI job সফল (run 43581917105)।
+- [x] Flutter analyzer-এ Error/Warning নেই; ৪৯টি Info-level lint/style suggestion রয়ে গেছে।
+- [x] ৬টি widget test pass।
+- [x] Release APK ও AAB build এবং artifact upload সফল।
+- [x] APK/AAB archive integrity যাচাই।
+- [ ] APK বাস্তব Android ফোনে install/launch এবং smoke test।
+- [ ] Firebase login/email verification ও cloud-backed customer flow পরীক্ষা।
+- [ ] Cloud Functions deploy; COD order ও Owner Admin claim live করা।
+- [ ] Firebase Storage bucket/rules deploy; seller image upload পরীক্ষা।
+- [ ] Owner Admin custom claim দিয়ে আলাদা admin login পরীক্ষা।
+- [ ] Owner upload keystore দিয়ে signed AAB তৈরি ও signature verify।
+- [ ] Privacy/terms, hosting এবং Play Console release requirements সম্পন্ন।
+
+**Release সিদ্ধান্ত:** বর্তমান APK কেবল install-test candidate। উপরের বাস্তব ডিভাইস, backend, security এবং signing gate শেষ না হওয়া পর্যন্ত production launch বা Play Store submission করা যাবে না।
