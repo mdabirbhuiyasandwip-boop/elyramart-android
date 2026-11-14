@@ -67,6 +67,7 @@ Source of truth: repository root-এর Flutter source এবং বর্তম
 | `docs/PRODUCTION_READINESS.md` | production readiness ও verified blockers | আপডেট |
 | `docs/PROJECT_STATUS_BN.md` | বর্তমান project status | আপডেট |
 | `docs/SERVICE_MARKETPLACE.md` | customer/provider/admin service scope | আছে |
+| `docs/RENTAL_MARKETPLACE_BN.md` | বাসা/অফিস ভাড়া দেওয়া ও খোঁজার feature guide | নতুন যোগ |
 | `docs/TERMS_DRAFT_BN.md` | Marketplace terms-এর বাংলা খসড়া | মালিক/আইনজীবীর যাচাই বাকি |
 
 ## ৭. পরিষ্কার করা হয়েছে
