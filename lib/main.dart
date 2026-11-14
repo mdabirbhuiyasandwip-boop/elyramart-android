@@ -317,6 +317,7 @@ class RentalMarketplacePage extends StatefulWidget {
 class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
   bool loading = true;
   String filter = 'সব';
+  String listingFilter = 'সব';
   List<Map<String, dynamic>> listings = [];
 
   @override
@@ -357,7 +358,8 @@ class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
   @override
   Widget build(BuildContext context) {
     final visible = listings.where((item) =>
-      filter == 'সব' || item['propertyType'] == filter
+      (filter == 'সব' || item['propertyType'] == filter) &&
+      (listingFilter == 'সব' || item['listingType'] == listingFilter)
     ).toList();
     return Scaffold(
       appBar: AppBar(title: Text(tx('বাসা ও অফিস ভাড়া', 'House & office rentals'))),
@@ -394,6 +396,12 @@ class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
               selectedColor: const Color(0xFFD6EFE5),
             ),
           ).toList()),
+          const SizedBox(height: 8),
+          Wrap(spacing: 8, children: [
+            ChoiceChip(label: const Text('সব বিজ্ঞাপন'), selected: listingFilter == 'সব', onSelected: (_) => setState(() => listingFilter = 'সব')),
+            ChoiceChip(label: const Text('ভাড়া দেবেন'), selected: listingFilter == 'offer', onSelected: (_) => setState(() => listingFilter = 'offer')),
+            ChoiceChip(label: const Text('ভাড়া প্রয়োজন'), selected: listingFilter == 'wanted', onSelected: (_) => setState(() => listingFilter = 'wanted')),
+          ]),
           const SizedBox(height: 12),
           if (!FirebaseRuntime.initialized)
             Card(color: Colors.white, child: Padding(
