@@ -123,3 +123,13 @@ Service-account JSON/private key, Android upload keystore/password, payment secr
 
 ### সিদ্ধান্ত
 **এটি CI-তে build ও widget-test pass করা install-test candidate; production launch বা Play Store submission-ready release নয়।** কোনো paid Firebase billing চালু করা হয়নি। Owner-এর স্পষ্ট অনুমতি ছাড়া billing enable করা যাবে না।
+
+
+## ১৪ নভেম্বর ২০২৬ — লগইন স্থিতিশীলতা ও মোবাইল OTP
+
+- Email/password login-এর পর Firestore profile sync সাময়িকভাবে ব্যর্থ হলেও authentication সফল থাকলে অ্যাপ আর ভুল করে login failure দেখাবে না।
+- নতুন account তৈরি হওয়ার পর verification email বা profile sync সাময়িকভাবে ব্যর্থ হলেও account creation-এর সফলতা আলাদাভাবে দেখানো হয়।
+- Firebase Phone Authentication-এর Android OTP request, SMS code verification, automatic SMS verification, resend এবং বাংলা error message-এর client flow যোগ হয়েছে।
+- **OTP live activation এখনো বাকি:** Firebase Console → Authentication → Sign-in method-এ Phone provider enable, SMS region policy যাচাই, Android app SHA-1/SHA-256 fingerprint যোগ, real device-এ SMS delivery ও abuse/limit testing প্রয়োজন। Firebase billing/SMS charge হতে পারে; owner অনুমতি ছাড়া billing enable করা হবে না।
+- Google Sign-In ও email numeric OTP এখনো live নয়; email/password ও email verification link বিদ্যমান পদ্ধতি।
+- Commit `1da47afe494556b026f445e260238ee7e65fb9fa`-এ পরিবর্তন push হয়েছে। Android/Web CI run [43586109910](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43586109910) / [43586109896](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43586109896) যাচাই চলছে; ফলাফল না আসা পর্যন্ত build/test pass বলা হচ্ছে না।
