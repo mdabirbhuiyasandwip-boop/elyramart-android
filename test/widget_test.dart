@@ -102,6 +102,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('ভ্রমণ ও থাকার ব্যবস্থা'), findsOneWidget);
     expect(find.text('টোল পেমেন্ট'), findsOneWidget);
+    expect(find.text('বাসের টিকিট ও সিট বুকিং'), findsOneWidget);
+    expect(find.text('ট্রেনের টিকিট ও সিট বুকিং'), findsOneWidget);
+    expect(find.textContaining('বাস অপারেটরের অনুমোদিত লাইভ API না পাওয়া পর্যন্ত অ্যাপের ভেতরে বুকিং চালু নয়'), findsOneWidget);
+    expect(find.textContaining('বাংলাদেশ রেলওয়ের অনুমোদিত টিকিটিং সংযোগ ছাড়া বুকিং চালু নয়'), findsOneWidget);
     expect(find.text('লঞ্চ ও স্টিমার টিকিট'), findsOneWidget);
     expect(find.text('হোটেল বুকিং'), findsOneWidget);
     expect(find.text('বাসা, ফ্ল্যাট ও অফিস ভাড়া'), findsOneWidget);
