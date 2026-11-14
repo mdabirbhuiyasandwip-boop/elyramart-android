@@ -6,6 +6,13 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/package-source.yml'
+      - 'lib/**'
+      - 'test/**'
+      - 'docs/**'
+      - 'firestore.rules'
+      - 'storage.rules'
+      - 'README.md'
+      - 'pubspec.yaml'
 
 permissions:
   contents: read
