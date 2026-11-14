@@ -935,6 +935,11 @@ class _BookingPageState extends State<BookingPage> {
       ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
     }
     final user = FirebaseRuntime.initialized ? FirebaseAuth.instance.currentUser : null;
+    if(user==null){
+      ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('বাস্তব বুকিং পাঠাতে আগে লগইন করুন।')));
+      Navigator.push(c,MaterialPageRoute(builder:(_)=>const CustomerLoginPage()));
+      return;
+    }
     final booking = <String,dynamic>{
       'service': widget.service,
       'name': name.text.trim(),
@@ -945,24 +950,15 @@ class _BookingPageState extends State<BookingPage> {
       'createdAt': FieldValue.serverTimestamp(),
       'customerId': user?.uid,
     };
-    var cloudSaved = false;
-    if (user != null) {
-      try {
-        await FirebaseFirestore.instance.collection('serviceBookings').add(booking);
-        cloudSaved = true;
-      } catch (error) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text('অনলাইনে বুকিং পাঠানো যায়নি: $error')));
-        return;
-      }
-    } else {
-      final prefs=await SharedPreferences.getInstance();
-      final requests=prefs.getStringList('elyramart_service_requests_v1')??[];
-      requests.add(jsonEncode({...booking,'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'}));
-      await prefs.setStringList('elyramart_service_requests_v1',requests);
+    try {
+      await FirebaseFirestore.instance.collection('serviceBookings').add(booking);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text('অনলাইনে বুকিং পাঠানো যায়নি: $error')));
+      return;
     }
     if(!mounted)return;
-    showDialog(context:c,builder:(_)=>AlertDialog(title:Text(cloudSaved?'অনলাইন বুকিং পাঠানো হয়েছে':'ডেমো বুকিং সংরক্ষিত'),content:Text(cloudSaved?'আপনার বুকিং সার্ভারে পাঠানো হয়েছে। অ্যাডমিন যাচাই করে টেকনিশিয়ান নির্ধারণ করবেন।':'এই ফোনে বুকিং রাখা হয়েছে। অনলাইনে পাঠাতে লগইন করুন এবং Firebase চালু থাকতে হবে।'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
+    showDialog(context:c,builder:(_)=>AlertDialog(title:const Text('অনলাইন বুকিং পাঠানো হয়েছে'),content:const Text('আপনার বুকিং সার্ভারে সংরক্ষিত হয়েছে। অ্যাডমিন যাচাই করে টেকনিশিয়ান নির্ধারণ করবেন।'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
   }
   @override Widget build(BuildContext c)=>Scaffold(
     appBar:AppBar(title:const Text('সার্ভিস বুকিং')),
@@ -1085,15 +1081,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
         return;
       }
     }else{
-      final prefs=await SharedPreferences.getInstance();
-      final orders=prefs.getStringList('elyramart_local_orders_v1')??[];
-      orders.add(jsonEncode({...orderData,'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'}));
-      await prefs.setStringList('elyramart_local_orders_v1',orders);
+      if(mounted){
+        setState(()=>saving=false);
+        ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('বাস্তব অর্ডার পাঠাতে আগে লগইন করুন।')));
+        Navigator.push(c,MaterialPageRoute(builder:(_)=>const CustomerLoginPage()));
+      }
+      return;
     }
     widget.onOrderSaved();
     if(!mounted)return;
     setState(()=>saving=false);
-    showDialog(context:c,builder:(_)=>AlertDialog(title:Text(cloudSaved?'অর্ডার অনলাইনে পাঠানো হয়েছে':'ডেমো অর্ডার সংরক্ষিত'),content:Text('অর্ডার নম্বর: $confirmedOrderNumber\nপণ্যের মোট: ৳$totalAmount\nডেলিভারি চার্জ: ৳$serverDeliveryFee\nসর্বমোট: ৳${serverTotalAmount??(totalAmount+serverDeliveryFee)}\n${cloudSaved?'অর্ডার সার্ভারে সংরক্ষিত হয়েছে।':'অর্ডার শুধু এই ফোনে রাখা হয়েছে। অনলাইনে পাঠাতে লগইন করুন এবং Firebase চালু থাকতে হবে।'}'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
+    showDialog(context:c,builder:(_)=>AlertDialog(title:const Text('অর্ডার অনলাইনে পাঠানো হয়েছে'),content:Text('অর্ডার নম্বর: $confirmedOrderNumber\nপণ্যের মোট: ৳$totalAmount\nডেলিভারি চার্জ: ৳$serverDeliveryFee\nসর্বমোট: ৳${serverTotalAmount??(totalAmount+serverDeliveryFee)}\nঅর্ডার সার্ভারে সংরক্ষিত হয়েছে।'),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('ঠিক আছে'))]));
   }
   @override Widget build(BuildContext c)=>Scaffold(
     appBar:AppBar(title:const Text('ডেলিভারি তথ্য')),
