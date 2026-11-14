@@ -491,7 +491,7 @@ class _HomePageState extends State<HomePage> {
               ),
               ...nearbyPlaces.where((place) {
                 final q = searchQuery.trim().toLowerCase();
-                final searchable = '\${place['name']} \${place['category']} \${place['address']}'.toLowerCase();
+                final searchable = '${place['name']} ${place['category']} ${place['address']}'.toLowerCase();
                 return q.isEmpty || searchable.contains(q);
               }).take(20).map((place) {
                 final distanceKm = ((place['distance'] as double) / 1000).toStringAsFixed(1);
@@ -501,7 +501,7 @@ class _HomePageState extends State<HomePage> {
                   contentPadding: EdgeInsets.zero,
                   leading: const CircleAvatar(child: Icon(Icons.place_outlined, color: green)),
                   title: Text(place['name'].toString()),
-                  subtitle: Text('\${place['category']} • $distanceKm km\${address.isEmpty ? '' : ' • $address'}'),
+                  subtitle: Text('${place['category']} • $distanceKm km${address.isEmpty ? '' : ' • $address'}'),
                   trailing: const Icon(Icons.map_outlined),
                   onTap: () => _openNearbyPlace(place),
                 );
@@ -717,7 +717,7 @@ class ProductCard extends StatelessWidget {
         Text(p.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.w800,fontSize:13,color:ink)),
         const SizedBox(height:3),
         Text(p.detail,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.black54,fontSize:10)),
-        if(p.stock!=null)Text(outOfStock?'স্টক শেষ':'স্টক: \${p.stock}',style:TextStyle(color:outOfStock?Colors.red:Colors.black54,fontSize:10)),
+        if(p.stock!=null)Text(outOfStock?'স্টক শেষ':'স্টক: ${p.stock}',style:TextStyle(color:outOfStock?Colors.red:Colors.black54,fontSize:10)),
         const SizedBox(height:8),
         Row(children:[
           Expanded(child:Text(p.price,style:const TextStyle(color:green,fontWeight:FontWeight.w900,fontSize:15))),
