@@ -58,7 +58,8 @@
 ## F. Android/Play Store release
 
 - [ ] Android upload keystore তৈরি এবং নিরাপদ backup।
-- [ ] CI-তে protected signing secrets configure; কোনো key repository-তে নয়।
+- [ ] CI-তে `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` protected secrets configure; কোনো key repository-তে নয়।
+- [ ] একই upload keystore-এর নিরাপদ offline backup রাখা; keystore হারালে update প্রকাশে সমস্যা হতে পারে।
 - [ ] Signed release AAB তৈরি ও signature verify।
 - [ ] App icon, package ID, version, privacy policy URL final।
 - [ ] Play Console account ও identity verification।
