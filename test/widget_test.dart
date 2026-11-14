@@ -33,7 +33,7 @@ void main() {
         body: ProductCard(p: product, onAdd: () => added = true, isFavorite: false, onToggleFavorite: () {}),
       ),
     ));
-    final addButton = tester.widget<IconButton>(find.byType(IconButton));
+    final addButton = tester.widget<IconButton>(find.byIcon(Icons.add_rounded));
     expect(addButton.onPressed, isNull);
     expect(find.text('স্টক শেষ'), findsOneWidget);
     await tester.tap(find.byType(IconButton));
