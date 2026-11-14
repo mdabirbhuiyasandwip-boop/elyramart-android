@@ -2704,15 +2704,7 @@ class _CustomerLoginPageState extends State<CustomerLoginPage> {
         field(password, 'পাসওয়ার্ড', obscure: true),
         FilledButton(onPressed: authBusy ? null : _signIn, child: const Text('ইমেইল ও পাসওয়ার্ড দিয়ে লগইন')),
         const SizedBox(height: 12),
-        TextField(
-          controller: phone,
-          keyboardType: TextInputType.phone,
-          decoration: const InputDecoration(
-            labelText: 'মোবাইল নম্বর (01XXXXXXXXX)',
-            prefixIcon: Icon(Icons.phone_android),
-            border: OutlineInputBorder(),
-          ),
-        ),
+        Text('উপরের প্রোফাইলের মোবাইল নম্বরে OTP পাঠানো হবে: ${phone.text.trim().isEmpty ? 'নম্বর লিখুন' : phone.text.trim()}'),
         if (!phoneOtpSent)
           OutlinedButton.icon(
             onPressed: authBusy ? null : _sendPhoneOtp,
