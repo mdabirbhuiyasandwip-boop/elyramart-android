@@ -133,3 +133,17 @@ Service-account JSON/private key, Android upload keystore/password, payment secr
 - **OTP live activation এখনো বাকি:** Firebase Console → Authentication → Sign-in method-এ Phone provider enable, SMS region policy যাচাই, Android app SHA-1/SHA-256 fingerprint যোগ, real device-এ SMS delivery ও abuse/limit testing প্রয়োজন। Firebase billing/SMS charge হতে পারে; owner অনুমতি ছাড়া billing enable করা হবে না।
 - Google Sign-In ও email numeric OTP এখনো live নয়; email/password ও email verification link বিদ্যমান পদ্ধতি।
 - Commit `1da47afe494556b026f445e260238ee7e65fb9fa`-এ পরিবর্তন push হয়েছে। Android/Web CI run [43586109910](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43586109910) / [43586109896](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43586109896) যাচাই চলছে; ফলাফল না আসা পর্যন্ত build/test pass বলা হচ্ছে না।
+
+
+## ১৪ নভেম্বর ২০২৬ — সর্বশেষ পুনঃযাচাই (commit cefe05f8)
+
+- Android source verification, Flutter package resolution, Dart analyze এবং widget tests সফল। Release APK build ধাপ এখনো চলমান; এই যাচাইয়ের সময় APK/AAB artifact তৈরি হয়নি। তাই APK download link এখনো দেওয়া যাচ্ছে না। [Android workflow](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43586412860)
+- Web release build সফল এবং `Elyramart-Web-release` artifact তৈরি হয়েছে। এটি build artifact, public website deployment নয়। [Web workflow](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43586412811)
+- GitHub Pages build সফল হলেও publish/deploy ধাপগুলো `ENABLE_GITHUB_PAGES_DEPLOY` repository variable `true` না থাকায় skipped। কোনো public Pages URL live বলে যাচাই হয়নি।
+- Firebase Hosting workflow credential check পেরোলেও ছয়টি Web Firebase config secret খালি থাকায় থেমেছে: `ELYRAMART_FIREBASE_WEB_API_KEY`, `ELYRAMART_FIREBASE_WEB_APP_ID`, `ELYRAMART_FIREBASE_MESSAGING_SENDER_ID`, `ELYRAMART_FIREBASE_PROJECT_ID`, `ELYRAMART_FIREBASE_AUTH_DOMAIN`, `ELYRAMART_FIREBASE_STORAGE_BUCKET`। [Hosting workflow](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43586412848)
+- Firestore rules-এ customer নিজের profile create করতে পারে শুধু `role: customer` দিয়ে; admin claim client থেকে সেট করার অনুমতি নেই। Seller-এর product submission approval-নির্ভর। তবে order rules-এ seller update কেবল এক-seller order-এর জন্য অনুমোদিত; multi-seller order-এর পৃথক seller fulfillment flow এখনো অসম্পূর্ণ।
+- Cloud Functions deploy না হওয়ায় `claimOwnerAdmin`, server-side COD order এবং notification triggers live নয়। Deploy workflow-তে `ENABLE_CLOUD_FUNCTIONS_DEPLOY=true` দিলে Blaze billing দরকার হতে পারে; মালিকের অনুমতি ছাড়া এটি চালু করা হবে না।
+- Android OTP client code আছে; Phone provider/SMS region/SHA fingerprints/real SMS verification বাকি। Google Sign-In, email numeric OTP, online payment gateway, rider live tracking, iOS build, production device QA এবং signed Play Store AAB এখনো অসম্পূর্ণ।
+- Firebase setup guide-এর পুরোনো “OTP UI নেই” বক্তব্য সংশোধন করা হয়েছে।
+
+**বর্তমান সিদ্ধান্ত:** source ও Web build CI-তে যাচাইকৃত; APK build ফলাফল pending। Elyramart এখনো production launch-ready নয়। বাস্তব ফোনে পরীক্ষা, live Firebase backend, private Owner Admin, secure payment/delivery workflow এবং signed AAB ছাড়া launch সম্পূর্ণ বলা যাবে না।
