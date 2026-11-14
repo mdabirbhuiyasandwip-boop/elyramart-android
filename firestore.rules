@@ -137,7 +137,7 @@ service cloud.firestore {
         && request.resource.data.ownerId == request.auth.uid
         && request.resource.data.status == 'active'
         && request.resource.data.propertyType in ['বাসা','অফিস']
-        && request.resource.data.listingType in ['offer','wanted']
+        && request.resource.data.listingType == 'offer'
         && request.resource.data.title is string
         && request.resource.data.title.size() >= 4
         && request.resource.data.title.size() <= 120
@@ -160,6 +160,16 @@ service cloud.firestore {
       allow update: if isAdmin();
       allow delete: if isAdmin()
         || (verifiedUser() && resource.data.ownerId == request.auth.uid);
+    }
+
+    match /directoryListings/{listingId} {
+      allow read: if resource.data.status == 'active' || isAdmin();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly([
+          'category','name','address','phone','divisionId','districtId',
+          'districtBn','upazilaId','upazilaBn','source','status','createdAt','updatedAt'
+        ]);
+      allow delete: if isAdmin();
     }
 
     match /settings/{settingId} {
