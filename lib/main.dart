@@ -13,6 +13,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class FirebaseRuntime { static bool initialized = false; }
 
@@ -217,6 +219,7 @@ class _HomePageState extends State<HomePage> {
   int tab=0;
   final cart=<Product>[];
   List<Product> sellerProducts=[];
+  List<Map<String,dynamic>> directorySearchItems=[];
   String category='সব';
   String searchQuery='';
   final categories=['সব','ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি'];
@@ -225,6 +228,7 @@ class _HomePageState extends State<HomePage> {
     final prefs=await SharedPreferences.getInstance();
     final saved=prefs.getStringList('elyramart_cart_v1')??[];
     final loadedSeller=<Product>[];
+    var loadedDirectory=<Map<String,dynamic>>[];
     if(FirebaseRuntime.initialized){
       try{
         final snapshot=await FirebaseFirestore.instance.collection('products').where('status',isEqualTo:'active').limit(60).get();
@@ -275,6 +279,7 @@ class _HomePageState extends State<HomePage> {
     final allProducts=<Product>[...products,...sellerProducts];
     final visibleProducts=allProducts.where((p)=>(category=='সব'||p.category==category) && p.sellerId!=null && p.productId!=null && p.imageUrl!=null && p.imageUrl!.isNotEmpty && ('${p.name} ${p.category} ${p.detail}'.toLowerCase().contains(searchQuery.toLowerCase()))).toList();
     final query=searchQuery.trim().toLowerCase();
+    final visibleDirectory=directorySearchItems.where((e)=>query.isNotEmpty && '${e['name']??''} ${e['address']??''} ${e['districtBn']??''} ${e['upazilaBn']??''} ${e['phone']??''} ${e['category']??''}'.toLowerCase().contains(query)).toList();
     final visibleServices=services.where((s)=>query.isEmpty || '${s.$1} ${s.$3} ${englishServiceName(s.$1)} ${englishServiceDetail(s.$3)}'.toLowerCase().contains(query)).toList();
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
@@ -327,7 +332,8 @@ class _HomePageState extends State<HomePage> {
             Text(tx('সার্চের ফলাফল','Search results'),style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800,color:ink)),const SizedBox(height:6),
             if(visibleServices.isNotEmpty) ...[Text(tx('সার্ভিস (${visibleServices.length})','Services (${visibleServices.length})'),style:const TextStyle(color:green,fontWeight:FontWeight.w700)),...visibleServices.map((service)=>ListTile(contentPadding:EdgeInsets.zero,leading:CircleAvatar(backgroundColor:const Color(0xFFEAF5EF),child:Icon(service.$2,color:green)),title:Text(AppLanguage.english.value?englishServiceName(service.$1):service.$1),subtitle:Text(AppLanguage.english.value?englishServiceDetail(service.$3):service.$3),trailing:const Icon(Icons.arrow_forward_ios,size:14),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>BookingPage(service:AppLanguage.english.value?englishServiceName(service.$1):service.$1)))))],
             Text(tx('পণ্য: ${visibleProducts.length}','Products: ${visibleProducts.length}'),style:const TextStyle(color:green,fontWeight:FontWeight.w700)),
-            if(visibleServices.isEmpty&&visibleProducts.isEmpty) Padding(padding:const EdgeInsets.only(top:8),child:Text(tx('কোনো মিল পাওয়া যায়নি। অন্য নামে খুঁজুন।','No matches found. Try another keyword.'))),
+            if(visibleDirectory.isNotEmpty) ...[const SizedBox(height:8),Text(tx('হাসপাতাল, রেস্টুরেন্ট ও প্রতিষ্ঠান (${visibleDirectory.length})','Hospitals, restaurants & places (${visibleDirectory.length})'),style:const TextStyle(color:green,fontWeight:FontWeight.w700)),...visibleDirectory.take(12).map((e)=>ListTile(contentPadding:EdgeInsets.zero,leading:const CircleAvatar(child:Icon(Icons.place_outlined)),title:Text((e['name']??'').toString()),subtitle:Text('${e['address']??''} • ${e['districtBn']??''}'),trailing:const Icon(Icons.location_on_outlined),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const DailyLifeDirectoryPage())))],
+            if(visibleServices.isEmpty&&visibleProducts.isEmpty&&visibleDirectory.isEmpty) Padding(padding:const EdgeInsets.only(top:8),child:Text(tx('কোনো মিল পাওয়া যায়নি। অন্য নামে খুঁজুন।','No matches found. Try another keyword.'))),
             if(!FirebaseRuntime.initialized) Padding(padding:const EdgeInsets.only(top:8),child:Text(tx('লাইভ পণ্যের ফল পেতে সার্ভার সংযোগ চালু করতে হবে।','Server setup is required to show live product results.'),style:const TextStyle(fontSize:12,color:Colors.black54))),
           ])),
         if(!FirebaseRuntime.initialized)
@@ -2147,6 +2153,7 @@ class _LocationSettingsPageState extends State<LocationSettingsPage> {
   bool loading = false;
   String message = '';
   String? coordinates;
+  double? latitude, longitude;
 
   Future<void> _getLocation() async {
     setState(() { loading = true; message = ''; });
@@ -2177,6 +2184,8 @@ class _LocationSettingsPageState extends State<LocationSettingsPage> {
       await prefs.setString('elyramart_last_location_v1', value);
       if (mounted) setState(() {
         coordinates = value;
+        latitude = p.latitude;
+        longitude = p.longitude;
         message = tx('লোকেশন পাওয়া গেছে।','Location acquired.');
       });
     } catch (e) {
