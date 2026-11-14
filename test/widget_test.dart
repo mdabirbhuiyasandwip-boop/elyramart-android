@@ -76,6 +76,7 @@ void main() {
 
     expect(find.text('Elyramart'), findsOneWidget);
     expect(find.textContaining('আপনার প্রতিদিনের'), findsOneWidget);
+    expect(find.text('এখনো কোনো পণ্য যোগ করা হয়নি। সেলাররা পণ্য যোগ করলে এখানে দেখা যাবে।'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('সেলার হোন'), 250, scrollable: find.byType(Scrollable).first);
     expect(find.text('সেলার হোন'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('টেকনিশিয়ান হোন'), 250, scrollable: find.byType(Scrollable).first);
@@ -99,6 +100,7 @@ void main() {
     expect(find.text('Elyramart অ্যাকাউন্ট'), findsOneWidget);
     expect(find.text('সেলার অ্যাকাউন্ট'), findsOneWidget);
     expect(find.text('অ্যাডমিন প্যানেল'), findsNothing); // Admin controls are hidden from ordinary users.
+    expect(find.text('Create a demo profile and save your details'), findsNothing);
     expect(find.text('কোম্পানির মালিক / Owner Settings'), findsNothing);
     expect(find.text('টেকনিশিয়ান সেন্টার'), findsOneWidget);
 
@@ -111,6 +113,6 @@ void main() {
     await tester.enterText(fields.at(1), '01712345678');
     await tester.tap(find.text('প্রোফাইল সংরক্ষণ করুন'));
     await tester.pumpAndSettle();
-    expect(find.text('ডেমো প্রোফাইল এই ফোনে সংরক্ষিত হয়েছে'), findsOneWidget);
+    expect(find.text('প্রোফাইল অনলাইনে সংরক্ষণ করতে আগে লগইন বা নতুন অ্যাকাউন্ট তৈরি করুন।'), findsOneWidget);
   });
 }
