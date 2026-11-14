@@ -1244,7 +1244,12 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
     }
     final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;
-    if(user!=null){
+    if(user==null){
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('বাস্তব সেলার আবেদন করতে আগে গ্রাহক অ্যাকাউন্টে লগইন করুন।')));
+      Navigator.push(context,MaterialPageRoute(builder:(_)=>const CustomerLoginPage()));
+      return;
+    }
+    {
       try{
         final existing=await FirebaseFirestore.instance.collection('sellerApplications').where('userId',isEqualTo:user.uid).limit(20).get();
         final hasActiveApplication=existing.docs.any((doc)=>['pending','approved'].contains(doc.data()['status']));
@@ -1259,15 +1264,9 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
         return;
       }
     }
-    final p=await SharedPreferences.getInstance();
-    if (user == null) {
-      await p.setString('elyramart_seller_profile_v1',jsonEncode({'shop':shop.text.trim(),'owner':owner.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'userId':null,'status':'local_pending'}));
-    } else {
-      await p.remove('elyramart_seller_profile_v1');
-    }
     if(!mounted)return;
     setState(()=>registered=true);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(user==null?'সেলার তথ্য শুধু এই ফোনে রাখা হয়েছে। অনলাইন আবেদনের জন্য লগইন করুন।':'সেলার আবেদন অনলাইনে পাঠানো হয়েছে। অ্যাডমিন অনুমোদনের পর পণ্য যোগ করতে পারবেন।')));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সেলার আবেদন অনলাইনে পাঠানো হয়েছে। অ্যাডমিন অনুমোদনের পর পণ্য যোগ করতে পারবেন।')));
   }
   Future<void> removeProduct(Map<String,dynamic> item) async {if(item['_docId']!=null){try{await FirebaseFirestore.instance.collection('products').doc(item['_docId']).delete();if(mounted)setState(()=>mine.remove(item));}catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('পণ্য মুছতে সমস্যা: $error')));}return;}final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];final target=jsonEncode(item);raw.remove(target);await p.setStringList('elyramart_seller_products_v1',raw);if(!mounted)return;setState(()=>mine.remove(item));}
   Future<void> editProduct(Map<String,dynamic> item) async {
@@ -1323,7 +1322,7 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
   }
   Future<void> addProduct() async {
     if(!registered){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('আগে সেলার তথ্য সংরক্ষণ করুন')));return;}
-    if(product.text.trim().isEmpty||price.text.trim().isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্যের নাম ও দাম দিন')));return;}
+    if(product.text.trim().isEmpty||price.text.trim().isEmpty||selectedImage==null){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্যের নাম, দাম এবং নিজের তোলা আসল পণ্যের ছবি দিন')));return;}
     final parsedStock=int.tryParse(stock.text.trim());
     if(parsedStock==null||parsedStock<0){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('স্টক ০ বা তার বেশি পূর্ণসংখ্যা হতে হবে')));return;}
     final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;
@@ -1358,12 +1357,11 @@ class _SellerPortalPageState extends State<SellerPortalPage> {
         return;
       }
     }else{
-      final item={'name':product.text.trim(),'price':price.text.trim(),'category':category,'createdAt':DateTime.now().toIso8601String(),'status':'local_pending'};
-      final p=await SharedPreferences.getInstance();final raw=p.getStringList('elyramart_seller_products_v1')??[];raw.add(jsonEncode(item));await p.setStringList('elyramart_seller_products_v1',raw);
-      if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('পণ্য শুধু এই ফোনে ডেমো হিসেবে সংরক্ষিত হয়েছে।')));
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Firebase লগইন সংযোগ পাওয়া যায়নি। পণ্য অনলাইনে জমা হয়নি।')));
+      return;
     }
     if(!mounted)return;
-    setState(()=>mine.insert(0,{'name':product.text.trim(),'price':price.text.trim(),'category':category,'status':user==null?'local_pending':'pending'}));
+    setState(()=>mine.insert(0,{'name':product.text.trim(),'price':price.text.trim(),'category':category,'status':'pending'}));
     product.clear();price.clear();setState(()=>selectedImage=null);
   }
   @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('সেলার সেন্টার')),body:ListView(padding:const EdgeInsets.all(18),children:[
