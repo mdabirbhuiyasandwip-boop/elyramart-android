@@ -3,6 +3,19 @@
 সর্বশেষ আপডেট: ১৪ নভেম্বর ২০২৬  
 Repository: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android
 
+## ১৪ নভেম্বর ২০২৬ — ডেমো কনটেন্ট বাদ দিয়ে বাস্তব ডেটা ব্যবহারের কাজ
+
+- Home catalogue থেকে কাল্পনিক ছয়টি sample product সরানো হয়েছে; এখন শুধু Firestore-এর active seller listing আসে।
+- Product card-এ category stock photo fallback বন্ধ; পণ্যের নিজের uploaded image ছাড়া product listing দেখানো হবে না।
+- Home hero/category/service stock imagery বাদ দিয়ে clean icon/brand treatment ব্যবহার করা হয়েছে।
+- সেলার পণ্য জমা দিতে লগইন, অনুমোদিত seller এবং নিজের তোলা আসল পণ্যের ছবি আবশ্যক।
+- লগইন ছাড়া service booking বা checkout সফল/সংরক্ষিত বলে দেখানো হয় না; আগে account login করতে বলে।
+- Customer profile local-only demo save বন্ধ; verified account দিয়ে cloud sync ছাড়া profile saved বলে দেখায় না।
+- Firebase initialization ব্যর্থ হলে Home-এ স্পষ্ট server connection warning দেখায়।
+- Widget tests-এ empty real catalogue ও login-required profile save-এর expectation যোগ করা হয়েছে।
+
+**এখনো live নয়:** Firebase Storage bucket/Blaze setup ও Storage rules deployment, Cloud Functions deployment (Blaze billing দরকার), real seller product data, Android CI build result এবং physical-device QA। এই পরিবর্তনগুলোর পর build/test pass হয়েছে—CI result না দেখা পর্যন্ত এমন দাবি করা যাবে না।
+
 ## বাসা ও অফিস ভাড়া — সংশোধিত নিয়ম
 
 - শুধু বাড়ি/ফ্ল্যাট/অফিসের বিজ্ঞাপনদাতা পোস্ট করবেন।
