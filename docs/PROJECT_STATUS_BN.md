@@ -89,3 +89,13 @@ Repository: https://github.com/mdabirbhuiyasandwip-boop/elyramart-android
 ## গুরুত্বপূর্ণ নিরাপত্তা
 
 Service-account JSON/private key, Android upload keystore/password, payment secret বা OTP কখনো chat বা public repository-তে দেবেন না। Android `google-services.json` deploy credential নয়। Paid billing কেবল মালিকের সচেতন অনুমোদনে চালু হবে।
+
+
+## ১৪ নভেম্বর ২০২৬ — APK/AAB build সম্পন্ন
+
+- Android workflow run [43581917105](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43581917105) সফল। Flutter analyze, widget tests, release APK build ও AAB build—সব ধাপ সফল।
+- APK artifact: `Elyramart-APK-release` (ZIP-এ `app-release.apk`); artifact ID `14109195976`; মেয়াদ ২৮ নভেম্বর ২০২৬ পর্যন্ত।
+- AAB artifact: `Elyramart-Play-Store-AAB` (ZIP-এ `app-release.aab`); artifact ID `14109310618`; মেয়াদ ২৮ নভেম্বর ২০২৬ পর্যন্ত।
+- AAB signature inspection-এ `CN=Android Debug` পাওয়া গেছে; এটি Play Store upload keystore signature নয়। Production upload-এর আগে মালিকের নিজস্ব upload keystore ও চারটি GitHub signing secret দিয়ে পুনরায় build/sign করতে হবে।
+- APK build success মানে বাস্তব Android ফোনে install/run বা Firebase end-to-end QA সম্পন্ন হয়েছে—এমন নয়।
+- Owner Admin panel source-এ রাখা আছে এবং admin custom claim ছাড়া প্রবেশ বন্ধ। Cloud Functions/Blaze চালু না করায় `claimOwnerAdmin` এখনো live নয়; প্যানেলের production online actions আপাতত সীমিত। কোনো paid billing enable করা হয়নি।
