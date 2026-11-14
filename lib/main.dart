@@ -262,6 +262,14 @@ class _HomePageState extends State<HomePage> {
     const SizedBox(height:22),section(tx('ক্যাটাগরি','Categories'), tx('সব দেখুন','View all')),
     SizedBox(height:42,child:ListView(scrollDirection:Axis.horizontal,children:categories.map((c)=>Padding(padding:const EdgeInsets.only(right:8),child:ChoiceChip(label:Text(AppLanguage.english.value?englishCategory(c):c),selected:category==c,onSelected:(_)=>setState(()=>category=c),selectedColor:const Color(0xFFD6EFE5),labelStyle:TextStyle(color:category==c?green:ink,fontWeight:FontWeight.w600)))).toList())),
     const SizedBox(height:18),Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:const Color(0xFFE2F3EC),borderRadius:BorderRadius.circular(18)),child:Row(children:[Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(tx('বাসায় টেকনিশিয়ান লাগবে?','Need a technician at home?'),style:TextStyle(fontSize:17,fontWeight:FontWeight.bold,color:ink)),SizedBox(height:4),Text(tx('ইলেকট্রিশিয়ান, প্লাম্বারসহ বিভিন্ন সার্ভিস বুক করুন','Book electricians, plumbers and more'),style:TextStyle(color:ink))])),FilledButton(onPressed:()=>setState(()=>tab=1),style:FilledButton.styleFrom(backgroundColor:green),child:Text(tx('বুক করুন','Book now')))])),
+    const SizedBox(height:14),
+    Card(color:Colors.white,elevation:0,child:ListTile(
+      leading:CircleAvatar(backgroundColor:const Color(0xFFE2F3EC),child:Icon(Icons.apartment_outlined,color:green)),
+      title:Text(tx('বাসা ও অফিস ভাড়া','House & office rentals'),style:const TextStyle(fontWeight:FontWeight.bold)),
+      subtitle:Text(tx('ভাড়া দেবেন বা বাসা/অফিস খুঁজছেন? এখানে বিজ্ঞাপন দিন ও দেখুন।','List a property for rent or find a house/office.')),
+      trailing:FilledButton(onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage())),style:FilledButton.styleFrom(backgroundColor:green),child:Text(tx('দেখুন','Explore'))),
+      onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const RentalMarketplacePage())),
+    )),
     const SizedBox(height:18),
     Row(children:[
       Expanded(child:InkWell(
@@ -299,6 +307,290 @@ class _HomePageState extends State<HomePage> {
 class Cat extends StatelessWidget { final String icon,name; const Cat({super.key,required this.icon,required this.name}); @override Widget build(BuildContext c)=>Container(width:76,margin:const EdgeInsets.only(right:10),padding:const EdgeInsets.all(8),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14)),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Text(icon,style:const TextStyle(fontSize:27)),const SizedBox(height:5),Text(name,style:const TextStyle(fontSize:11,fontWeight:FontWeight.w600))])); }
 
 class ProductCard extends StatelessWidget { final Product p; final VoidCallback onAdd; const ProductCard({super.key,required this.p,required this.onAdd}); @override Widget build(BuildContext c){final outOfStock=p.stock!=null&&p.stock!<=0;return Container(padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Container(height:92,width:double.infinity,decoration:BoxDecoration(color:pale,borderRadius:BorderRadius.circular(12)),child:p.imageUrl!=null?ClipRRect(borderRadius:BorderRadius.circular(12),child:Image.network(p.imageUrl!,fit:BoxFit.cover,width:double.infinity,errorBuilder:(_,__,___)=>Center(child:Text(p.emoji,style:const TextStyle(fontSize:42))))):Center(child:Text(p.emoji,style:const TextStyle(fontSize:42)))),const SizedBox(height:9),Text(p.name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.bold)),Text(p.detail,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.black54,fontSize:11)),if(p.stock!=null)Text(outOfStock?'স্টক শেষ':'স্টক: ${p.stock}',style:TextStyle(color:outOfStock?Colors.red:Colors.black54,fontSize:11)),const SizedBox(height:8),Row(children:[Text(p.price,style:const TextStyle(color:green,fontWeight:FontWeight.bold)),const Spacer(),IconButton.filled(onPressed:(p.demoOnly||outOfStock)?null:onAdd,icon:Icon(p.demoOnly?Icons.info_outline:Icons.add,size:18),style:IconButton.styleFrom(backgroundColor:green,foregroundColor:Colors.white,minimumSize:const Size(34,34)))]) ]));} }
+
+class RentalMarketplacePage extends StatefulWidget {
+  const RentalMarketplacePage({super.key});
+  @override
+  State<RentalMarketplacePage> createState() => _RentalMarketplacePageState();
+}
+
+class _RentalMarketplacePageState extends State<RentalMarketplacePage> {
+  bool loading = true;
+  String filter = 'সব';
+  List<Map<String, dynamic>> listings = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadListings();
+  }
+
+  Future<void> _loadListings() async {
+    if (!FirebaseRuntime.initialized) {
+      if (mounted) setState(() => loading = false);
+      return;
+    }
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('rentalListings')
+          .where('status', isEqualTo: 'active')
+          .limit(100)
+          .get();
+      final rows = snapshot.docs.map((doc) => <String, dynamic>{
+        ...doc.data(),
+        '_docId': doc.id,
+      }).toList();
+      rows.sort((a, b) {
+        final av = a['createdAt'];
+        final bv = b['createdAt'];
+        final ad = av is Timestamp ? av.toDate() : DateTime(2000);
+        final bd = bv is Timestamp ? bv.toDate() : DateTime(2000);
+        return bd.compareTo(ad);
+      });
+      if (mounted) setState(() { listings = rows; loading = false; });
+    } catch (error) {
+      debugPrint('Rental listings load failed: $error');
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = listings.where((item) =>
+      filter == 'সব' || item['propertyType'] == filter
+    ).toList();
+    return Scaffold(
+      appBar: AppBar(title: Text(tx('বাসা ও অফিস ভাড়া', 'House & office rentals'))),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: green,
+        foregroundColor: Colors.white,
+        onPressed: () => Navigator.push(context, MaterialPageRoute(
+          builder: (_) => const RentalPostPage(),
+        )).then((_) => _loadListings()),
+        icon: const Icon(Icons.add_home_work_outlined),
+        label: Text(tx('বিজ্ঞাপন দিন', 'Post a listing')),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE2F3EC),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              tx('বাসা বা অফিস ভাড়া দিতে চাইলে বিজ্ঞাপন দিন। আবার আপনার বাসা বা অফিস প্রয়োজন হলেও চাহিদা পোস্ট করতে পারবেন।',
+                 'Post a property for rent, or publish what kind of house or office you need.'),
+              style: const TextStyle(color: ink),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(spacing: 8, children: ['সব', 'বাসা', 'অফিস'].map((value) =>
+            ChoiceChip(
+              label: Text(value),
+              selected: filter == value,
+              onSelected: (_) => setState(() => filter = value),
+              selectedColor: const Color(0xFFD6EFE5),
+            ),
+          ).toList()),
+          const SizedBox(height: 12),
+          if (!FirebaseRuntime.initialized)
+            Card(color: Colors.white, child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(tx('অনলাইন বিজ্ঞাপন দেখতে Firebase সংযোগ প্রয়োজন।',
+                'Firebase connection is required to browse online listings.')),
+            ))
+          else if (loading)
+            const Padding(padding: EdgeInsets.all(28), child: Center(child: CircularProgressIndicator()))
+          else if (visible.isEmpty)
+            Card(color: Colors.white, child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Text(tx('এখনো কোনো বিজ্ঞাপন নেই। প্রথম বিজ্ঞাপনটি আপনিই দিন।',
+                'No listings yet. Be the first to post.')),
+            ))
+          else
+            ...visible.map((item) {
+              final offer = item['listingType'] == 'offer';
+              final property = item['propertyType']?.toString() ?? 'বাসা';
+              final amount = item['rentAmount'] ?? 0;
+              return Card(
+                color: Colors.white,
+                elevation: 0,
+                margin: const EdgeInsets.only(bottom: 12),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: [
+                        Icon(property == 'অফিস' ? Icons.business_outlined : Icons.home_outlined, color: green),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(
+                          '${property} • ${offer ? 'ভাড়া দেওয়া হবে' : 'ভাড়া প্রয়োজন'}',
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: green),
+                        )),
+                      ]),
+                      const SizedBox(height: 8),
+                      Text(item['title']?.toString() ?? '', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 5),
+                      Text('${offer ? 'মাসিক ভাড়া' : 'মাসিক বাজেট'}: ৳${amount}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 5),
+                      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const Icon(Icons.location_on_outlined, size: 18, color: Colors.black54),
+                        const SizedBox(width: 4),
+                        Expanded(child: Text(item['location']?.toString() ?? '')),
+                      ]),
+                      if ((item['details']?.toString() ?? '').isNotEmpty) ...[
+                        const SizedBox(height: 7),
+                        Text(item['details'].toString()),
+                      ],
+                      const Divider(height: 20),
+                      Row(children: [
+                        const Icon(Icons.call_outlined, size: 18, color: green),
+                        const SizedBox(width: 7),
+                        Expanded(child: SelectableText(item['phone']?.toString() ?? '')),
+                        TextButton.icon(
+                          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(tx('যোগাযোগের আগে জায়গা ও কাগজপত্র যাচাই করুন।','Verify the property and documents before contacting.'))),
+                          ),
+                          icon: const Icon(Icons.info_outline, size: 17),
+                          label: Text(tx('সতর্কতা','Safety')),
+                        ),
+                      ]),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          const SizedBox(height: 12),
+          Text(tx('সতর্কতা: অগ্রিম টাকা পাঠানোর আগে জায়গা সরেজমিনে দেখুন, মালিকানা/ভাড়ার কাগজ যাচাই করুন। Elyramart কোনো ভাড়া বা জামানত গ্রহণ করছে না।',
+            'Safety: Visit the property and verify ownership/rental documents before paying any advance. Elyramart does not collect rent or deposits.'),
+            style: const TextStyle(fontSize: 12, color: Colors.black54)),
+        ],
+      ),
+    );
+  }
+}
+
+class RentalPostPage extends StatefulWidget {
+  const RentalPostPage({super.key});
+  @override
+  State<RentalPostPage> createState() => _RentalPostPageState();
+}
+
+class _RentalPostPageState extends State<RentalPostPage> {
+  final title = TextEditingController();
+  final rent = TextEditingController();
+  final location = TextEditingController();
+  final phone = TextEditingController();
+  final details = TextEditingController();
+  String propertyType = 'বাসা';
+  String listingType = 'offer';
+  bool saving = false;
+
+  @override
+  void dispose() {
+    title.dispose(); rent.dispose(); location.dispose(); phone.dispose(); details.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final user = FirebaseRuntime.initialized ? FirebaseAuth.instance.currentUser : null;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('বিজ্ঞাপন দিতে আগে লগইন করুন।'),
+      ));
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerLoginPage()));
+      return;
+    }
+    if (!user.emailVerified) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('বিজ্ঞাপন দিতে ইমেইল ভেরিফাই করতে হবে।'),
+      ));
+      return;
+    }
+    if ([title, rent, location, phone].any((c) => c.text.trim().isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('শিরোনাম, ভাড়া/বাজেট, এলাকা ও ফোন নম্বর দিন।')));
+      return;
+    }
+    final normalizedPhone = normalizeBangladeshPhone(phone.text);
+    if (normalizedPhone == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন।')));
+      return;
+    }
+    var digits = rent.text.trim();
+    const bn = '০১২৩৪৫৬৭৮৯';
+    for (var i = 0; i < 10; i++) { digits = digits.replaceAll(bn[i], '$i'); }
+    final amount = int.tryParse(digits.replaceAll(RegExp(r'[^0-9]'), ''));
+    if (amount == null || amount < 100 || amount > 100000000) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('সঠিক মাসিক ভাড়া বা বাজেট লিখুন।')));
+      return;
+    }
+    if (title.text.trim().length < 4 || location.text.trim().length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('শিরোনাম ও এলাকার তথ্য আরও স্পষ্ট লিখুন।')));
+      return;
+    }
+    setState(() => saving = true);
+    try {
+      await FirebaseFirestore.instance.collection('rentalListings').add({
+        'ownerId': user.uid,
+        'ownerName': user.displayName ?? (user.email?.split('@').first ?? 'Elyramart user'),
+        'propertyType': propertyType,
+        'listingType': listingType,
+        'title': title.text.trim(),
+        'rentAmount': amount,
+        'location': location.text.trim(),
+        'phone': normalizedPhone,
+        'details': details.text.trim(),
+        'status': 'active',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('আপনার বিজ্ঞাপন প্রকাশ হয়েছে।')));
+      Navigator.pop(context);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('বিজ্ঞাপন প্রকাশ হয়নি: $error')));
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(tx('ভাড়া বিজ্ঞাপন দিন', 'Post a rental listing'))),
+    body: ListView(padding: const EdgeInsets.all(18), children: [
+      const Text('কী ধরনের বিজ্ঞাপন?', style: TextStyle(fontWeight: FontWeight.bold)),
+      const SizedBox(height: 8),
+      Wrap(spacing: 8, children: [
+        ChoiceChip(label: const Text('ভাড়া দেব'), selected: listingType == 'offer', onSelected: (_) => setState(() => listingType = 'offer')),
+        ChoiceChip(label: const Text('ভাড়া প্রয়োজন'), selected: listingType == 'wanted', onSelected: (_) => setState(() => listingType = 'wanted')),
+      ]),
+      const SizedBox(height: 14),
+      const Text('কী ভাড়া হবে?', style: TextStyle(fontWeight: FontWeight.bold)),
+      const SizedBox(height: 8),
+      Wrap(spacing: 8, children: [
+        ChoiceChip(label: const Text('বাসা'), selected: propertyType == 'বাসা', onSelected: (_) => setState(() => propertyType = 'বাসা')),
+        ChoiceChip(label: const Text('অফিস'), selected: propertyType == 'অফিস', onSelected: (_) => setState(() => propertyType = 'অফিস')),
+      ]),
+      const SizedBox(height: 12),
+      field(title, 'শিরোনাম (যেমন: ২ বেডরুমের বাসা)'),
+      field(rent, listingType == 'offer' ? 'মাসিক ভাড়া (টাকা)' : 'মাসিক বাজেট (টাকা)', keyboard: TextInputType.number),
+      field(location, 'এলাকা / ঠিকানা (যেমন: হালিশহর, চট্টগ্রাম)'),
+      field(phone, 'যোগাযোগের মোবাইল নম্বর', keyboard: TextInputType.phone),
+      field(details, 'বিস্তারিত (ঐচ্ছিক)', lines: 4),
+      const SizedBox(height: 10),
+      const Text('বিজ্ঞাপন প্রকাশের আগে তথ্য যাচাই করুন। ভাড়া বা জামানত Elyramart গ্রহণ করে না।', style: TextStyle(fontSize: 12, color: Colors.black54)),
+      const SizedBox(height: 14),
+      FilledButton.icon(
+        onPressed: saving ? null : _submit,
+        icon: saving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.publish_outlined),
+        label: Text(saving ? 'প্রকাশ হচ্ছে...' : 'বিজ্ঞাপন প্রকাশ করুন'),
+      ),
+    ]),
+  );
+}
 
 class ServicesPage extends StatelessWidget {
   const ServicesPage({super.key});
