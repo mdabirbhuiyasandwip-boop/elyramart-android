@@ -10,10 +10,11 @@
 4. GitHub repository → Settings → Secrets and variables → Actions → New repository secret।
 5. Name: `FIREBASE_SERVICE_ACCOUNT_JSON`
 6. Secret value: ডাউনলোড করা service-account JSON ফাইলের সম্পূর্ণ contents।
-7. Save করার পর GitHub Actions → **Deploy Elyramart Firebase backend** → Run workflow।
-8. Workflow সফল না হলে billing/API permission লাগতে পারে। Firebase/Google Cloud-এ কোনো paid plan বা billing চালু করার আগে খরচ যাচাই করে মালিকের অনুমোদন নিন।
+7. Save করার পর GitHub Actions → **Deploy Elyramart Firebase backend** → Run workflow। বর্তমানে workflow Firestore Rules বিনা Blaze-এ deploy করে; Cloud Functions ও Storage deployment ইচ্ছাকৃতভাবে বন্ধ থাকে।
+8. Cloud Functions চালু করতে Firebase project-এ Blaze billing লাগবে। খরচ ও billing ঝুঁকি বুঝে মালিকের স্পষ্ট অনুমোদন ছাড়া `ENABLE_CLOUD_FUNCTIONS_DEPLOY=true` variable তৈরি করবেন না। অনুমোদনের পর GitHub → Settings → Secrets and variables → Actions → Variables-এ ওই variable-এর value `true` দিয়ে workflow পুনরায় চালান।
+9. Storage deployment-এর জন্য Firebase Storage bucket প্রস্তুত এবং Blaze প্রয়োজন হতে পারে। অনুমোদন ছাড়া `ENABLE_FIREBASE_STORAGE_DEPLOY=true` চালু করবেন না।
 
-এই deploy Firestore Rules, Storage Rules ও Cloud Functions প্রকাশ করে।
+**বর্তমান যাচাই:** Firestore Rules deployment সফল হয়েছে (১৪ নভেম্বর ২০২৬, run 43570891759)। Cloud Functions ও Storage deployment skipped। তাই callable COD order backend এখনো production-এ চালু নয়।
 
 ## ২. ওয়েবসাইটের Firebase config যোগ করা
 
