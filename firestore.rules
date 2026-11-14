@@ -65,7 +65,6 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
-      // Orders are created only by the trusted placeOrder callable function.
       allow create: if false;
       allow read: if isAdmin()
         || (signedIn() && (resource.data.customerId == request.auth.uid
@@ -130,7 +129,6 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-
     match /rentalListings/{listingId} {
       allow read: if resource.data.status == 'active'
         || isAdmin()
@@ -150,24 +148,8 @@ service cloud.firestore {
         && request.resource.data.location.size() >= 2
         && request.resource.data.location.size() <= 250
         && request.resource.data.phone is string
-        && request.resource.data.phone.matches('^01[3-9][0-9]{8}
-
-    match /technicianApplications/{applicationId} {
-      allow create: if verifiedUser()
-        && request.resource.data.userId == request.auth.uid
-        && request.resource.data.status == 'pending'
-        && request.resource.data.name is string
-        && request.resource.data.phone is string
-        && request.resource.data.skills is string
-        && request.resource.data.keys().hasOnly([
-          'userId','name','phone','address','skills','status','createdAt'
-        ]);
-      allow read: if isAdmin()
-        || (signedIn() && resource.data.userId == request.auth.uid);
-      allow update, delete: if isAdmin();
-    }
-  }
-})
+        && request.resource.data.phone.size() == 11
+        && request.resource.data.phone.matches('^01[3-9][0-9]{8}$')
         && request.resource.data.details is string
         && request.resource.data.details.size() <= 1500
         && request.resource.data.ownerName is string
