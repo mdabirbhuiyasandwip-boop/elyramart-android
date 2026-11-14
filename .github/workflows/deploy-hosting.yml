@@ -1,0 +1,91 @@
+name: Deploy Elyramart Web to Firebase Hosting
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'web/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'tools/**'
+      - 'firebase.json'
+      - '.github/workflows/deploy-hosting.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: elyramart-firebase-hosting
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Verify required Firebase configuration
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          WEB_API_KEY: ${{ secrets.ELYRAMART_FIREBASE_WEB_API_KEY }}
+          WEB_APP_ID: ${{ secrets.ELYRAMART_FIREBASE_WEB_APP_ID }}
+          MESSAGING_SENDER_ID: ${{ secrets.ELYRAMART_FIREBASE_MESSAGING_SENDER_ID }}
+          PROJECT_ID: ${{ secrets.ELYRAMART_FIREBASE_PROJECT_ID }}
+          AUTH_DOMAIN: ${{ secrets.ELYRAMART_FIREBASE_AUTH_DOMAIN }}
+          STORAGE_BUCKET: ${{ secrets.ELYRAMART_FIREBASE_STORAGE_BUCKET }}
+        run: |
+          test -n "$FIREBASE_SERVICE_ACCOUNT_JSON" || { echo "Missing FIREBASE_SERVICE_ACCOUNT_JSON."; exit 1; }
+          for value in "$WEB_API_KEY" "$WEB_APP_ID" "$MESSAGING_SENDER_ID" "$PROJECT_ID" "$AUTH_DOMAIN" "$STORAGE_BUCKET"; do
+            test -n "$value" || { echo "One or more ELYRAMART_FIREBASE_WEB_* secrets are missing."; exit 1; }
+          done
+          test "$PROJECT_ID" = "elyramart" || { echo "Firebase project ID must be elyramart."; exit 1; }
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-service-account.json"
+          node -e "const d=JSON.parse(require('fs').readFileSync(process.env.RUNNER_TEMP+'/firebase-service-account.json','utf8'));const k=['type','project_id','private_key','client_email','token_uri'];if(d.type!=='service_account'||k.some(x=>!d[x])||d.project_id!=='elyramart')process.exit(1);console.log('Firebase deployment credential verified.')"
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate Web project files
+        run: flutter create --platforms=web --org com.elyramartbd --project-name elyramart .
+      - name: Generate Elyramart brand assets
+        run: |
+          python3 -m pip install pillow --break-system-packages
+          python3 tools/generate_brand_assets.py
+          python3 tools/configure_web_pwa.py
+      - name: Resolve packages and test
+        run: |
+          flutter pub get
+          flutter analyze --no-pub
+          flutter test
+      - name: Build production Web app
+        env:
+          ELYRAMART_FIREBASE_WEB_API_KEY: ${{ secrets.ELYRAMART_FIREBASE_WEB_API_KEY }}
+          ELYRAMART_FIREBASE_WEB_APP_ID: ${{ secrets.ELYRAMART_FIREBASE_WEB_APP_ID }}
+          ELYRAMART_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.ELYRAMART_FIREBASE_MESSAGING_SENDER_ID }}
+          ELYRAMART_FIREBASE_PROJECT_ID: ${{ secrets.ELYRAMART_FIREBASE_PROJECT_ID }}
+          ELYRAMART_FIREBASE_AUTH_DOMAIN: ${{ secrets.ELYRAMART_FIREBASE_AUTH_DOMAIN }}
+          ELYRAMART_FIREBASE_STORAGE_BUCKET: ${{ secrets.ELYRAMART_FIREBASE_STORAGE_BUCKET }}
+        run: |
+          flutter build web --release \
+            --dart-define=ELYRAMART_FIREBASE_WEB_API_KEY="$ELYRAMART_FIREBASE_WEB_API_KEY" \
+            --dart-define=ELYRAMART_FIREBASE_WEB_APP_ID="$ELYRAMART_FIREBASE_WEB_APP_ID" \
+            --dart-define=ELYRAMART_FIREBASE_MESSAGING_SENDER_ID="$ELYRAMART_FIREBASE_MESSAGING_SENDER_ID" \
+            --dart-define=ELYRAMART_FIREBASE_PROJECT_ID="$ELYRAMART_FIREBASE_PROJECT_ID" \
+            --dart-define=ELYRAMART_FIREBASE_AUTH_DOMAIN="$ELYRAMART_FIREBASE_AUTH_DOMAIN" \
+            --dart-define=ELYRAMART_FIREBASE_STORAGE_BUCKET="$ELYRAMART_FIREBASE_STORAGE_BUCKET"
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools@15.22.3
+      - name: Deploy Firebase Hosting
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase deploy --only hosting --project elyramart --non-interactive
