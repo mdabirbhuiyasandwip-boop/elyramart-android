@@ -28,8 +28,8 @@
 ## Live launch-এর জন্য এখনো প্রয়োজন
 
 1. Firebase Console project `elyramart`-এ Email/Password Authentication, Firestore ও Storage প্রস্তুত/যাচাই।
-2. সঠিক Google Cloud service-account JSON-কে GitHub Actions secret `FIREBASE_SERVICE_ACCOUNT_JSON` হিসেবে সংরক্ষণ এবং Firebase deploy workflow সফল করা।
-3. Cloud Functions-এর জন্য প্রয়োজন হলে Blaze billing ও Google Cloud API enablement। মালিকের স্পষ্ট অনুমতি ছাড়া paid billing পরিবর্তন নয়।
+2. Firestore Rules deploy সফল। Cloud Functions চালাতে Blaze billing ও Google Cloud API enablement লাগবে; `ENABLE_CLOUD_FUNCTIONS_DEPLOY=true` owner opt-in ছাড়া deploy হবে না।
+3. Storage deploy-এর জন্য bucket setup ও owner approval দরকার; `ENABLE_FIREBASE_STORAGE_DEPLOY=true` opt-in ছাড়া deploy হবে না।
 4. Firebase deploy-এর পর owner email `elyramartbd@gmail.com` দিয়ে verified account sign-in করে app-এর মাধ্যমে Owner Admin claim করা।
 5. Repository Settings → Pages-এ GitHub Actions source enable করে Pages workflow পুনরায় চালানো; অথবা Firebase Hosting workflow-তে Service Account ও ছয়টি Web config secret যোগ করা।
 6. Android release upload signing key ও password নিরাপদে তৈরি/সংরক্ষণ এবং CI secrets configure করা। আগের AAB artifact-কে signed Play upload bundle ধরে নেওয়া যাবে না; নতুন signing workflow সফল হলে signature যাচাই করতে হবে।
