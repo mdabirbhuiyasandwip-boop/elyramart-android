@@ -155,3 +155,11 @@ Service-account JSON/private key, Android upload keystore/password, payment secr
 - Cloud Function `placeOrder`-এর authentication guard-ও verified email অথবা verified phone token গ্রহণ করার মতো করা হয়েছে; COD order backend code এখন phone OTP user-দেরও অনুমতি দেবে।
 - পরিবর্তনের পর Functions TypeScript compile workflow এবং Firebase backend workflow চালু হয়েছে। Compile ও Firestore rules deployment শেষ না হওয়া পর্যন্ত এই পরিবর্তন live/verified বলা হচ্ছে না। Cloud Functions deployment এখনো billing variable বন্ধ থাকায় করা হবে না।
 - Multi-seller order fulfilment-এর সীমাবদ্ধতা রয়ে গেছে: Firestore rules-এ seller update বর্তমানে এক seller-যুক্ত order-এর জন্য অনুমোদিত; split seller order lifecycle আলাদা করে implement/test করতে হবে।
+
+
+## ১৪ নভেম্বর ২০২৬ — OTP permission fix: CI ও Firestore deploy verified
+
+- Firebase Functions TypeScript compile workflow [43586826897](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43586826897) **success**।
+- Firestore rules compile ও Firebase project `elyramart`-এ deploy workflow [43586823063](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43586823063) **success**। Deploy log-এ rules compiled successfully এবং released rules দেখা গেছে। এখন verified email অথবা Firebase-verified phone token—দুই ধরনের user Firestore-এর verified-user gated actions ব্যবহার করতে পারবে।
+- Cloud Functions deploy step paid billing variable বন্ধ থাকায় চালানো হয়নি; COD callable ও Owner Admin claim এখনো live নয়। Storage deployment-ও বন্ধ।
+- APK workflow [43586412860](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43586412860)-এ Analyze ও Widget Tests সফল; Release APK build step এখনো in progress, AAB/artifact upload pending। APK/AAB পাওয়া না পর্যন্ত build complete বলা যাবে না।
