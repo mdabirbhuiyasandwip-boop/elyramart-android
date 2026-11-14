@@ -75,7 +75,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Elyramart'), findsOneWidget);
-    expect(find.text('আপনার প্রয়োজন, এক জায়গায়'), findsOneWidget);
+    expect(find.textContaining('আপনার প্রতিদিনের'), findsOneWidget);
     expect(find.text('সেলার হোন'), findsOneWidget);
     expect(find.text('টেকনিশিয়ান হোন'), findsOneWidget);
     expect(find.text('রেস্টুরেন্ট'), findsNothing); // Restaurant is a service, not a product category.
