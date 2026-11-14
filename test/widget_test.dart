@@ -54,7 +54,7 @@ void main() {
     expect(find.text('বাসা ও অফিস ভাড়া'), findsOneWidget);
     expect(find.text('অনলাইন বিজ্ঞাপন দেখতে Firebase সংযোগ প্রয়োজন।'), findsOneWidget);
     expect(find.text('ভাড়ার বিজ্ঞাপন দিন'), findsOneWidget);
-    expect(find.text('শুধু বাসা বা অফিস ভাড়া দেওয়ার বিজ্ঞাপন প্রকাশ করুন।'), findsOneWidget);
+    expect(find.textContaining('আপনার প্রয়োজনের জায়গা খুঁজে বিজ্ঞাপনদাতার সঙ্গে সরাসরি যোগাযোগ করুন।'), findsOneWidget);
   });
 
   testWidgets('daily directory loads Bangladesh division district and upazila filters', (tester) async {
