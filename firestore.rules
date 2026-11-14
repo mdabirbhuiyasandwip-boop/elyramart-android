@@ -131,6 +131,55 @@ service cloud.firestore {
     }
 
 
+    match /rentalListings/{listingId} {
+      allow read: if resource.data.status == 'active'
+        || isAdmin()
+        || (signedIn() && resource.data.ownerId == request.auth.uid);
+      allow create: if verifiedUser()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.status == 'active'
+        && request.resource.data.propertyType in ['বাসা','অফিস']
+        && request.resource.data.listingType in ['offer','wanted']
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 4
+        && request.resource.data.title.size() <= 120
+        && request.resource.data.rentAmount is int
+        && request.resource.data.rentAmount >= 100
+        && request.resource.data.rentAmount <= 100000000
+        && request.resource.data.location is string
+        && request.resource.data.location.size() >= 2
+        && request.resource.data.location.size() <= 250
+        && request.resource.data.phone is string
+        && request.resource.data.phone.matches('^01[3-9][0-9]{8}
+
+    match /technicianApplications/{applicationId} {
+      allow create: if verifiedUser()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.name is string
+        && request.resource.data.phone is string
+        && request.resource.data.skills is string
+        && request.resource.data.keys().hasOnly([
+          'userId','name','phone','address','skills','status','createdAt'
+        ]);
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+  }
+})
+        && request.resource.data.details is string
+        && request.resource.data.details.size() <= 1500
+        && request.resource.data.ownerName is string
+        && request.resource.data.keys().hasOnly([
+          'ownerId','ownerName','propertyType','listingType','title',
+          'rentAmount','location','phone','details','status','createdAt'
+        ]);
+      allow update: if isAdmin();
+      allow delete: if isAdmin()
+        || (verifiedUser() && resource.data.ownerId == request.auth.uid);
+    }
+
     match /settings/{settingId} {
       allow read, write: if isAdmin();
     }
