@@ -2321,7 +2321,7 @@ class _SupportCenterPageState extends State<SupportCenterPage> {
       const SizedBox(height:24),
       Row(children:[Expanded(child:Text(tx('আমার সহায়তা অনুরোধ','My support requests'),style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold))),IconButton(onPressed:_loadTickets,icon:const Icon(Icons.refresh))]),
       if (loading) const Center(child:Padding(padding:EdgeInsets.all(16),child:CircularProgressIndicator()))
-      else if (FirebaseAuth.instance.currentUser == null) Text(tx('অনুরোধের ইতিহাস দেখতে লগইন করুন।','Sign in to view your request history.'))
+      else if (!FirebaseRuntime.initialized || FirebaseAuth.instance.currentUser == null) Text(tx('অনুরোধের ইতিহাস দেখতে লগইন করুন।','Sign in to view your request history.'))
       else if (tickets.isEmpty) Text(tx('এখনো কোনো অনুরোধ নেই।','No requests yet.'))
       else ...tickets.map((t)=>Card(color:Colors.white,child:ListTile(
         leading:const Icon(Icons.support_agent,color:green),
