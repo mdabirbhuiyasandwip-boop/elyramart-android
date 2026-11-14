@@ -1291,7 +1291,7 @@ class WishlistPage extends StatelessWidget {
             subtitle:Text(p.price),
             trailing:Wrap(mainAxisSize:MainAxisSize.min,children:[
               IconButton(tooltip:'কার্টে যোগ করুন',onPressed:p.stock!=null&&p.stock!<=0?null:()=>onAdd(p),icon:const Icon(Icons.add_shopping_cart,color:green)),
-              IconButton(tooltip:'সরান',onPressed:()=>onRemove(p),icon:const Icon(Icons.favorite,color:Colors.red)),
+              IconButton(tooltip:'সরান',onPressed:(){onRemove(p);Navigator.pop(context);},icon:const Icon(Icons.favorite,color:Colors.red)),
             ]),
           ));
         },
