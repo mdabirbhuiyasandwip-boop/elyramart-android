@@ -1709,15 +1709,8 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
   @override void initState(){super.initState();_load();}
   @override void dispose(){name.dispose();phone.dispose();address.dispose();skills.dispose();super.dispose();}
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
     final user = FirebaseRuntime.initialized ? FirebaseAuth.instance.currentUser : null;
-    // Local technician records are demo-only; signed-in users load their own cloud application.
-    final raw = user == null ? prefs.getString('elyramart_technician_profile_v1') : null;
-    final list = user == null ? (prefs.getStringList('elyramart_service_requests_v1') ?? <String>[]) : <String>[];
     final data = <Map<String,dynamic>>[];
-    for (final value in list) {
-      try { data.add(Map<String,dynamic>.from(jsonDecode(value) as Map)); } catch (_) {}
-    }
     var cloudApproved = false;
     Map<String,dynamic>? cloudApplication;
     if (user != null) {
@@ -1741,24 +1734,13 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
     }
     if (!mounted) return;
     setState(() {
-      var localSaved = false;
-      if (raw != null) {
-        final m = Map<String,dynamic>.from(jsonDecode(raw));
-        if (m['userId'] == null) {
-          name.text = m['name'] ?? '';
-          phone.text = m['phone'] ?? '';
-          address.text = m['address'] ?? '';
-          skills.text = m['skills'] ?? '';
-          localSaved = true;
-        }
-      }
       if (cloudApplication != null) {
         name.text = cloudApplication!['name'] ?? '';
         phone.text = cloudApplication!['phone'] ?? '';
         address.text = cloudApplication!['address'] ?? '';
         skills.text = cloudApplication!['skills'] ?? '';
       }
-      saved = localSaved || cloudApplication != null || cloudApproved;
+      saved = cloudApplication != null || cloudApproved;
       bookings = data.reversed.toList();
     });
   }
@@ -1771,7 +1753,16 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন')));return;
     }
     final user=FirebaseRuntime.initialized?FirebaseAuth.instance.currentUser:null;
-    if(user!=null){
+    if(user==null){
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('বাস্তব টেকনিশিয়ান আবেদন করতে আগে অ্যাকাউন্টে লগইন করুন।')));
+      Navigator.push(context,MaterialPageRoute(builder:(_)=>const CustomerLoginPage()));
+      return;
+    }
+    if(!user.emailVerified){
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('আবেদন পাঠানোর আগে ইমেইল যাচাই করুন।')));
+      return;
+    }
+    {
       try{
         final existing=await FirebaseFirestore.instance.collection('technicianApplications').where('userId',isEqualTo:user.uid).limit(20).get();
         final hasActiveApplication=existing.docs.any((doc)=>['pending','approved'].contains(doc.data()['status']));
@@ -1787,15 +1778,9 @@ class _TechnicianPortalPageState extends State<TechnicianPortalPage> {
         return;
       }
     }
-    final p=await SharedPreferences.getInstance();
-    if (user == null) {
-      await p.setString('elyramart_technician_profile_v1',jsonEncode({'name':name.text.trim(),'phone':normalizedPhone,'address':address.text.trim(),'skills':skills.text.trim(),'userId':null,'status':'local_pending'}));
-    } else {
-      await p.remove('elyramart_technician_profile_v1');
-    }
     if(!mounted)return;
     setState(()=>saved=true);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(user==null?'টেকনিশিয়ান তথ্য শুধু এই ফোনে রাখা হয়েছে। অনলাইনে আবেদনের জন্য লগইন করুন।':'টেকনিশিয়ান আবেদন অনলাইনে পাঠানো হয়েছে। অ্যাডমিন যাচাই করবেন।')));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('টেকনিশিয়ান আবেদন অনলাইনে পাঠানো হয়েছে। অ্যাডমিন যাচাই করবেন।')));
   }
   List<String> _technicianNextStatuses(String current) => switch(current) {
     'confirmed' => ['processing','cancelled'],
