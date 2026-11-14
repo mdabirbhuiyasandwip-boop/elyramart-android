@@ -16,9 +16,11 @@
 - [ ] Project `elyramart`-এ Email/Password Authentication enable।
 - [ ] Firestore Database তৈরি/যাচাই।
 - [ ] Firebase Storage bucket তৈরি/যাচাই।
-- [ ] Dedicated Google Cloud service account key JSON তৈরি।
-- [ ] GitHub Actions secret `FIREBASE_SERVICE_ACCOUNT_JSON`-এ সম্পূর্ণ service-account JSON সংরক্ষণ।
-- [ ] Deploy workflow-তে Firestore rules, Storage rules ও Functions সফলভাবে deploy।
+- [x] Dedicated Google Cloud service account key JSON তৈরি/যাচাই (GitHub secret-এ আছে)।
+- [x] GitHub Actions secret `FIREBASE_SERVICE_ACCOUNT_JSON` যাচাই হয়েছে।
+- [x] Firestore Rules deploy সফল (run 43570891759)।
+- [ ] Cloud Functions deploy (Blaze billing ও owner approval প্রয়োজন)।
+- [ ] Storage rules deploy (bucket setup ও owner approval প্রয়োজন)।
 - [ ] প্রয়োজনীয় billing/API enablement owner অনুমোদনসহ সম্পন্ন।
 - [ ] Owner account `elyramartbd@gmail.com` email verify করে Owner Admin claim সফল।
 
