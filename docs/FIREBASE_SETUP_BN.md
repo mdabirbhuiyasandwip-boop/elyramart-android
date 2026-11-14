@@ -9,7 +9,7 @@ Android app startup-এ Firebase Core initialize হয়। `google-services.json
 ## Firebase project প্রস্তুত
 1. Firebase Console-এ আগে থেকে তৈরি `elyramart` project খুলুন: https://console.firebase.google.com/
 2. Project Settings → Your apps-এ Android app-এর package name `com.elyramartbd.elyramart` নিশ্চিত করুন; config ফাইলে এই package-ই নিবন্ধিত আছে।
-3. Authentication-এ Email/Password provider চালু করুন। (Phone OTP UI এখনো অ্যাপে implement করা হয়নি; পরে আলাদা করে যোগ করতে হবে।)
+3. Authentication-এ Email/Password provider চালু করুন। Android Phone OTP request/verify/resend-এর client code যোগ হয়েছে, কিন্তু Firebase Console-এ Phone provider, SMS region policy, Android SHA-1/SHA-256 এবং বাস্তব SMS test সম্পন্ন না হওয়া পর্যন্ত OTP live নয়; SMS charge হতে পারে। Email numeric OTP নয়—email verification link ব্যবহৃত হয়।
 4. Firestore Database তৈরি করুন (production mode)।
 5. Storage চালু করুন।
 6. Firestore database ও Storage bucket-এর billing/plan requirements দেখে নিন; Cloud Functions deploy করতে Blaze plan এবং প্রয়োজনীয় Google Cloud APIs লাগতে পারে।
