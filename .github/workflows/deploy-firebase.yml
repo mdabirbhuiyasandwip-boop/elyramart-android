@@ -8,6 +8,7 @@ on:
       - 'functions/**'
       - 'firestore.rules'
       - 'storage.rules'
+      - '.github/workflows/deploy-firebase.yml'
 
 permissions:
   contents: read
@@ -39,14 +40,23 @@ jobs:
           node -e "const fs=require('fs'); const p=process.env.RUNNER_TEMP+'/firebase-service-account.json'; const d=JSON.parse(fs.readFileSync(p,'utf8')); const required=['type','project_id','private_key','client_email','token_uri']; const missing=required.filter(k=>!d[k]); if(d.type!=='service_account'||missing.length){console.error('Secret-এ Service Account JSON নেই/অসম্পূর্ণ। google-services.json নয়; Google Cloud service account key JSON দিন. Missing: '+(missing.join(', ')||'type=service_account'));process.exit(1)} if(d.project_id!=='elyramart'){console.error('Service Account project_id elyramart নয়।');process.exit(1)} console.log('Service Account JSON verified for elyramart.')"
       - name: Configure Firebase owner email
         run: |
-          printf '%s\n' 'ELYRAMART_OWNER_EMAIL=elyramartbd@gmail.com' > functions/.env.elyramart
+          printf '%s\\n' 'ELYRAMART_OWNER_EMAIL=elyramartbd@gmail.com' > functions/.env.elyramart
       - name: Install Firebase CLI and Functions dependencies
         run: |
           npm install --global firebase-tools@15.22.3
           cd functions
           npm install
           npm run build
-      - name: Deploy Firestore, Storage rules and Cloud Functions
+      - name: Deploy Firestore rules and Cloud Functions
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: firebase deploy --only firestore:rules,storage,functions --project elyramart --non-interactive
+        run: firebase deploy --only firestore:rules,functions --project elyramart --non-interactive
+      - name: Deploy Storage rules (requires an active Firebase Storage bucket)
+        if: vars.ENABLE_FIREBASE_STORAGE_DEPLOY == 'true'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase deploy --only storage --project elyramart --non-interactive
+      - name: Explain Storage deployment is paused
+        if: vars.ENABLE_FIREBASE_STORAGE_DEPLOY != 'true'
+        run: |
+          echo "Storage deployment skipped. Create/activate the Firebase Storage bucket on the Blaze plan, then set ENABLE_FIREBASE_STORAGE_DEPLOY=true."
