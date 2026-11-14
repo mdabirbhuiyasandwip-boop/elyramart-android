@@ -8,12 +8,14 @@ Shared Flutter codebase for Android and responsive Web. iOS needs macOS/Xcode an
 
 ## Verified build status (14 November 2026)
 
-- **Android:** Previously verified APK/AAB build [43499666854](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499666854) succeeded. A fresh build is running after the latest source changes: [43565196528](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43565196528).
-- **Web:** Previously verified Web build [43499666897](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499666897) succeeded. A fresh Web build is running after adding optional Web Firebase configuration: [43565190109](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43565190109).
-- **GitHub Pages:** Previous deploy [43499666844](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499666844) failed at Configure GitHub Pages because Pages is not enabled for this repository. A new deploy [43565193489](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43565193489) is pending; repository owner may still need to enable GitHub Actions as the Pages source in Settings → Pages.
-- **Firebase Functions:** TypeScript check [43499739123](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499739123) succeeded. Backend deploy [43499739022](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499739022) failed because secret `FIREBASE_SERVICE_ACCOUNT_JSON` does not contain a valid Google Cloud service-account key JSON for project `elyramart`.
+- **Android APK/AAB:** Latest fully verified build [43565797120](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43565797120) succeeded. Both artifacts are present: `Elyramart-APK-release` and `Elyramart-Play-Store-AAB`. A newer rebuild [43566534555](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566534555) is in progress after adding optional upload-key signing support.
+- **Web:** Latest build [43566515356](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566515356) succeeded and produced `Elyramart-Web-release` (about 14.3 MB).
+- **GitHub Pages:** Deploy [43566515428](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566515428) failed at **Configure GitHub Pages**; repository owner must set Settings → Pages → Source = GitHub Actions.
+- **Firebase Hosting:** Deploy [43566515366](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566515366) stopped at configuration validation because required Firebase secrets are missing.
+- **Firebase backend:** Deploy [43566429137](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566429137) stopped at credential validation; `FIREBASE_SERVICE_ACCOUNT_JSON` must contain a Google Cloud service-account key JSON, not Android `google-services.json`.
+- **Firebase Functions:** TypeScript compile check [43566429172](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566429172) succeeded.
 
-A successful build is not proof of full live functionality, real-device QA or Play Store publication. See [the detailed Bengali project status](docs/PROJECT_STATUS_BN.md).
+A successful build is not proof of full live functionality, real-device QA or Play Store publication. See [the Bengali owner setup guide](docs/OWNER_ACTIONS_BN.md), [the detailed launch checklist](docs/LAUNCH_CHECKLIST_BN.md), and [the file audit](docs/FILE_AUDIT_BN.md).
 
 ## App capabilities in source
 
@@ -33,6 +35,7 @@ These capabilities require Firebase Console setup, successful backend deployment
 - Flutter Web build artifact: `.github/workflows/build-web.yml`
 - GitHub Pages deploy: `.github/workflows/deploy-pages.yml`
 - Firebase backend deploy: `.github/workflows/deploy-firebase.yml`
+- Firebase Hosting deploy: `.github/workflows/deploy-hosting.yml`
 - Firebase Functions compile check: `.github/workflows/check-functions.yml`
 
 ## Developer documentation
