@@ -859,6 +859,29 @@ class _DailyLifeDirectoryPageState extends State<DailyLifeDirectoryPage> {
           ChoiceChip(label:const Text('মেয়েদের পার্লার'),selected:category=='beauty_parlour',onSelected:(_){setState(()=>category='beauty_parlour');}),
         ]),
         const SizedBox(height:12),
+        Card(
+          color: const Color(0xFFEAF5EF),
+          elevation: 0,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('বাংলাদেশের সরকারি স্বাস্থ্য প্রতিষ্ঠান রেজিস্ট্রি',
+                style: TextStyle(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 4),
+              const Text('সরকারি ও বেসরকারি হাসপাতাল/স্বাস্থ্যসেবা প্রতিষ্ঠানের হালনাগাদ সরকারি তালিকা এখানে খুঁজুন।',
+                style: TextStyle(fontSize: 12)),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () => launchUrl(
+                  Uri.parse('https://hris.mohfw.gov.bd/public/facility-registry/reports/organization-list'),
+                  mode: LaunchMode.externalApplication),
+                icon: const Icon(Icons.open_in_new),
+                label: const Text('DGHS-এর সম্পূর্ণ সরকারি তালিকা খুলুন'),
+              ),
+            ]),
+          ),
+        ),
+        const SizedBox(height:12),
         TextField(onChanged:(v)=>setState(()=>query=v),decoration:const InputDecoration(prefixIcon:Icon(Icons.search),labelText:'নাম, ঠিকানা বা এলাকা লিখুন',border:OutlineInputBorder())),
         const SizedBox(height:10),
         if(locationsLoading) const LinearProgressIndicator(),
