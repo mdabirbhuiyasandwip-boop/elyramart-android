@@ -6,12 +6,10 @@
 
 ## CI-তে যাচাইকৃত
 
-- Android APK/AAB: [run 43565797120](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43565797120) — success; APK ও AAB artifacts উপস্থিত। নতুন upload-key signing support-সহ rebuild [run 43566883247](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566883247) যাচাইাধীন।
-- Web: [run 43566515356](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566515356) — success; `Elyramart-Web-release` artifact তৈরি।
-- Firebase Functions compile: [run 43566429172](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566429172) — success।
-- Firebase backend deploy: [run 43566429137](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566429137) — credential validation-এ ব্যর্থ; `FIREBASE_SERVICE_ACCOUNT_JSON`-এ সঠিক service-account JSON প্রয়োজন।
-- Firebase Hosting deploy: [run 43566515366](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566515366) — ছয়টি Web config secret ও Service Account validation-এ ব্যর্থ।
-- GitHub Pages deploy: [run 43566515428](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43566515428) — Pages configuration/enablement-এ ব্যর্থ; owner-কে Settings → Pages → Source = GitHub Actions নির্বাচন করতে হবে।
+- Android APK/AAB: [run 43567716158](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43567716158) — success; APK ও AAB artifacts আছে, তবে signing secrets না থাকায় AAB unsigned।
+- Web: [run 43567716156](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43567716156) — success; `Elyramart-Web-release` artifact তৈরি।
+- GitHub Pages build: [run 43567976719](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43567976719) — build success; publish steps skipped, public URL verified নয়।
+- Firebase backend: [run 43570891759](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43570891759) — Firestore Rules deploy success; Cloud Functions ও Storage intentionally skipped। Functions TypeScript build success।
 
 
 ## Repository-তে থাকা প্রধান code
