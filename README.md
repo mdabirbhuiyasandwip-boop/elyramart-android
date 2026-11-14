@@ -8,9 +8,9 @@ Shared Flutter codebase for Android and responsive Web. iOS needs macOS/Xcode an
 
 ## Verified build status (14 November 2026)
 
-- **Android:** GitHub Actions run [43499666854](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499666854) completed successfully. Artifacts: `Elyramart-APK-release` (~26.7 MB) and `Elyramart-Play-Store-AAB` (~56.1 MB).
-- **Web:** [Build run 43499666897](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499666897) completed successfully and uploaded `Elyramart-Web-release` (~14.3 MB).
-- **GitHub Pages:** [Deploy run 43499666844](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499666844) failed at Configure GitHub Pages because the GitHub integration cannot create the Pages site. Repository owner must enable Pages and choose GitHub Actions as the deployment source in Settings → Pages, then rerun the workflow.
+- **Android:** Previously verified APK/AAB build [43499666854](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499666854) succeeded. A fresh build is running after the latest source changes: [43565196528](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43565196528).
+- **Web:** Previously verified Web build [43499666897](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499666897) succeeded. A fresh Web build is running after adding optional Web Firebase configuration: [43565190109](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43565190109).
+- **GitHub Pages:** Previous deploy [43499666844](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499666844) failed at Configure GitHub Pages because Pages is not enabled for this repository. A new deploy [43565193489](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43565193489) is pending; repository owner may still need to enable GitHub Actions as the Pages source in Settings → Pages.
 - **Firebase Functions:** TypeScript check [43499739123](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499739123) succeeded. Backend deploy [43499739022](https://github.com/mdabirbhuiyasandwip-boop/elyramart-android/actions/runs/43499739022) failed because secret `FIREBASE_SERVICE_ACCOUNT_JSON` does not contain a valid Google Cloud service-account key JSON for project `elyramart`.
 
 A successful build is not proof of full live functionality, real-device QA or Play Store publication. See [the detailed Bengali project status](docs/PROJECT_STATUS_BN.md).
@@ -41,6 +41,7 @@ These capabilities require Firebase Console setup, successful backend deployment
 - [বাংলা Firebase Setup](docs/FIREBASE_SETUP_BN.md)
 - [বাংলা Project Status and Verified Blockers](docs/PROJECT_STATUS_BN.md)
 - [Production Readiness Checklist](docs/PRODUCTION_READINESS.md)
+- [বাংলা End-to-end Launch Checklist](docs/LAUNCH_CHECKLIST_BN.md)
 
 ## Security
 
