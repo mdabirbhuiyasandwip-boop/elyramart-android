@@ -248,6 +248,7 @@ class _HomePageState extends State<HomePage> {
     final loadedSeller=<Product>[];
     var loadedDirectory=<Map<String,dynamic>>[];
     var loadedRentals=<Map<String,dynamic>>[];
+    var syncError='';
     if(FirebaseRuntime.initialized){
       try{
         final snapshot=await FirebaseFirestore.instance.collection('products').where('status',isEqualTo:'active').limit(500).get();
@@ -258,22 +259,22 @@ class _HomePageState extends State<HomePage> {
           final imageUrls=data['imageUrls'] as List? ?? [];
           loadedSeller.add(Product(title,(data['categoryId']??'অন্যান্য').toString(),'৳${price is num?price.toStringAsFixed(0):price}','🛍️','Elyramart verified seller',sellerId:data['sellerId']?.toString(),productId:doc.id,imageUrl:imageUrls.isNotEmpty?imageUrls.first.toString():null,stock:(data['stock'] as num?)?.toInt()));
         }
-      }catch(error){debugPrint('Elyramart product sync failed: $error');liveSyncError='পণ্যের তালিকা লোড হয়নি: $error';}
+      }catch(error){debugPrint('Elyramart product sync failed: $error');syncError='পণ্যের তালিকা লোড হয়নি: $error';}
       try {
         final directory = await FirebaseFirestore.instance.collection('directoryListings').where('status',isEqualTo:'active').limit(500).get();
         loadedDirectory = directory.docs.map((d)=><String,dynamic>{...d.data(),'_docId':d.id}).toList();
-      } catch(error) { debugPrint('Elyramart directory search sync failed: $error');liveSyncError='প্রতিষ্ঠানের তালিকা লোড হয়নি: $error'; }
+      } catch(error) { debugPrint('Elyramart directory search sync failed: $error');syncError='প্রতিষ্ঠানের তালিকা লোড হয়নি: $error'; }
       try {
-        final rentals = await FirebaseFirestore.instance.collection('rentalListings').where('status',isEqualTo:'active').limit(300).get();
+        final rentals = await FirebaseFirestore.instance.collection('rentalListings').where('status',isEqualTo:'active').where('listingType',isEqualTo:'offer').limit(300).get();
         loadedRentals = rentals.docs.map((d)=><String,dynamic>{...d.data(),'_docId':d.id}).toList();
-      } catch(error) { debugPrint('Elyramart rental search sync failed: $error');liveSyncError='ভাড়ার তালিকা লোড হয়নি: $error'; }
+      } catch(error) { debugPrint('Elyramart rental search sync failed: $error');syncError='ভাড়ার তালিকা লোড হয়নি: $error'; }
     }
     if(!mounted)return;
     setState((){
       sellerProducts=loadedSeller;
       directorySearchItems=loadedDirectory;
       rentalSearchItems=loadedRentals;
-      liveSyncError='';
+      liveSyncError=syncError;
       cart..clear()..addAll(saved.map((v){try{final m=Map<String,dynamic>.from(jsonDecode(v) as Map);return Product(m['name']??'',m['category']??'',m['price']??'',m['emoji']??'🛍️',m['detail']??'',sellerId:m['sellerId']?.toString(),productId:m['productId']?.toString(),imageUrl:m['imageUrl']?.toString(),demoOnly:m['demoOnly']==true||m['sellerId']==null);}catch(_){final i=int.tryParse(v);return i!=null&&i>=0&&i<products.length?products[i]:null;}}).whereType<Product>());
     });
   }
