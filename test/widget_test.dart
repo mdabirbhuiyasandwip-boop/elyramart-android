@@ -48,6 +48,14 @@ void main() {
     expect(fields[2].controller?.text, isEmpty);
   });
 
+  testWidgets('rental marketplace screen opens and explains online setup', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: RentalMarketplacePage()));
+    await tester.pumpAndSettle();
+    expect(find.text('বাসা ও অফিস ভাড়া'), findsOneWidget);
+    expect(find.text('Firebase সংযোগ প্রয়োজন।'), findsOneWidget);
+    expect(find.text('বিজ্ঞাপন দিন'), findsOneWidget);
+  });
+
   testWidgets('Elyramart main pages and customer profile open', (tester) async {
     await tester.pumpWidget(const ElyramartApp());
     await tester.pumpAndSettle();
