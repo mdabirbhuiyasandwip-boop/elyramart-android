@@ -224,8 +224,11 @@ class _HomePageState extends State<HomePage> {
   Set<String> wishlistIds={};
   String category='সব';
   String searchQuery='';
+  Timer? _searchRefreshTimer;
+  String liveSyncError='';
   final categories=['সব','ঔষধ','মুদিখানা','কসমেটিকস','ফ্যাশন','স্যানিটারি'];
   @override void initState(){super.initState();_loadCart();_loadWishlist();}
+  @override void dispose(){_searchRefreshTimer?.cancel();super.dispose();}
   Future<void> _loadWishlist() async {
     final prefs=await SharedPreferences.getInstance();
     final ids=prefs.getStringList('elyramart_wishlist_v1')??[];
@@ -247,7 +250,7 @@ class _HomePageState extends State<HomePage> {
     var loadedRentals=<Map<String,dynamic>>[];
     if(FirebaseRuntime.initialized){
       try{
-        final snapshot=await FirebaseFirestore.instance.collection('products').where('status',isEqualTo:'active').limit(60).get();
+        final snapshot=await FirebaseFirestore.instance.collection('products').where('status',isEqualTo:'active').limit(500).get();
         for(final doc in snapshot.docs){
           final data=doc.data();
           final title=(data['title']??'পণ্য').toString();
@@ -255,21 +258,22 @@ class _HomePageState extends State<HomePage> {
           final imageUrls=data['imageUrls'] as List? ?? [];
           loadedSeller.add(Product(title,(data['categoryId']??'অন্যান্য').toString(),'৳${price is num?price.toStringAsFixed(0):price}','🛍️','Elyramart verified seller',sellerId:data['sellerId']?.toString(),productId:doc.id,imageUrl:imageUrls.isNotEmpty?imageUrls.first.toString():null,stock:(data['stock'] as num?)?.toInt()));
         }
-      }catch(error){debugPrint('Elyramart product sync failed: $error');}
+      }catch(error){debugPrint('Elyramart product sync failed: $error');liveSyncError='পণ্যের তালিকা লোড হয়নি: $error';}
       try {
         final directory = await FirebaseFirestore.instance.collection('directoryListings').where('status',isEqualTo:'active').limit(500).get();
         loadedDirectory = directory.docs.map((d)=><String,dynamic>{...d.data(),'_docId':d.id}).toList();
-      } catch(error) { debugPrint('Elyramart directory search sync failed: $error'); }
+      } catch(error) { debugPrint('Elyramart directory search sync failed: $error');liveSyncError='প্রতিষ্ঠানের তালিকা লোড হয়নি: $error'; }
       try {
         final rentals = await FirebaseFirestore.instance.collection('rentalListings').where('status',isEqualTo:'active').limit(300).get();
         loadedRentals = rentals.docs.map((d)=><String,dynamic>{...d.data(),'_docId':d.id}).toList();
-      } catch(error) { debugPrint('Elyramart rental search sync failed: $error'); }
+      } catch(error) { debugPrint('Elyramart rental search sync failed: $error');liveSyncError='ভাড়ার তালিকা লোড হয়নি: $error'; }
     }
     if(!mounted)return;
     setState((){
       sellerProducts=loadedSeller;
       directorySearchItems=loadedDirectory;
       rentalSearchItems=loadedRentals;
+      liveSyncError='';
       cart..clear()..addAll(saved.map((v){try{final m=Map<String,dynamic>.from(jsonDecode(v) as Map);return Product(m['name']??'',m['category']??'',m['price']??'',m['emoji']??'🛍️',m['detail']??'',sellerId:m['sellerId']?.toString(),productId:m['productId']?.toString(),imageUrl:m['imageUrl']?.toString(),demoOnly:m['demoOnly']==true||m['sellerId']==null);}catch(_){final i=int.tryParse(v);return i!=null&&i>=0&&i<products.length?products[i]:null;}}).whereType<Product>());
     });
   }
@@ -303,7 +307,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget home(){
     final allProducts=<Product>[...products,...sellerProducts];
-    final visibleProducts=allProducts.where((p)=>(category=='সব'||p.category==category) && p.sellerId!=null && p.productId!=null && p.imageUrl!=null && p.imageUrl!.isNotEmpty && ('${p.name} ${p.category} ${p.detail}'.toLowerCase().contains(searchQuery.toLowerCase()))).toList();
+    final visibleProducts=allProducts.where((p)=>(category=='সব'||p.category==category) && p.sellerId!=null && p.productId!=null && ('${p.name} ${p.category} ${p.detail}'.toLowerCase().contains(searchQuery.toLowerCase()))).toList();
     final query=searchQuery.trim().toLowerCase();
     final visibleDirectory=directorySearchItems.where((e)=>query.isNotEmpty && '${e['name']??''} ${e['address']??''} ${e['districtBn']??''} ${e['upazilaBn']??''} ${e['phone']??''} ${e['category']??''}'.toLowerCase().contains(query)).toList();
     final visibleRentals=rentalSearchItems.where((e)=>query.isNotEmpty && e['listingType']=='offer' && '${e['title']??''} ${e['propertyType']??''} ${e['location']??''} ${e['details']??''} ${e['rentAmount']??''}'.toLowerCase().contains(query)).toList();
@@ -340,7 +344,7 @@ class _HomePageState extends State<HomePage> {
                   height: 46,
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
                   child: TextField(
-                    onChanged: (v)=>setState(()=>searchQuery=v),
+                    onChanged: (v){setState(()=>searchQuery=v);_searchRefreshTimer?.cancel();if(FirebaseRuntime.initialized&&v.trim().isNotEmpty){_searchRefreshTimer=Timer(const Duration(milliseconds:450),_loadCart);}},
                     textInputAction: TextInputAction.search,
                     decoration: InputDecoration(
                       hintText: tx('পণ্য বা সেবা খুঁজুন...','Search products or services...'),
@@ -392,6 +396,7 @@ class _HomePageState extends State<HomePage> {
             ],
             if(visibleServices.isEmpty&&visibleProducts.isEmpty&&visibleDirectory.isEmpty&&visibleRentals.isEmpty) Padding(padding:const EdgeInsets.only(top:8),child:Text(tx('কোনো মিল পাওয়া যায়নি। অন্য নামে খুঁজুন।','No matches found. Try another keyword.'))),
             if(!FirebaseRuntime.initialized) Padding(padding:const EdgeInsets.only(top:8),child:Text(tx('লাইভ পণ্যের ফল পেতে সার্ভার সংযোগ চালু করতে হবে।','Server setup is required to show live product results.'),style:const TextStyle(fontSize:12,color:Colors.black54))),
+            if(liveSyncError.isNotEmpty) Padding(padding:const EdgeInsets.only(top:8),child:Text(liveSyncError,style:const TextStyle(fontSize:12,color:Colors.red))),
           ])),
         if(!FirebaseRuntime.initialized)
         Container(
