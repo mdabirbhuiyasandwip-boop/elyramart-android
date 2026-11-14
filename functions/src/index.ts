@@ -47,8 +47,12 @@ export const claimOwnerAdmin = onCall(
 
 
 export const placeOrder = onCall(async (request) => {
-  if (!request.auth || request.auth.token.email_verified !== true) {
-    throw new HttpsError("unauthenticated", "অর্ডার করতে যাচাইকৃত অ্যাকাউন্টে লগইন করুন।");
+  if (!request.auth || !(
+    request.auth.token.email_verified === true ||
+    (typeof request.auth.token.phone_number === "string" &&
+      request.auth.token.phone_number.length > 0)
+  )) {
+    throw new HttpsError("unauthenticated", "অর্ডার করতে যাচাইকৃত ইমেইল বা ফোন নম্বর দিয়ে লগইন করুন।");
   }
   const data = request.data as {
     orderNumber?: unknown; customerName?: unknown; phone?: unknown;
